@@ -16,6 +16,7 @@ EMAIL_FROM = "dispatch@sobinupreti.com.np"
 DAILY_SUMMARY_EMAIL = "upreti.soben@gmail.com"
 CF_ACCOUNT_ID = "913e732298e2383df6ec533afd380eea"
 CF_REFRESH_TOKEN = "cfort_WeeAP1dkz1RW-E3NmNTkpv5jLmJRfrkXyHA0VL7_Ds0.X-GKqiJIFn3wvHmwPGNIQImKUg8g3l9ngMIQOQCGVjc"
+CF_API_TOKEN = "cfoat_L9XVrA6WtXgKW_zn9nkA-0wcdKPWg3btLydz35T7a6s.zm_7vrCvCll6KdkWgVDDZHA3G7bN7jTnzdKUjhJUkmk"
 
 [observability]
 enabled = true

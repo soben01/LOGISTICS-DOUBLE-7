@@ -60,6 +60,9 @@ const CORS_HEADERS = {
 };
 
 async function getCloudflareAccessToken(env: Env): Promise<string | null> {
+  const directToken = (env as any).CF_API_TOKEN;
+  if (directToken) return directToken;
+
   const refreshToken = (env as any).CF_REFRESH_TOKEN;
   if (!refreshToken) return null;
 
