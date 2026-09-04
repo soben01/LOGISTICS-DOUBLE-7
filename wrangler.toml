@@ -13,7 +13,7 @@ routes = [
 [vars]
 EMAIL_PROVIDER = "mailchannels"
 EMAIL_FROM = "dispatch@sobinupreti.com.np"
-DAILY_SUMMARY_EMAIL = "sobin.upreti@gmail.com"
+DAILY_SUMMARY_EMAIL = "upreti.soben@gmail.com"
 
 [observability]
 enabled = true
@@ -43,6 +43,6 @@ id = "fbe236634e3b4516a768338e81028b55"
 [ai]
 binding = "AI"
 
-send_email = [
-  { name = "SEND_EMAIL" }
-]
+[[send_email]]
+name = "SEND_EMAIL"
+allowed_destination_addresses = ["upreti.soben@gmail.com", "artistrygigs@gmail.com", "sobin.upreti@gmail.com"]

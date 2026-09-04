@@ -34,6 +34,20 @@ export interface Env {
   LOGISTICS_CACHE?: KVNamespace;
   AI?: WorkersAI;
   LOGISTICS_ANALYTICS?: AnalyticsEngineDataset;
+  SEND_EMAIL?: {
+    send(message: {
+      from: string;
+      to: string | string[];
+      subject: string;
+      html?: string;
+      text?: string;
+    }): Promise<any>;
+  };
+  EMAIL_FROM?: string;
+  DAILY_SUMMARY_EMAIL?: string;
+  EMAIL_PROVIDER?: string;
+  SENDGRID_API_KEY?: string;
+  RESEND_API_KEY?: string;
 }
 
 const CORS_HEADERS = {
@@ -257,7 +271,7 @@ export default {
     // New POST endpoint: create shipment
     if (url.pathname === '/api/shipments' && request.method === 'POST') {
       try {
-        const body = await request.json();
+        const body = (await request.json()) as any;
         const { tracking_number, reference_number, status } = body;
         if (!tracking_number) {
           return new Response(JSON.stringify({ success: false, error: 'tracking_number required' }), { status: 400, headers: CORS_HEADERS });
@@ -275,7 +289,7 @@ export default {
     // New POST endpoint: create sub‑user
     if (url.pathname === '/api/subusers' && request.method === 'POST') {
       try {
-        const body = await request.json();
+        const body = (await request.json()) as any;
         const { parent_id, email, name, role, password_hash } = body;
         if (!parent_id || !email || !role || !password_hash) {
           return new Response(JSON.stringify({ success: false, error: 'Missing required fields' }), { status: 400, headers: CORS_HEADERS });
@@ -452,13 +466,60 @@ export default {
 
         const messageId = `msg_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
 
-        // Dispatch via SendGrid (if configured) or MailChannels transactional email API
+        // Dispatch via Cloudflare SEND_EMAIL, Resend, SendGrid, or MailChannels
         let dispatched = false;
-        let provider = 'MailChannels / Cloudflare Relay';
-        const sendgridKey = (env as any).SENDGRID_API_KEY;
+        let provider = 'Pending Gateway';
+        let dispatchError: string | null = null;
         const fromEmail = (env as any).EMAIL_FROM || 'dispatch@sobinupreti.com.np';
 
-        if (sendgridKey && sendgridKey !== 'REPLACE_WITH_KEY' && sendgridKey.startsWith('SG.')) {
+        // 1. Native Cloudflare Email Service binding
+        if (!dispatched && (env as any).SEND_EMAIL) {
+          try {
+            provider = 'Cloudflare Email Service';
+            await (env as any).SEND_EMAIL.send({
+              from: fromEmail,
+              to: cleanEmail,
+              subject: finalSubject,
+              html: html,
+            });
+            dispatched = true;
+          } catch (cfErr: any) {
+            dispatchError = `Cloudflare Email: ${cfErr?.message || String(cfErr)}`;
+          }
+        }
+
+        // 2. Resend API (if configured)
+        const resendKey = (env as any).RESEND_API_KEY;
+        if (!dispatched && resendKey && resendKey.startsWith('re_')) {
+          try {
+            provider = 'Resend API';
+            const resendRes = await fetch('https://api.resend.com/emails', {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${resendKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                from: `Double 7 Logistics <${fromEmail}>`,
+                to: [cleanEmail],
+                subject: finalSubject,
+                html: html,
+              }),
+            });
+            if (resendRes.ok) {
+              dispatched = true;
+            } else {
+              const txt = await resendRes.text();
+              dispatchError = `Resend error: ${txt}`;
+            }
+          } catch (rErr: any) {
+            dispatchError = `Resend exception: ${rErr?.message || String(rErr)}`;
+          }
+        }
+
+        // 3. SendGrid API (if configured)
+        const sendgridKey = (env as any).SENDGRID_API_KEY;
+        if (!dispatched && sendgridKey && sendgridKey !== 'REPLACE_WITH_KEY' && sendgridKey.startsWith('SG.')) {
           try {
             provider = 'SendGrid API';
             const sgRes = await fetch('https://api.sendgrid.com/v3/mail/send', {
@@ -476,12 +537,16 @@ export default {
             });
             if (sgRes.ok || sgRes.status === 202) {
               dispatched = true;
+            } else {
+              const txt = await sgRes.text();
+              dispatchError = `SendGrid error: ${txt}`;
             }
-          } catch {
-            // Fallback to MailChannels
+          } catch (sgErr: any) {
+            dispatchError = `SendGrid exception: ${sgErr?.message || String(sgErr)}`;
           }
         }
 
+        // 4. MailChannels Relay
         if (!dispatched) {
           try {
             const mailRes = await fetch('https://api.mailchannels.net/tx/v1/send', {
@@ -496,9 +561,14 @@ export default {
             });
             if (mailRes.ok || mailRes.status === 202) {
               dispatched = true;
+              provider = 'MailChannels Relay';
+            } else {
+              if (!dispatchError) {
+                dispatchError = `MailChannels: HTTP ${mailRes.status} (Authentication or DNS TXT lock required)`;
+              }
             }
-          } catch {
-            // Fallback handled below
+          } catch (mcErr: any) {
+            if (!dispatchError) dispatchError = `MailChannels error: ${mcErr?.message || String(mcErr)}`;
           }
         }
 
@@ -513,7 +583,9 @@ export default {
                 subject: finalSubject,
                 type,
                 trackingId,
-                status: 'dispatched',
+                status: dispatched ? 'dispatched' : 'failed',
+                error: dispatchError,
+                provider,
                 timestamp: new Date().toISOString(),
               }),
               { expirationTtl: 86400 * 7 }
@@ -525,16 +597,20 @@ export default {
 
         return new Response(
           JSON.stringify({
-            success: true,
+            success: dispatched,
             messageId,
             recipient: cleanEmail,
             subject: finalSubject,
-            status: 'sent',
-            dispatched: true,
+            status: dispatched ? 'sent' : 'failed',
+            dispatched,
             provider,
+            error: dispatched ? null : (dispatchError || 'Email relay authorization required'),
             timestamp: new Date().toISOString(),
           }),
-          { headers: CORS_HEADERS }
+          {
+            status: dispatched ? 200 : 502,
+            headers: CORS_HEADERS
+          }
         );
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);

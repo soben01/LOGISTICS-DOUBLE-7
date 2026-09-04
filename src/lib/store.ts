@@ -92,7 +92,7 @@ export async function fetchD1Tracking(trackingNumber: string): Promise<any | nul
   try {
     const res = await fetch(`/api/track?id=${encodeURIComponent(trackingNumber.trim())}`);
     if (res.ok) {
-      const data = await res.json();
+      const data = (await res.json()) as any;
       if (data.found && data.consignment) {
         return data.consignment;
       }
@@ -197,7 +197,7 @@ export async function getAllCombinedBookings(): Promise<Shipment[]> {
   try {
     const res = await fetch('/api/shipments');
     if (res.ok) {
-      const data = await res.json();
+      const data = (await res.json()) as any;
       if (data.success && Array.isArray(data.shipments)) {
         const remoteShipments = data.shipments.map(normalizeD1Shipment);
         const seenIds = new Set(localShipments.map(s => s.id.toUpperCase()));
