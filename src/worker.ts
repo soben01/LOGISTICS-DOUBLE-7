@@ -301,13 +301,13 @@ export default {
 
         if (request.method === 'POST') {
           const body = await request.json() as any;
-          recipientEmail = body.email || '';
+          recipientEmail = body.email || (env as any).DAILY_SUMMARY_EMAIL || '';
           subject = body.subject || '';
           role = body.role || 'merchant';
           trackingId = body.trackingId || '';
           type = body.type || '24h_summary';
         } else {
-          recipientEmail = url.searchParams.get('email') || '';
+          recipientEmail = url.searchParams.get('email') || (env as any).DAILY_SUMMARY_EMAIL || '';
           subject = url.searchParams.get('subject') || '';
           role = url.searchParams.get('role') || 'merchant';
           trackingId = url.searchParams.get('id') || url.searchParams.get('trackingId') || '';
@@ -452,25 +452,54 @@ export default {
 
         const messageId = `msg_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
 
-        // Dispatch via MailChannels transactional email API
+        // Dispatch via SendGrid (if configured) or MailChannels transactional email API
         let dispatched = false;
         let provider = 'MailChannels / Cloudflare Relay';
-        try {
-          const mailRes = await fetch('https://api.mailchannels.net/tx/v1/send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              personalizations: [{ to: [{ email: cleanEmail, name: role }] }],
-              from: { email: 'dispatch@sobinupreti.com.np', name: 'Double 7 Logistics Command' },
-              subject: finalSubject,
-              content: [{ type: 'text/html', value: html }],
-            }),
-          });
-          if (mailRes.ok || mailRes.status === 202) {
-            dispatched = true;
+        const sendgridKey = (env as any).SENDGRID_API_KEY;
+        const fromEmail = (env as any).EMAIL_FROM || 'dispatch@sobinupreti.com.np';
+
+        if (sendgridKey && sendgridKey !== 'REPLACE_WITH_KEY' && sendgridKey.startsWith('SG.')) {
+          try {
+            provider = 'SendGrid API';
+            const sgRes = await fetch('https://api.sendgrid.com/v3/mail/send', {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${sendgridKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                personalizations: [{ to: [{ email: cleanEmail, name: role }] }],
+                from: { email: fromEmail, name: 'Double 7 Logistics Command' },
+                subject: finalSubject,
+                content: [{ type: 'text/html', value: html }],
+              }),
+            });
+            if (sgRes.ok || sgRes.status === 202) {
+              dispatched = true;
+            }
+          } catch {
+            // Fallback to MailChannels
           }
-        } catch {
-          // Fallback handled below
+        }
+
+        if (!dispatched) {
+          try {
+            const mailRes = await fetch('https://api.mailchannels.net/tx/v1/send', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                personalizations: [{ to: [{ email: cleanEmail, name: role }] }],
+                from: { email: fromEmail, name: 'Double 7 Logistics Command' },
+                subject: finalSubject,
+                content: [{ type: 'text/html', value: html }],
+              }),
+            });
+            if (mailRes.ok || mailRes.status === 202) {
+              dispatched = true;
+            }
+          } catch {
+            // Fallback handled below
+          }
         }
 
         // Save delivery record in Cloudflare KV Outbox

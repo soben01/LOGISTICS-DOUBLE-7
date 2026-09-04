@@ -3,11 +3,20 @@ main = "src/worker.ts"
 compatibility_date = "2024-09-02"
 account_id = "913e732298e2383df6ec533afd380eea"
 
+workers_dev = true
+preview_urls = true
+
+routes = [
+  { pattern = "sobinupreti.com.np", custom_domain = true }
+]
+
 [vars]
-EMAIL_PROVIDER = "sendgrid"
-SENDGRID_API_KEY = "REPLACE_WITH_KEY"
-EMAIL_FROM = "no-reply@double7logistics.com"
-DAILY_SUMMARY_EMAIL = "admin@example.com"
+EMAIL_PROVIDER = "mailchannels"
+EMAIL_FROM = "dispatch@sobinupreti.com.np"
+DAILY_SUMMARY_EMAIL = "sobin.upreti@gmail.com"
+
+[observability]
+enabled = true
 
 [build]
 command = "npm run build"
@@ -37,6 +46,3 @@ binding = "AI"
 send_email = [
   { name = "SEND_EMAIL" }
 ]
-
-
-
