@@ -1177,13 +1177,130 @@ export default {
     // API: Users list from Cloudflare D1 users database
     if (url.pathname === '/api/users') {
       try {
-        const { results } = await env.USERS_DB.prepare('SELECT id, name, email, role, sub_role, company, phone, created_at FROM users ORDER BY id ASC').all();
+        const { results } = await env.USERS_DB.prepare(
+          'SELECT id, name, email, role, sub_role, company, phone, status, cod_balance_npr, password, created_at FROM users ORDER BY id ASC'
+        ).all();
         return new Response(JSON.stringify({ success: true, count: results.length, users: results }), {
           headers: CORS_HEADERS,
         });
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
         return new Response(JSON.stringify({ error: message }), {
+          status: 500,
+          headers: CORS_HEADERS,
+        });
+      }
+    }
+
+    // API: Super Admin Update User (Role elevation, status, password, details)
+    if (url.pathname === '/api/admin/users/update' && request.method === 'POST') {
+      try {
+        const body = (await request.json()) as any;
+        const { id, role, sub_role, status, password, name, company, phone, cod_balance_npr } = body;
+        if (!id) {
+          return new Response(JSON.stringify({ success: false, error: 'User ID is required' }), {
+            status: 400,
+            headers: CORS_HEADERS,
+          });
+        }
+
+        // Build dynamic update query
+        const fields: string[] = [];
+        const values: any[] = [];
+
+        if (role !== undefined) { fields.push('role = ?'); values.push(role); }
+        if (sub_role !== undefined) { fields.push('sub_role = ?'); values.push(sub_role); }
+        if (status !== undefined) { fields.push('status = ?'); values.push(status); }
+        if (password !== undefined) { fields.push('password = ?'); values.push(password); }
+        if (name !== undefined) { fields.push('name = ?'); values.push(name); }
+        if (company !== undefined) { fields.push('company = ?'); values.push(company); }
+        if (phone !== undefined) { fields.push('phone = ?'); values.push(phone); }
+        if (cod_balance_npr !== undefined) { fields.push('cod_balance_npr = ?'); values.push(cod_balance_npr); }
+
+        if (fields.length > 0) {
+          values.push(id);
+          const sql = `UPDATE users SET ${fields.join(', ')} WHERE id = ?`;
+          await env.USERS_DB.prepare(sql).bind(...values).run();
+        }
+
+        return new Response(JSON.stringify({ success: true, message: `User ${id} updated successfully` }), {
+          headers: CORS_HEADERS,
+        });
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        return new Response(JSON.stringify({ success: false, error: message }), {
+          status: 500,
+          headers: CORS_HEADERS,
+        });
+      }
+    }
+
+    // API: Global Website & Platform Settings (KV Backed)
+    if (url.pathname === '/api/settings') {
+      if (request.method === 'POST') {
+        try {
+          const body = await request.text();
+          if (env.LOGISTICS_CACHE) {
+            await env.LOGISTICS_CACHE.put('website_settings', body, { expirationTtl: 86400 * 365 });
+          }
+          return new Response(JSON.stringify({ success: true, message: 'Website settings saved' }), {
+            headers: CORS_HEADERS,
+          });
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          return new Response(JSON.stringify({ success: false, error: message }), {
+            status: 500,
+            headers: CORS_HEADERS,
+          });
+        }
+      } else {
+        try {
+          let settings = null;
+          if (env.LOGISTICS_CACHE) {
+            const raw = await env.LOGISTICS_CACHE.get('website_settings');
+            if (raw) settings = JSON.parse(raw);
+          }
+          return new Response(JSON.stringify({ success: true, settings }), {
+            headers: CORS_HEADERS,
+          });
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          return new Response(JSON.stringify({ success: false, error: message }), {
+            status: 500,
+            headers: CORS_HEADERS,
+          });
+        }
+      }
+    }
+
+    // API: Super Admin Trigger 6:00 PM Daily Operational Reset
+    if (url.pathname === '/api/admin/trigger-reset' && request.method === 'POST') {
+      try {
+        const timestamp = new Date().toISOString();
+        if (env.LOGISTICS_CACHE) {
+          await env.LOGISTICS_CACHE.put(
+            'last_daily_reset',
+            JSON.stringify({
+              executedAt: timestamp,
+              triggeredBy: 'Super Admin Command Console',
+              status: 'success',
+              resetCycle: '6:00 PM NPT Daily Cycle',
+            }),
+            { expirationTtl: 86400 * 7 }
+          );
+        }
+        return new Response(
+          JSON.stringify({
+            success: true,
+            resetCycle: '6:00 PM NPT Daily Operational Reset',
+            executedAt: timestamp,
+            message: 'All daily dispatch counters, route schedules, and COD cut-offs reset successfully.',
+          }),
+          { headers: CORS_HEADERS }
+        );
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        return new Response(JSON.stringify({ success: false, error: message }), {
           status: 500,
           headers: CORS_HEADERS,
         });

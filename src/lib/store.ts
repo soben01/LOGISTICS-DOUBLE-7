@@ -64,6 +64,9 @@ export interface Shipment {
     receivedBy: string;
     signatureText: string;
   };
+  codAmount?: number;
+  serviceType?: string;
+  assignedVehicle?: string;
 }
 
 export const INITIAL_SHIPMENTS: Shipment[] = [];

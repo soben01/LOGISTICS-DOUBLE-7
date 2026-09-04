@@ -11,6 +11,7 @@ export interface User {
   codBalanceNpr: number;
   totalShipments?: number;
   createdAt: string;
+  password?: string;
 }
 
 const USERS_STORAGE_KEY = 'double7_users_v1';
@@ -367,6 +368,144 @@ export function deleteMerchant(id: string): boolean {
   if (typeof window !== 'undefined') {
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(filtered));
     window.dispatchEvent(new Event('auth-change'));
+  }
+  return true;
+}
+
+export function isSuperAdmin(user: User | null | undefined): boolean {
+  if (!user) return false;
+  if (user.role !== 'admin') return false;
+  const subRole = (user.subRole || '').toLowerCase();
+  const email = (user.email || '').toLowerCase();
+  return (
+    subRole.includes('super admin') ||
+    subRole.includes('executive') ||
+    email === 'soben@double7.com' ||
+    email === 'soben@double11.com' ||
+    email === 'anil@double7.com' ||
+    email === 'anil@double7.com.np' ||
+    email === 'artistrygigs@gmail.com' ||
+    email === 'upreti.soben@gmail.com' ||
+    !user.subRole
+  );
+}
+
+export function updateUserRole(id: string, role: 'merchant' | 'admin', subRole?: string, permissions?: string[]): boolean {
+  const users = getUsers();
+  const index = users.findIndex(u => u.id === id);
+  if (index === -1) return false;
+
+  users[index].role = role;
+  if (subRole) users[index].subRole = subRole;
+  if (permissions) users[index].permissions = permissions;
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+    const current = getCurrentUser();
+    if (current && current.id === id) {
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(users[index]));
+    }
+    window.dispatchEvent(new Event('auth-change'));
+  }
+
+  // Sync to D1
+  if (typeof window !== 'undefined') {
+    fetch('/api/admin/users/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, role, sub_role: subRole, permissions: JSON.stringify(permissions || []) }),
+    }).catch(() => {});
+  }
+  return true;
+}
+
+export function updateUserPassword(id: string, password: string): boolean {
+  const users = getUsers();
+  const index = users.findIndex(u => u.id === id);
+  if (index === -1) return false;
+
+  users[index].password = password;
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+    const current = getCurrentUser();
+    if (current && current.id === id) {
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(users[index]));
+    }
+    window.dispatchEvent(new Event('auth-change'));
+  }
+
+  // Sync to D1
+  if (typeof window !== 'undefined') {
+    fetch('/api/admin/users/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, password }),
+    }).catch(() => {});
+  }
+  return true;
+}
+
+export function updateUserDetails(id: string, updates: Partial<User>): boolean {
+  const users = getUsers();
+  const index = users.findIndex(u => u.id === id);
+  if (index === -1) return false;
+
+  users[index] = { ...users[index], ...updates };
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+    const current = getCurrentUser();
+    if (current && current.id === id) {
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(users[index]));
+    }
+    window.dispatchEvent(new Event('auth-change'));
+  }
+
+  // Sync to D1
+  if (typeof window !== 'undefined') {
+    fetch('/api/admin/users/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id,
+        name: updates.name,
+        company: updates.company,
+        phone: updates.phone,
+        role: updates.role,
+        sub_role: updates.subRole,
+        status: updates.status,
+        password: updates.password,
+        cod_balance_npr: updates.codBalanceNpr,
+      }),
+    }).catch(() => {});
+  }
+  return true;
+}
+
+export function updateUserBalance(id: string, newBalance: number): boolean {
+  const users = getUsers();
+  const index = users.findIndex(u => u.id === id);
+  if (index === -1) return false;
+
+  users[index].codBalanceNpr = Math.max(0, newBalance);
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+    const current = getCurrentUser();
+    if (current && current.id === id) {
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(users[index]));
+    }
+    window.dispatchEvent(new Event('auth-change'));
+  }
+
+  // Sync to D1
+  if (typeof window !== 'undefined') {
+    fetch('/api/admin/users/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, cod_balance_npr: users[index].codBalanceNpr }),
+    }).catch(() => {});
   }
   return true;
 }
