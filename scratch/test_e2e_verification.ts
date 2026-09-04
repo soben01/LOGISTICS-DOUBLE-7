@@ -1,4 +1,4 @@
-const BASE_URL = 'https://logistics-double-11.nex-it.workers.dev';
+const BASE_URL = 'https://logistics-double-7.nex-it.workers.dev';
 
 interface TestResult {
   name: string;
@@ -9,7 +9,7 @@ interface TestResult {
 }
 
 async function runTests() {
-  console.log('🚀 Starting Double 11 Logistics End-to-End Verification Audit...\n');
+  console.log('🚀 Starting Double 7 Logistics End-to-End Verification Audit...\n');
 
   const results: TestResult[] = [];
 
@@ -86,7 +86,7 @@ async function runTests() {
         email: 'upreti.soben@gmail.com',
         role: 'admin',
         type: '24h_summary',
-        subject: '[Test Audit] Double 11 24h Logistics Digest',
+        subject: '[Test Audit] Double 7 24h Logistics Digest',
       })
     });
     const data = await res.json();
@@ -112,12 +112,12 @@ async function runTests() {
     try {
       const res = await fetch(`${BASE_URL}${route}`);
       const text = await res.text();
-      const hasDouble11 = text.includes('DOUBLE') || text.includes('Double 11') || text.includes('Logistics');
+      const hasDouble7 = text.includes('DOUBLE') || text.includes('Double 7') || text.includes('Logistics');
       results.push({
         name: `Page: ${route}`,
         url: `${BASE_URL}${route}`,
         status: res.status,
-        success: res.ok && hasDouble11,
+        success: res.ok && hasDouble7,
         details: { length: text.length }
       });
     } catch (err: any) {

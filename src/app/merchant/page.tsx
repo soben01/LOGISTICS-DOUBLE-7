@@ -143,7 +143,7 @@ export default function MerchantPortal() {
               {shipments.length}
             </div>
             <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-              Total consignments dispatched through Double 11 linehauls across Nepal&apos;s 7 provinces.
+              Total consignments dispatched through Double 7 linehauls across Nepal&apos;s 7 provinces.
             </p>
           </div>
 

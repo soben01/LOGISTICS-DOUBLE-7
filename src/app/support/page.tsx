@@ -31,7 +31,7 @@ const FAQS: FAQ[] = [
   },
   {
     category: 'Customs',
-    q: 'How does Double 11 Fast-Track customs pre-clearance work?',
+    q: 'How does Double 7 Fast-Track customs pre-clearance work?',
     a: 'Our cloud platform electronically transmits commercial invoices, HS codes, and security declarations to border authorities (US CBP, EU ICS2, UK HMRC) while your cargo is still in flight. Over 94% of consignments receive automated green-channel release before touchdown.',
   },
   {
@@ -41,12 +41,12 @@ const FAQS: FAQ[] = [
   },
   {
     category: 'Claims',
-    q: 'What is the Double 11 Peak Surge On-Time Guarantee?',
-    a: 'If a consignment booked under Double 11 Super Express fails to arrive within its guaranteed service SLA window due to non-force-majeure airline operations, we issue an automatic 100% freight refund plus a 20% future booking credit.',
+    q: 'What is the Double 7 Peak Surge On-Time Guarantee?',
+    a: 'If a consignment booked under Double 7 Super Express fails to arrive within its guaranteed service SLA window due to non-force-majeure airline operations, we issue an automatic 100% freight refund plus a 20% future booking credit.',
   },
   {
     category: 'Customs',
-    q: 'Can I ship lithium batteries or high-tech equipment with Double 11?',
+    q: 'Can I ship lithium batteries or high-tech equipment with Double 7?',
     a: 'Yes, we are fully certified under IATA Dangerous Goods Regulations (DGR) to transport Section II lithium ion (UN3481) and metal batteries (UN3091) on our dedicated Boeing 777F cargo aircraft.',
   },
 ];
@@ -59,7 +59,7 @@ export default function SupportPage() {
   const [chatMessages, setChatMessages] = useState<Array<{ sender: 'agent' | 'user'; text: string; time: string }>>([
     {
       sender: 'agent',
-      text: 'Hello! I am your Double 11 Dispatch Assistant. How can I help you with your consignment, customs clearance, or freight rate today?',
+      text: 'Hello! I am your Double 7 Dispatch Assistant. How can I help you with your consignment, customs clearance, or freight rate today?',
       time: 'Just now',
     },
   ]);
@@ -82,14 +82,14 @@ export default function SupportPage() {
       let reply = 'Thank you for reaching out. Our dispatch command has logged your inquiry. For immediate urgent flight manifests, you can also view the Operations Tower.';
       const lower = userText.toLowerCase();
 
-      if (lower.includes('track') || lower.includes('where') || lower.includes('d11') || lower.includes('awb')) {
+      if (lower.includes('track') || lower.includes('where') || lower.includes('d7') || lower.includes('d11') || lower.includes('awb')) {
         reply = 'You can track any consignment in real-time by clicking "Tracking Center" in the top navigation or entering your tracking or Airway Bill (AWB) number!';
       } else if (lower.includes('rate') || lower.includes('cost') || lower.includes('price')) {
         reply = 'Our dynamic rate estimator calculates exact volumetric pricing based on origin, destination, and dimensions. Check out the "Rates & Tariffs" page for instant quotes.';
       } else if (lower.includes('customs') || lower.includes('duty') || lower.includes('tax')) {
-        reply = 'Double 11 provides automated green-channel customs pre-clearance with US CBP, EU ICS2, and UK border force so consignments clear while still airborne.';
+        reply = 'Double 7 provides automated green-channel customs pre-clearance with US CBP, EU ICS2, and UK border force so consignments clear while still airborne.';
       } else if (lower.includes('soben') || lower.includes('founder')) {
-        reply = 'Double 11 Logistics was founded and architected by Soben (@soben01) to provide frictionless, high-velocity freight infrastructure for modern global trade.';
+        reply = 'Double 7 Logistics was founded and architected by Soben (@soben01) to provide frictionless, high-velocity freight infrastructure for modern global trade.';
       }
 
       setChatMessages(prev => [...prev, { sender: 'agent', text: reply, time: 'Just now' }]);
@@ -139,7 +139,7 @@ export default function SupportPage() {
                 </div>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#ffffff' }}>
-                    Double 11 Dispatch Bot
+                    Double 7 Dispatch Bot
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--brand-emerald)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                     <span className="pulse-dot pulse-dot-green" style={{ width: 6, height: 6 }} /> Connected to Global HQ
@@ -263,7 +263,7 @@ export default function SupportPage() {
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
             <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Frequently Asked Questions</h3>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-              Everything you need to know about Double 11 Logistics shipping protocols, volumetric weights, and SLAs.
+              Everything you need to know about Double 7 Logistics shipping protocols, volumetric weights, and SLAs.
             </p>
 
             {/* Category Filter Pills */}

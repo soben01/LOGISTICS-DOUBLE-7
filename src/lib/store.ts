@@ -68,7 +68,7 @@ export interface Shipment {
 
 export const INITIAL_SHIPMENTS: Shipment[] = [];
 
-const STORAGE_KEY = 'double11_shipments_v3';
+const STORAGE_KEY = 'double7_shipments_v1';
 
 export function getShipments(): Shipment[] {
   if (typeof window === 'undefined') return INITIAL_SHIPMENTS;
@@ -76,7 +76,7 @@ export function getShipments(): Shipment[] {
     // Purge legacy storage versions
     localStorage.removeItem('double11_shipments_nepal_v1');
     localStorage.removeItem('double11_shipments_v2');
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('double11_shipments_v3');
     if (!saved) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_SHIPMENTS));
       return INITIAL_SHIPMENTS;
@@ -143,8 +143,8 @@ export function normalizeD1Shipment(raw: any): Shipment {
   const destCity = details.destination_city || details.city || 'Pokhara';
 
   return {
-    id: raw.tracking_number || details.number || `D11-D1-${raw.id}`,
-    service: 'Double 11 Nepal Express',
+    id: raw.tracking_number || details.number || `D7-D1-${raw.id}`,
+    service: 'Double 7 Nepal Express',
     serviceCode: 'EXP',
     status: status,
     origin: {
@@ -157,7 +157,7 @@ export function normalizeD1Shipment(raw: any): Shipment {
     },
     sender: {
       name: 'Central Merchant Dispatch',
-      company: 'Double 11 Logistics Command HQ',
+      company: 'Double 7 Logistics Command HQ',
       phone: '+977 1 4411000'
     },
     recipient: {
@@ -227,7 +227,7 @@ export function createShipment(data: Partial<Shipment>): Shipment {
   const current = getShipments();
   const randomNum = Math.floor(1000 + Math.random() * 9000);
   const code = data.serviceCode || 'EXP';
-  const newId = `D11-${randomNum}-${code}`;
+  const newId = `D7-${randomNum}-${code}`;
 
   const now = new Date().toLocaleString('en-US', {
     month: 'short',
@@ -239,7 +239,7 @@ export function createShipment(data: Partial<Shipment>): Shipment {
 
   const newShipment: Shipment = {
     id: newId,
-    service: data.service || 'Double 11 Nepal Express',
+    service: data.service || 'Double 7 Nepal Express',
     serviceCode: code,
     status: 'Pending Pickup',
     origin: data.origin || { city: 'Kathmandu', province: 'Bagmati Province', hub: 'Kathmandu Central Hub' },
@@ -248,8 +248,8 @@ export function createShipment(data: Partial<Shipment>): Shipment {
     recipient: data.recipient || { name: 'Customer Receiver', company: 'Personal', address: 'City Road', phone: '+977 98000 00000' },
     cargo: data.cargo || { pieces: 1, weightKg: 2.0, volumeCbm: 0.01, description: 'E-Commerce Consignment', declaredValueNpr: 5000 },
     telemetry: {
-      transportVehicle: 'D11 Swift Electric Dispatch Unit',
-      waybillNumber: `AWB-D11-NP-${randomNum}`,
+      transportVehicle: 'D7 Swift Electric Dispatch Unit',
+      waybillNumber: `AWB-D7-NP-${randomNum}`,
       trackingRoute: `${data.origin?.city || 'Kathmandu'} to ${data.destination?.city || 'Pokhara'} Express Corridor`,
       estimatedArrival: 'Next Business Day (by 17:00 NPT)',
       temperatureCelsius: 21.5,
@@ -383,7 +383,7 @@ export function addCustomCheckpoint(
   return true;
 }
 
-const WAITLIST_STORAGE_KEY = 'double11_intl_waitlist_v1';
+const WAITLIST_STORAGE_KEY = 'double7_intl_waitlist_v1';
 const DEFAULT_WAITLIST = [
   'apex.export@nepaltrading.com',
   'himalayan.cashmere@crafts.np',
@@ -393,7 +393,7 @@ const DEFAULT_WAITLIST = [
 export function getWaitlistSubscribers(): string[] {
   if (typeof window === 'undefined') return DEFAULT_WAITLIST;
   try {
-    const raw = localStorage.getItem(WAITLIST_STORAGE_KEY);
+    const raw = localStorage.getItem(WAITLIST_STORAGE_KEY) || localStorage.getItem('double11_intl_waitlist_v1');
     if (!raw) {
       localStorage.setItem(WAITLIST_STORAGE_KEY, JSON.stringify(DEFAULT_WAITLIST));
       return DEFAULT_WAITLIST;
@@ -453,7 +453,7 @@ export function calculateDomesticFreightRate(params: QuoteRequest): DomesticRate
 
   return [
     {
-      serviceName: 'Double 11 Nepal Express',
+      serviceName: 'Double 7 Nepal Express',
       serviceCode: 'EXP',
       transitDays: isValley ? 'Same-Day (within 6 hrs)' : 'Next-Day (24 hrs Guaranteed)',
       estimatedCostNpr: Math.round(baseExpress),

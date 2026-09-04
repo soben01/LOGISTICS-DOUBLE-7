@@ -81,8 +81,8 @@ export default function EmailSummaryModal({
             trackingId: associatedTrackingId,
             type: '24h_summary',
             subject: associatedTrackingId
-              ? `[Double 11] Waybill & Dispatch Notice: ${associatedTrackingId}`
-              : `[Double 11] 24-Hour Logistics & COD Operations Digest Activated (${email.trim()})`,
+              ? `[Double 7] Waybill & Dispatch Notice: ${associatedTrackingId}`
+              : `[Double 7] 24-Hour Logistics & COD Operations Digest Activated (${email.trim()})`,
           }),
         });
       } catch {
@@ -118,8 +118,8 @@ export default function EmailSummaryModal({
           trackingId: associatedTrackingId,
           type: 'sample_summary',
           subject: associatedTrackingId
-            ? `[Double 11] Consignment Tracking Summary: ${associatedTrackingId}`
-            : `[Double 11] Sample 24-Hour Logistics & COD Digest (${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })})`,
+            ? `[Double 7] Consignment Tracking Summary: ${associatedTrackingId}`
+            : `[Double 7] Sample 24-Hour Logistics & COD Digest (${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })})`,
         }),
       });
       const data = await res.json() as any;
@@ -445,10 +445,10 @@ export default function EmailSummaryModal({
               {/* Fake Gmail Top metadata */}
               <div style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: '0.75rem', marginBottom: '1rem' }}>
                 <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#111827' }}>
-                  [Double 11] Daily 24-Hour Logistics &amp; COD Summary &bull; Morning Report
+                  [Double 7] Daily 24-Hour Logistics &amp; COD Summary &bull; Morning Report
                 </div>
                 <div style={{ fontSize: '0.78rem', color: '#6b7280', marginTop: '0.2rem' }}>
-                  From: <strong>Double 11 Dispatch Center</strong> &lt;dispatch@double11.com&gt;
+                  From: <strong>Double 7 Dispatch Center</strong> &lt;dispatch@double7.com&gt;
                 </div>
                 <div style={{ fontSize: '0.78rem', color: '#6b7280' }}>
                   To: <strong>{email || 'your-gmail@gmail.com'}</strong> &bull; Schedule: Every 24 Hours (08:00 NPT)
@@ -464,7 +464,7 @@ export default function EmailSummaryModal({
                 borderLeft: '4px solid #ea580c'
               }}>
                 <div style={{ fontWeight: 700, color: '#ea580c', fontSize: '0.95rem' }}>
-                  Good morning! Here is your 24-Hour Double 11 Network Digest:
+                  Good morning! Here is your 24-Hour Double 7 Network Digest:
                 </div>
                 <div style={{ color: '#4b5563', fontSize: '0.8rem', marginTop: '0.25rem' }}>
                   Reporting Period: Past 24 Hours across Kathmandu, Pokhara, Birgunj &amp; 77 Districts
@@ -518,7 +518,7 @@ export default function EmailSummaryModal({
               </div>
 
               <div style={{ fontSize: '0.75rem', color: '#6b7280', textAlign: 'center', borderTop: '1px solid #e5e7eb', paddingTop: '0.75rem' }}>
-                Double 11 Logistics Nepal &bull; 24/7 Automated Telemetry Hub &bull; Kathmandu, Nepal
+                Double 7 Logistics Nepal &bull; 24/7 Automated Telemetry Hub &bull; Kathmandu, Nepal
               </div>
             </div>
 

@@ -65,7 +65,7 @@ function TrackContent() {
           if (d1Record) {
             const adapted: Shipment = {
               id: d1Record.tracking_number,
-              service: d1Record.carrier ? `Carrier: ${d1Record.carrier}` : 'Double 11 Express (Cloudflare D1)',
+              service: d1Record.carrier ? `Carrier: ${d1Record.carrier}` : 'Double 7 Express (Cloudflare D1)',
               serviceCode: 'EXP',
               status: (d1Record.status === 'Delivered' ? 'Delivered' : 'In Transit') as any,
               origin: {
@@ -77,8 +77,8 @@ function TrackContent() {
                 hub: 'Local Destination Delivery Center',
               },
               sender: {
-                name: 'Double 11 Logistics Command',
-                company: 'Double 11 Dispatch Terminal',
+                name: 'Double 7 Logistics Command',
+                company: 'Double 7 Dispatch Terminal',
                 phone: '+977 1 4411000',
               },
               recipient: {
@@ -238,7 +238,7 @@ function TrackContent() {
               />
               <input
                 type="text"
-                placeholder="Enter Consignment or AWB # (e.g. CP002994035NP or D11-XXXXXXXX)"
+                placeholder="Enter Consignment or AWB # (e.g. CP002994035NP or D7-XXXXXXXX)"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="input-field"

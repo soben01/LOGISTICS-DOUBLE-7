@@ -1,7 +1,13 @@
-name = "logistics-double-11"
+name = "logistics-double-7"
 main = "src/worker.ts"
 compatibility_date = "2024-09-02"
 account_id = "913e732298e2383df6ec533afd380eea"
+
+[vars]
+EMAIL_PROVIDER = "sendgrid"
+SENDGRID_API_KEY = "REPLACE_WITH_KEY"
+EMAIL_FROM = "no-reply@double7logistics.com"
+DAILY_SUMMARY_EMAIL = "admin@example.com"
 
 [build]
 command = "npm run build"
@@ -27,6 +33,10 @@ id = "fbe236634e3b4516a768338e81028b55"
 # Enterprise Workers AI (Intelligent Routing & Customs Assistant)
 [ai]
 binding = "AI"
+
+send_email = [
+  { name = "SEND_EMAIL" }
+]
 
 
 

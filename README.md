@@ -1,4 +1,4 @@
-# DOUBLE 11 LOGISTICS
+# DOUBLE 7 LOGISTICS
 
 > **Next-Generation Intelligent Freight, Cross-Border E-Commerce & Global Supply Chain Network**
 
@@ -8,7 +8,7 @@ Founded by **Soben** ([@soben01](https://github.com/soben01)).
 
 ## Overview
 
-**DOUBLE 11 LOGISTICS** is an enterprise-grade, high-velocity freight and supply chain platform engineered to withstand extreme peak-surge volumes (such as the global 11.11 / Singles' Day shopping festival). Combining chartered Boeing 777F cargo aircraft, automated AGV robotic fulfillment hubs, and sub-second telemetry, the platform provides seamless door-to-door transparency across air, ocean, and ground freight.
+**DOUBLE 7 LOGISTICS** is an enterprise-grade, high-velocity freight and supply chain platform engineered to withstand extreme peak-surge volumes (such as the global 11.11 / Singles' Day shopping festival). Combining chartered Boeing 777F cargo aircraft, automated AGV robotic fulfillment hubs, and sub-second telemetry, the platform provides seamless door-to-door transparency across air, ocean, and ground freight.
 
 ---
 
@@ -40,7 +40,7 @@ Founded by **Soben** ([@soben01](https://github.com/soben01)).
    - Published international air express and ocean container rate matrix.
 
 6. **About Us & Founder Vision (`/about`)**:
-   - Origin story of Double 11 Logistics, engineering principles, and spotlight on Founder **Soben**.
+   - Origin story of Double 7 Logistics, engineering principles, and spotlight on Founder **Soben**.
 
 7. **Support & Customs Guide (`/support`)**:
    - Interactive 24/7 Dispatch Bot simulator.
@@ -75,4 +75,4 @@ npm run build
 
 ## License
 
-&copy; 2026 DOUBLE 11 LOGISTICS LTD. All rights reserved. Architected by Soben.
+&copy; 2026 DOUBLE 7 LOGISTICS LTD. All rights reserved. Architected by Soben.

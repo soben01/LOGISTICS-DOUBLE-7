@@ -500,7 +500,7 @@ export default function RatesPage() {
                 Automated Cash on Delivery (COD) Remittance
               </h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '1.75rem', lineHeight: '1.6' }}>
-                Double 11 collects Cash on Delivery across all 77 districts with customer OTP verification and automatically remits collected funds directly to your Nepal bank account the next business day.
+                Double 7 collects Cash on Delivery across all 77 districts with customer OTP verification and automatically remits collected funds directly to your Nepal bank account the next business day.
               </p>
 
               {/* Interactive COD Amount Input */}

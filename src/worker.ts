@@ -43,6 +43,8 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
+import { sendEmail } from './lib/email';
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -213,7 +215,7 @@ export default {
                 messages: [
                   {
                     role: 'system',
-                    content: 'You are Double 11 Logistics Command AI, an enterprise freight routing and supply chain optimization assistant for Nepal and cross-border trade. Respond concisely with realistic logistics guidance.'
+                    content: 'You are Double 7 Logistics Command AI, an enterprise freight routing and supply chain optimization assistant for Nepal and cross-border trade. Respond concisely with realistic logistics guidance.'
                   },
                   { role: 'user', content: prompt }
                 ],
@@ -252,6 +254,42 @@ export default {
       }
     }
 
+    // New POST endpoint: create shipment
+    if (url.pathname === '/api/shipments' && request.method === 'POST') {
+      try {
+        const body = await request.json();
+        const { tracking_number, reference_number, status } = body;
+        if (!tracking_number) {
+          return new Response(JSON.stringify({ success: false, error: 'tracking_number required' }), { status: 400, headers: CORS_HEADERS });
+        }
+        await env.DB.prepare('INSERT INTO shipments (tracking_number, reference_number, status, created_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)')
+          .bind(tracking_number, reference_number || '', status || 'pending')
+          .run();
+        return new Response(JSON.stringify({ success: true, message: 'Shipment created' }), { status: 201, headers: CORS_HEADERS });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        return new Response(JSON.stringify({ success: false, error: message }), { status: 500, headers: CORS_HEADERS });
+      }
+    }
+
+    // New POST endpoint: create sub‑user
+    if (url.pathname === '/api/subusers' && request.method === 'POST') {
+      try {
+        const body = await request.json();
+        const { parent_id, email, name, role, password_hash } = body;
+        if (!parent_id || !email || !role || !password_hash) {
+          return new Response(JSON.stringify({ success: false, error: 'Missing required fields' }), { status: 400, headers: CORS_HEADERS });
+        }
+        await env.USERS_DB.prepare('INSERT INTO sub_users (parent_id, email, name, role, password_hash, created_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)')
+          .bind(parent_id, email, name || '', role, password_hash)
+          .run();
+        return new Response(JSON.stringify({ success: true, message: 'Sub‑user created' }), { status: 201, headers: CORS_HEADERS });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        return new Response(JSON.stringify({ success: false, error: message }), { status: 500, headers: CORS_HEADERS });
+      }
+    }
+
     // API: Real Email Dispatch & 24h Summary Service
     if (url.pathname === '/api/send-summary' || url.pathname === '/api/send-email') {
       try {
@@ -287,8 +325,8 @@ export default {
         const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         const defaultSubject = trackingId
-          ? `[Double 11] Waybill & Dispatch Notice: ${trackingId}`
-          : `[Double 11] 24-Hour Logistics & COD Summary Report • ${dateStr}`;
+          ? `[Double 7] Waybill & Dispatch Notice: ${trackingId}`
+          : `[Double 7] 24-Hour Logistics & COD Summary Report • ${dateStr}`;
         const finalSubject = subject || defaultSubject;
 
         // Fetch live counts from D1
@@ -320,7 +358,7 @@ export default {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td>
-                    <div style="font-size:20px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">DOUBLE 11 LOGISTICS</div>
+                    <div style="font-size:20px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">DOUBLE 7 LOGISTICS</div>
                     <div style="font-size:11px;color:rgba(255,255,255,0.9);letter-spacing:1px;text-transform:uppercase;margin-top:2px;">National Express & Regional Fleet Command</div>
                   </td>
                   <td align="right">
@@ -394,7 +432,7 @@ export default {
               </table>
 
               <div style="font-size:12px;color:#64748b;line-height:1.5;border-top:1px solid rgba(255,255,255,0.08);padding-top:16px;">
-                <strong>Nepal Highway Corridor Alert:</strong> Prithvi Highway & Tribhuvan bypass corridors are fully active with GPS telemetry synced. For live claims or parcel rerouting, contact Double 11 dispatch desk at <a href="mailto:dispatch@sobinupreti.com.np" style="color:#ff8533;">dispatch@sobinupreti.com.np</a>.
+                <strong>Nepal Highway Corridor Alert:</strong> Prithvi Highway & Tribhuvan bypass corridors are fully active with GPS telemetry synced. For live claims or parcel rerouting, contact Double 7 dispatch desk at <a href="mailto:dispatch@sobinupreti.com.np" style="color:#ff8533;">dispatch@sobinupreti.com.np</a>.
               </div>
             </td>
           </tr>
@@ -402,7 +440,7 @@ export default {
           <!-- Footer -->
           <tr>
             <td style="background-color:#060911;padding:16px 30px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;font-size:11px;color:#64748b;">
-              &copy; ${new Date().getFullYear()} Double 11 Logistics Command Headquarters &bull; Kathmandu, Nepal &bull; <a href="https://sobinupreti.com.np" style="color:#94a3b8;text-decoration:none;">sobinupreti.com.np</a>
+              &copy; ${new Date().getFullYear()} Double 7 Logistics Command Headquarters &bull; Kathmandu, Nepal &bull; <a href="https://sobinupreti.com.np" style="color:#94a3b8;text-decoration:none;">sobinupreti.com.np</a>
             </td>
           </tr>
         </table>
@@ -423,7 +461,7 @@ export default {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               personalizations: [{ to: [{ email: cleanEmail, name: role }] }],
-              from: { email: 'dispatch@sobinupreti.com.np', name: 'Double 11 Logistics Command' },
+              from: { email: 'dispatch@sobinupreti.com.np', name: 'Double 7 Logistics Command' },
               subject: finalSubject,
               content: [{ type: 'text/html', value: html }],
             }),

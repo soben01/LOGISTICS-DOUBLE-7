@@ -6,21 +6,22 @@ export interface User {
   phone: string;
   role: 'merchant' | 'admin';
   subRole?: string;
+  permissions?: string[];
   status: 'active' | 'suspended';
   codBalanceNpr: number;
   totalShipments?: number;
   createdAt: string;
 }
 
-const USERS_STORAGE_KEY = 'double11_users_v3';
-const CURRENT_USER_KEY = 'double11_current_user_v3';
+const USERS_STORAGE_KEY = 'double7_users_v1';
+const CURRENT_USER_KEY = 'double7_current_user_v1';
 
 const DEFAULT_USERS: User[] = [
   {
     id: 'usr-admin-1',
     name: 'Soben',
-    email: 'soben@double11.com',
-    company: 'Double 11 Logistics Command HQ',
+    email: 'soben@double7.com',
+    company: 'Double 7 Logistics Command HQ',
     phone: '+977 1 4411000',
     role: 'admin',
     subRole: 'Command HQ / Super Admin',
@@ -37,7 +38,7 @@ export function getUsers(): User[] {
     // Purge legacy storage versions
     localStorage.removeItem('double11_users_v2');
     localStorage.removeItem('double11_users');
-    const raw = localStorage.getItem(USERS_STORAGE_KEY);
+    const raw = localStorage.getItem(USERS_STORAGE_KEY) || localStorage.getItem('double11_users_v3');
     if (!raw) {
       localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(DEFAULT_USERS));
       return DEFAULT_USERS;
@@ -53,7 +54,7 @@ export function getCurrentUser(): User | null {
   try {
     localStorage.removeItem('double11_current_user_v2');
     localStorage.removeItem('double11_current_user');
-    const raw = localStorage.getItem(CURRENT_USER_KEY);
+    const raw = localStorage.getItem(CURRENT_USER_KEY) || localStorage.getItem('double11_current_user_v3');
     if (!raw) return null;
     return JSON.parse(raw);
   } catch {
@@ -68,7 +69,12 @@ export function loginUser(email: string, password?: string, subRole?: string): {
 
   const users = getUsers();
   const normalizedEmail = email.trim().toLowerCase();
-  const user = users.find(u => u.email.toLowerCase() === normalizedEmail);
+  const user = users.find(u => {
+    const uEmail = u.email.toLowerCase();
+    return uEmail === normalizedEmail ||
+      (normalizedEmail === 'soben@double11.com' && uEmail === 'soben@double7.com') ||
+      (normalizedEmail === 'soben@double7.com' && uEmail === 'soben@double11.com');
+  });
 
   if (!user) {
     return {
@@ -80,7 +86,7 @@ export function loginUser(email: string, password?: string, subRole?: string): {
   if (user.status === 'suspended') {
     return {
       success: false,
-      error: 'This merchant account has been suspended by the Admin. Please contact Double 11 support.',
+      error: 'This merchant account has been suspended by the Admin. Please contact Double 7 support.',
     };
   }
 
@@ -285,6 +291,7 @@ export function resolveMatchedRedirect(user: User, redirectParam?: string | null
 export interface SubUser {
   id: string;
   parentId?: string;
+  parentName?: string;
   name: string;
   email: string;
   password?: string;
@@ -297,14 +304,14 @@ export interface SubUser {
   lastLoginAt?: string;
 }
 
-const SUB_USERS_STORAGE_KEY = 'double11_sub_users_v2';
+const SUB_USERS_STORAGE_KEY = 'double7_sub_users_v1';
 
 const DEFAULT_SUB_USERS: SubUser[] = [
   {
     id: 'sub-usr-1',
     parentId: 'usr-admin-1',
     name: 'Pradeep KC',
-    email: 'pradeep.ops@double11.com',
+    email: 'pradeep.ops@double7.com',
     password: 'password123',
     role: 'admin',
     subRole: 'Operations & Hub Controller',
@@ -318,7 +325,7 @@ const DEFAULT_SUB_USERS: SubUser[] = [
     id: 'sub-usr-2',
     parentId: 'usr-admin-1',
     name: 'Bikram Rayamajhi',
-    email: 'bikram.audit@double11.com',
+    email: 'bikram.audit@double7.com',
     password: 'password123',
     role: 'admin',
     subRole: 'Compliance & Security Auditor',
@@ -358,15 +365,21 @@ const DEFAULT_SUB_USERS: SubUser[] = [
   },
 ];
 
-export function getSubUsers(filterRole?: 'merchant' | 'admin'): SubUser[] {
+export function getSubUsers(filterRole?: 'merchant' | 'admin', parentId?: string): SubUser[] {
   if (typeof window === 'undefined') {
-    return filterRole ? DEFAULT_SUB_USERS.filter(u => u.role === filterRole) : DEFAULT_SUB_USERS;
+    let list = DEFAULT_SUB_USERS;
+    if (parentId) list = list.filter(u => u.parentId === parentId);
+    else if (filterRole) list = list.filter(u => u.role === filterRole);
+    return list;
   }
   try {
-    const raw = localStorage.getItem(SUB_USERS_STORAGE_KEY);
+    const raw = localStorage.getItem(SUB_USERS_STORAGE_KEY) || localStorage.getItem('double11_sub_users_v2');
     let list: SubUser[] = raw ? JSON.parse(raw) : DEFAULT_SUB_USERS;
     if (!raw) {
       localStorage.setItem(SUB_USERS_STORAGE_KEY, JSON.stringify(DEFAULT_SUB_USERS));
+    }
+    if (parentId) {
+      return list.filter(u => u.parentId === parentId);
     }
     if (filterRole) {
       return list.filter(u => u.role === filterRole);
@@ -384,6 +397,7 @@ export function addSubUser(data: {
   role: 'merchant' | 'admin';
   subRole: string;
   parentId?: string;
+  parentName?: string;
   phone?: string;
   permissions?: string[];
 }): { success: boolean; subUser?: SubUser; error?: string } {
@@ -404,6 +418,7 @@ export function addSubUser(data: {
   const newSubUser: SubUser = {
     id: `sub-usr-${Date.now()}`,
     parentId: data.parentId || 'active_parent',
+    parentName: data.parentName,
     name: data.name.trim(),
     email: cleanEmail,
     password: data.password || 'password123',
@@ -425,6 +440,32 @@ export function addSubUser(data: {
   return { success: true, subUser: newSubUser };
 }
 
+export function updateSubUser(id: string, updates: Partial<SubUser>): boolean {
+  const current = getSubUsers();
+  const index = current.findIndex(u => u.id === id);
+  if (index === -1) return false;
+
+  current[index] = { ...current[index], ...updates };
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(SUB_USERS_STORAGE_KEY, JSON.stringify(current));
+    window.dispatchEvent(new Event('sub-users-change'));
+  }
+  return true;
+}
+
+export function toggleSubUserStatus(id: string): boolean {
+  const current = getSubUsers();
+  const index = current.findIndex(u => u.id === id);
+  if (index === -1) return false;
+
+  current[index].status = current[index].status === 'active' ? 'suspended' : 'active';
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(SUB_USERS_STORAGE_KEY, JSON.stringify(current));
+    window.dispatchEvent(new Event('sub-users-change'));
+  }
+  return true;
+}
+
 export function deleteSubUser(id: string): boolean {
   const current = getSubUsers();
   const filtered = current.filter(u => u.id !== id);
@@ -441,10 +482,11 @@ export function switchActiveSubUser(subUser: SubUser): User {
     id: currentUser ? currentUser.id : subUser.id,
     name: subUser.name,
     email: subUser.email,
-    company: currentUser ? currentUser.company : (subUser.role === 'admin' ? 'Double 11 Logistics HQ' : 'Nepal Merchant Pvt Ltd'),
+    company: currentUser ? currentUser.company : (subUser.role === 'admin' ? 'Double 7 Logistics HQ' : 'Nepal Merchant Pvt Ltd'),
     phone: subUser.phone || '+977 98000 00000',
     role: subUser.role,
     subRole: subUser.subRole,
+    permissions: subUser.permissions,
     status: 'active',
     codBalanceNpr: currentUser ? currentUser.codBalanceNpr : 0,
     totalShipments: currentUser ? currentUser.totalShipments : 0,

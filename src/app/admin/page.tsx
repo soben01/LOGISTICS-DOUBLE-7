@@ -265,7 +265,7 @@ export default function AdminControlPanel() {
             </h2>
 
             <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', lineHeight: '1.7', fontSize: '0.95rem' }}>
-              The Double 11 Central Admin Control Panel allows complete authority over national logistics corridors, dispatching drivers, merchant account approval, and shipment override. You must be signed in as an authorized Administrator.
+              The Double 7 Central Admin Control Panel allows complete authority over national logistics corridors, dispatching drivers, merchant account approval, and shipment override. You must be signed in as an authorized Administrator.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: '320px', margin: '0 auto' }}>
@@ -294,7 +294,7 @@ export default function AdminControlPanel() {
                   <ShieldCheck size={14} />
                   <span>CENTRAL ADMINISTRATION COMMAND &bull; FOUNDER ACCESS</span>
                 </div>
-                <h1 style={{ fontSize: '2.4rem' }}>Double 11 Control Tower</h1>
+                <h1 style={{ fontSize: '2.4rem' }}>Double 7 Control Tower</h1>
                 <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
                   Authenticated Admin: <strong style={{ color: '#ffffff' }}>{currentUser.name}</strong> ({currentUser.company}) &bull; Master Operational Privileges
                 </p>
@@ -885,7 +885,7 @@ export default function AdminControlPanel() {
                     value={assignedVehicle}
                     onChange={(e) => setAssignedVehicle(e.target.value)}
                     className="input-field"
-                    placeholder="e.g. D11 Electric Van #BA-2-PA-8892"
+                    placeholder="e.g. D7 Electric Van #BA-2-PA-8892"
                     required
                   />
                 </div>

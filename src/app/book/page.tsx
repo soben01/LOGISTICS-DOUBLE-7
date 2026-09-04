@@ -58,7 +58,7 @@ function BookContent() {
   // 1. Shipper (Origin / Sender - Hidden by Default)
   const [originCity, setOriginCity] = useState(initialOrigin || 'Kathmandu');
   const [senderName, setSenderName] = useState('Soben');
-  const [senderCompany, setSenderCompany] = useState('Double 11 Logistics Command HQ');
+  const [senderCompany, setSenderCompany] = useState('Double 7 Logistics Command HQ');
   const [senderPhone, setSenderPhone] = useState('+977 1 4411000');
   const [showShipperDetails, setShowShipperDetails] = useState(false);
 
@@ -188,7 +188,7 @@ function BookContent() {
   const getOneFareBreakdown = () => {
     let baseRate = 220;
     let ratePerKg = 60;
-    let serviceLabel = 'Double 11 Nepal Express';
+    let serviceLabel = 'Double 7 Nepal Express';
     let transitSla = '24h Intercity Delivery SLA';
 
     if (selectedService === 'CARGO') {
@@ -288,7 +288,7 @@ function BookContent() {
           role: currentUser.role,
           trackingId: shipment.id,
           type: 'booking_confirmation',
-          subject: `[Double 11] Waybill Issued: ${shipment.id} (${shipment.origin.city} → ${shipment.destination.city})`,
+          subject: `[Double 7] Waybill Issued: ${shipment.id} (${shipment.origin.city} → ${shipment.destination.city})`,
         }),
       }).catch(() => {});
     }
@@ -345,7 +345,7 @@ function BookContent() {
               Merchant Authentication Required
             </h2>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.75rem', lineHeight: '1.6' }}>
-              To ensure parcel security and next-day automated COD bank remittances, <strong>only registered Double 11 merchants can book and dispatch consignments</strong>.
+              To ensure parcel security and next-day automated COD bank remittances, <strong>only registered Double 7 merchants can book and dispatch consignments</strong>.
             </p>
 
             <div className="tab-list" style={{ marginBottom: '1.5rem' }}>
@@ -557,7 +557,7 @@ function BookContent() {
                           role: currentUser.role,
                           trackingId: createdShipment.id,
                           type: 'booking_confirmation',
-                          subject: `[Double 11] Consignment Summary: ${createdShipment.id}`,
+                          subject: `[Double 7] Consignment Summary: ${createdShipment.id}`,
                         }),
                       });
                       setEmailSent(true);
@@ -1070,7 +1070,7 @@ function BookContent() {
 
                       {/* 3 Service Tiers stacked cleanly */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', marginBottom: '1rem' }}>
-                        {/* Tier 1: Double 11 Nepal Express */}
+                        {/* Tier 1: Double 7 Nepal Express */}
                         <div
                           onClick={() => setSelectedService('EXP')}
                           className={`service-card-select ${selectedService === 'EXP' ? 'selected' : ''}`}
@@ -1338,7 +1338,7 @@ function BookContent() {
                       ||||| | ||||| ||| ||||||| | ||||
                     </div>
                     <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.35rem' }}>
-                      PRE-AUTHORIZED &bull; D11-WAYBILL-2026
+                      PRE-AUTHORIZED &bull; D7-WAYBILL-2026
                     </div>
                   </div>
 
@@ -1364,7 +1364,7 @@ function BookContent() {
                 <div className="card" style={{ padding: '1rem', background: 'rgba(255, 255, 255, 0.02)', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, color: '#ffffff', marginBottom: '0.25rem' }}>
                     <ShieldCheck size={16} color="var(--brand-emerald)" />
-                    <span>Double 11 Carrier Guarantee</span>
+                    <span>Double 7 Carrier Guarantee</span>
                   </div>
                   <div>100% money-back guarantee if 24h delivery SLA is breached. Automated barcode generation &amp; real-time GPS tracking included in one fare.</div>
                 </div>
@@ -1379,7 +1379,7 @@ function BookContent() {
 
 export default function BookPage() {
   return (
-    <Suspense fallback={<div style={{ padding: '6rem 0', textAlign: 'center' }}>Loading Double 11 Dispatch Terminal...</div>}>
+    <Suspense fallback={<div style={{ padding: '6rem 0', textAlign: 'center' }}>Loading Double 7 Dispatch Terminal...</div>}>
       <BookContent />
     </Suspense>
   );

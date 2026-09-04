@@ -368,7 +368,7 @@ export default function ProfilePortalDrawer({
                 {currentUser ? 'Enterprise Account Control' : 'Portal Sub-Login'}
               </div>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                {currentUser ? `${currentUser.name} • ${currentUser.role === 'admin' ? 'Super Admin HQ' : 'Merchant Consignor'}` : 'Double 11 Logistics Command'}
+                {currentUser ? `${currentUser.name} • ${currentUser.role === 'admin' ? 'Super Admin HQ' : 'Merchant Consignor'}` : 'Double 7 Logistics Command'}
               </div>
             </div>
           </div>
@@ -1130,7 +1130,7 @@ export default function ProfilePortalDrawer({
                     <button
                       type="button"
                       onClick={() => {
-                        loginUser('soben@double11.com', 'admin123', 'Command HQ / Super Admin');
+                        loginUser('soben@double7.com', 'admin123', 'Command HQ / Super Admin');
                         setRoleSwitchSuccess('Switched to Super Admin (Soben)');
                         setTimeout(() => { onClose(); router.push('/dashboard'); }, 600);
                       }}
@@ -1153,7 +1153,7 @@ export default function ProfilePortalDrawer({
                             Super Admin (Soben)
                           </div>
                           <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                            soben@double11.com &bull; Command HQ
+                            soben@double7.com &bull; Command HQ
                           </div>
                         </div>
                       </div>
@@ -1447,7 +1447,7 @@ export default function ProfilePortalDrawer({
                     <Mail size={15} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
                     <input
                       type="email"
-                      placeholder={guestLoginTab === 'admin' ? 'soben@double11.com' : 'merchant@company.com'}
+                      placeholder={guestLoginTab === 'admin' ? 'soben@double7.com' : 'merchant@company.com'}
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
                       className="input-field"
@@ -1500,7 +1500,7 @@ export default function ProfilePortalDrawer({
                     onClick={() => {
                       setGuestLoginTab('admin');
                       setGuestSubRole('Command HQ / Super Admin');
-                      setLoginEmail('soben@double11.com');
+                      setLoginEmail('soben@double7.com');
                       setLoginPassword('admin123');
                     }}
                     className="btn btn-secondary btn-sm"

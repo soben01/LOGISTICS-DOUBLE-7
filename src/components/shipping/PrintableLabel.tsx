@@ -90,7 +90,7 @@ export default function PrintableLabel({ shipment, onClose }: PrintableLabelProp
         }}>
           <div>
             <div style={{ fontSize: '1.6rem', fontWeight: 900, letterSpacing: '-0.02em', color: '#000000' }}>
-              DOUBLE 11 LOGISTICS &bull; NEPAL
+              DOUBLE 7 LOGISTICS &bull; NEPAL
             </div>
             <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#333333', textTransform: 'uppercase' }}>
               DOMESTIC COURIER AIRWAY BILL &bull; 77 DISTRICTS NETWORK
@@ -158,7 +158,7 @@ export default function PrintableLabel({ shipment, onClose }: PrintableLabelProp
           </div>
 
           <div style={{ fontSize: '0.72rem', color: '#444444', fontWeight: 600, marginTop: '2px' }}>
-            WAYBILL: {shipment.telemetry.waybillNumber || shipment.telemetry.airwayBill || shipment.id} &bull; DISPATCH NODE: NP-11-HUB
+            WAYBILL: {shipment.telemetry.waybillNumber || shipment.telemetry.airwayBill || shipment.id} &bull; DISPATCH NODE: NP-7-HUB
           </div>
         </div>
 
@@ -275,7 +275,7 @@ export default function PrintableLabel({ shipment, onClose }: PrintableLabelProp
         }}>
           <div>
             <div style={{ fontWeight: 800, color: '#000' }}>
-              &check; DOUBLE 11 LOGISTICS OFFICIAL DOMESTIC DISPATCH
+              &check; DOUBLE 7 LOGISTICS OFFICIAL DOMESTIC DISPATCH
             </div>
             <div style={{ color: '#555', fontSize: '0.7rem' }}>
               Electronic Waybill pre-authorized. Direct signature required upon delivery.

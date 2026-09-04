@@ -237,13 +237,13 @@ export default function Navbar() {
               fontFamily: 'var(--font-mono)',
               color: '#ffffff',
               letterSpacing: '-1px'
-            }}>11</span>
+            }}>7</span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0, whiteSpace: 'nowrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', whiteSpace: 'nowrap' }}>
               <span style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff', whiteSpace: 'nowrap' }}>
-                DOUBLE <span style={{ color: 'var(--brand-orange)' }}>11</span>
+                DOUBLE <span style={{ color: 'var(--brand-orange)' }}>7</span>
               </span>
               <span style={{
                 fontSize: '0.65rem',
@@ -593,7 +593,7 @@ export default function Navbar() {
               onClick={() => setMobileMenuOpen(false)}
               style={{ padding: '0.6rem 0', color: 'var(--text-primary)', fontWeight: 600 }}
             >
-              About Double 11 &amp; Founder
+              About Double 7 &amp; Founder
             </Link>
           </div>
         </div>

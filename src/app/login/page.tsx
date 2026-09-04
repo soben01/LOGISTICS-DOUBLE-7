@@ -125,7 +125,7 @@ function LoginContent() {
         {/* Page Header */}
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <div className="badge badge-orange" style={{ marginBottom: '0.75rem' }}>
-            <Sparkles size={13} /> DOUBLE 11 AUTHENTICATION
+            <Sparkles size={13} /> DOUBLE 7 AUTHENTICATION
           </div>
           <h1 style={{ fontSize: '2.4rem' }}>Login</h1>
           <p style={{ maxWidth: '520px', margin: '0.5rem auto 0 auto', color: 'var(--text-secondary)' }}>

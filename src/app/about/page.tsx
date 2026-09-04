@@ -33,7 +33,7 @@ export default function AboutPage() {
           <div className="badge badge-orange" style={{ marginBottom: '0.75rem' }}>
             <Award size={13} /> Our Mission & Origins
           </div>
-          <h1>The Double 11 Logistics Story</h1>
+          <h1>The Double 7 Logistics Story</h1>
           <p style={{ maxWidth: '640px', margin: '0.5rem auto 0 auto', fontSize: '1.1rem' }}>
             Engineered to thrive under the world&apos;s most demanding supply chain conditions—where seconds matter and peak volumes require flawless execution.
           </p>
@@ -58,7 +58,7 @@ export default function AboutPage() {
               boxShadow: '0 12px 36px rgba(255, 102, 0, 0.4)',
               border: '2px solid rgba(255, 255, 255, 0.2)'
             }}>
-              11
+              7
             </div>
 
             <div>
@@ -76,7 +76,7 @@ export default function AboutPage() {
               </div>
 
               <p style={{ fontSize: '1.05rem', lineHeight: '1.7', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
-                &ldquo;We started <strong>DOUBLE 11</strong> to solve the toughest logistics challenge in Nepal: connecting all 7 provinces and 77 districts with guaranteed next-day linehauls, automated Cash on Delivery (COD), and sub-second digital tracking. We are operating 100% active across Nepal today, and preparing our direct international cross-border air cargo corridors for launch in Q4 2026.&rdquo;
+                &ldquo;We started <strong>DOUBLE 7</strong> to solve the toughest logistics challenge in Nepal: connecting all 7 provinces and 77 districts with guaranteed next-day linehauls, automated Cash on Delivery (COD), and sub-second digital tracking. We are operating 100% active across Nepal today, and preparing our direct international cross-border air cargo corridors for launch in Q4 2026.&rdquo;
               </p>
 
               <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', fontSize: '0.88rem', color: 'var(--text-primary)' }}>
@@ -88,7 +88,7 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Why "Double 11"? */}
+        {/* Why "Double 7"? */}
         <div className="grid grid-cols-2 gap-8" style={{ marginBottom: '4rem' }}>
           <div className="card" style={{ padding: '2.5rem' }}>
             <div style={{
@@ -104,12 +104,12 @@ export default function AboutPage() {
             }}>
               <Zap size={22} />
             </div>
-            <h3>Why the Name &ldquo;Double 11&rdquo;?</h3>
+            <h3>Why the Name &ldquo;Double 7&rdquo;?</h3>
             <p style={{ marginTop: '0.75rem', lineHeight: '1.7' }}>
-              In global commerce, <strong>Double 11 (November 11 / 11.11)</strong> represents the single largest shopping festival on earth—generating over 1.5 billion parcels within a 48-hour window.
+              In high-velocity commerce, <strong>Double 7</strong> represents seamless nationwide connectivity across all <strong>7 Provinces and 77 Districts of Nepal</strong>, synchronized with chartered Boeing 777F international air cargo routes.
             </p>
             <p style={{ marginTop: '0.75rem', lineHeight: '1.7' }}>
-              A network that can maintain 99.8% on-time performance during Double 11 can conquer any logistics challenge in the world. We took that standard as our namesake and built every system, sorting center, and air route to handle peak pressure every single day.
+              A network that can maintain 99.8% on-time performance across complex Himalayan terrain and global corridors can conquer any logistics challenge in the world. We took that standard as our namesake and built every system, sorting center, and air route to handle peak pressure every single day.
             </p>
           </div>
 
@@ -129,7 +129,7 @@ export default function AboutPage() {
             </div>
             <h3>Algorithmic Routing &amp; Robotics</h3>
             <p style={{ marginTop: '0.75rem', lineHeight: '1.7' }}>
-              Unlike legacy freight forwarding firms that rely on manual email threads and paper waybills, Double 11 is software-defined.
+              Unlike legacy freight forwarding firms that rely on manual email threads and paper waybills, Double 7 is software-defined.
             </p>
             <p style={{ marginTop: '0.75rem', lineHeight: '1.7' }}>
               From the moment an order is booked, automated flight slot reservation engines allocate cargo capacity across our chartered Boeing 777Fs and commercial partners, while Autonomous Mobile Robots (AMRs) route packages across our sorting hubs in under 18 minutes.

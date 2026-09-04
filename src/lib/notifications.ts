@@ -12,12 +12,12 @@ export interface EmailNotificationSubscription {
   status: 'active' | 'paused';
 }
 
-const STORAGE_KEY = 'double11_gmail_subscriptions_v1';
+const STORAGE_KEY = 'double7_gmail_subscriptions_v1';
 
 const DEFAULT_SUBSCRIPTIONS: EmailNotificationSubscription[] = [
   {
     id: 'sub-soben',
-    email: 'soben@double11.com',
+    email: 'soben@double7.com',
     frequency: '24h',
     role: 'admin',
     includeDispatches: true,
@@ -44,7 +44,7 @@ const DEFAULT_SUBSCRIPTIONS: EmailNotificationSubscription[] = [
 export function getEmailSubscriptions(): EmailNotificationSubscription[] {
   if (typeof window === 'undefined') return DEFAULT_SUBSCRIPTIONS;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('double11_gmail_subscriptions_v1');
     if (!raw) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_SUBSCRIPTIONS));
       return DEFAULT_SUBSCRIPTIONS;

@@ -152,7 +152,7 @@ export default function HomePage() {
               }}>
                 <img
                   src="/images/hero.jpg"
-                  alt="Double 11 Logistics Hub Terminal"
+                  alt="Double 7 Logistics Hub Terminal"
                   style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }}
                 />
 
@@ -246,7 +246,7 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-4 gap-6">
-            {/* Service 1: Double 11 Nepal Express */}
+            {/* Service 1: Double 7 Nepal Express */}
             <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{
                 width: '48px',
@@ -264,7 +264,7 @@ export default function HomePage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
                 <span className="badge badge-emerald" style={{ fontSize: '0.68rem' }}>100% ACTIVE</span>
               </div>
-              <h3>Double 11 Nepal Express</h3>
+              <h3>Double 7 Nepal Express</h3>
               <p style={{ margin: '0.75rem 0 1.25rem 0', fontSize: '0.92rem' }}>
                 Same-Day dispatch in Kathmandu Valley and 24-hour intercity linehauls to Pokhara, Birgunj, Biratnagar, Chitwan, and Butwal with real-time GPS tracking.
               </p>

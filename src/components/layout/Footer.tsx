@@ -47,10 +47,10 @@ export default function Footer() {
                 justifyContent: 'center',
                 boxShadow: '0 4px 12px rgba(255, 102, 0, 0.4)'
               }}>
-                <span style={{ fontSize: '1.1rem', fontWeight: 900, fontFamily: 'var(--font-mono)', color: '#fff' }}>11</span>
+                <span style={{ fontSize: '1.1rem', fontWeight: 900, fontFamily: 'var(--font-mono)', color: '#fff' }}>7</span>
               </div>
               <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#ffffff' }}>
-                DOUBLE <span style={{ color: 'var(--brand-orange)' }}>11</span> LOGISTICS
+                DOUBLE <span style={{ color: 'var(--brand-orange)' }}>7</span> LOGISTICS
               </span>
             </div>
 
@@ -91,7 +91,7 @@ export default function Footer() {
                 </div>
               </div>
               <a
-                href="https://github.com/soben01/LOGISTICS-DOUBLE-11"
+                href="https://github.com/soben01/DOUBLE-7"
                 target="_blank"
                 rel="noreferrer"
                 style={{ marginLeft: 'auto', color: 'var(--text-secondary)' }}
@@ -109,7 +109,7 @@ export default function Footer() {
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
               <Link href="/track" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Plane size={15} color="var(--brand-orange)" /> Double 11 Super Express
+                <Plane size={15} color="var(--brand-orange)" /> Double 7 Super Express
               </Link>
               <Link href="/rates" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Ship size={15} color="var(--brand-cyan)" /> Ocean Container FCL / LCL
@@ -163,15 +163,15 @@ export default function Footer() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                 <Phone size={15} color="var(--brand-orange)" />
-                <span>Global Priority Hotline: <strong>+1 (800) 555-D11</strong></span>
+                <span>Global Priority Hotline: <strong>+1 (800) 555-D7</strong></span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                 <Mail size={15} color="var(--brand-cyan)" />
-                <span>dispatch@double11logistics.com</span>
+                <span>dispatch@double7logistics.com</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                 <MapPin size={15} color="var(--brand-amber)" />
-                <span>Global HQ: Double 11 SkyTower, Gateway 11</span>
+                <span>Global HQ: Double 7 SkyTower, Gateway 7</span>
               </div>
               
               <Link href="/operations" className="btn btn-secondary btn-sm" style={{ marginTop: '0.5rem', width: 'fit-content' }}>
@@ -194,7 +194,7 @@ export default function Footer() {
           color: 'var(--text-muted)'
         }}>
           <div>
-            &copy; 2026 DOUBLE 11 LOGISTICS LTD. All rights reserved. Architected & built by <strong style={{ color: '#f8fafc' }}>Soben</strong>.
+            &copy; 2026 DOUBLE 7 LOGISTICS LTD. All rights reserved. Architected & built by <strong style={{ color: '#f8fafc' }}>Soben</strong>.
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
