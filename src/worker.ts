@@ -60,13 +60,7 @@ const CORS_HEADERS = {
 };
 
 async function getCloudflareAccessToken(env: Env): Promise<string | null> {
-  const directToken = (env as any).CF_API_TOKEN;
-  if (directToken) return directToken;
-
-  const refreshToken = (env as any).CF_REFRESH_TOKEN;
-  if (!refreshToken) return null;
-
-  // Check KV cache
+  // 1. Check KV cache first
   if (env.LOGISTICS_CACHE) {
     try {
       const cached = await env.LOGISTICS_CACHE.get('cf_access_token');
@@ -76,42 +70,52 @@ async function getCloudflareAccessToken(env: Env): Promise<string | null> {
     }
   }
 
-  try {
-    const params = new URLSearchParams({
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken,
-      client_id: '54d11594-84e4-41aa-b438-e81b8fa78ee7',
-    });
+  // 2. Refresh dynamically via CF_REFRESH_TOKEN
+  const refreshToken = (env as any).CF_REFRESH_TOKEN;
+  if (refreshToken) {
+    try {
+      const params = new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        client_id: '54d11594-84e4-41aa-b438-e81b8fa78ee7',
+      });
 
-    const res = await fetch('https://dash.cloudflare.com/oauth2/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': 'wrangler/4.86.0',
-      },
-      body: params.toString(),
-    });
+      const res = await fetch('https://dash.cloudflare.com/oauth2/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'wrangler/4.86.0',
+        },
+        body: params.toString(),
+      });
 
-    if (!res.ok) return null;
-    const data = (await res.json()) as any;
-    const token = data.access_token;
-    if (token && env.LOGISTICS_CACHE) {
-      try {
-        await env.LOGISTICS_CACHE.put('cf_access_token', token, { expirationTtl: 3000 });
-      } catch {
-        // Non-blocking
+      if (res.ok) {
+        const data = (await res.json()) as any;
+        const token = data.access_token;
+        if (token) {
+          if (env.LOGISTICS_CACHE) {
+            try {
+              await env.LOGISTICS_CACHE.put('cf_access_token', token, { expirationTtl: 3000 });
+            } catch {
+              // Non-blocking
+            }
+          }
+          return token;
+        }
       }
+    } catch {
+      // Non-blocking
     }
-    return token;
-  } catch {
-    return null;
   }
+
+  // 3. Fallback to direct token
+  return (env as any).CF_API_TOKEN || null;
 }
 
 async function registerEmailWithCloudflare(
   email: string,
   env: Env
-): Promise<{ success: boolean; error?: string; alreadyExists?: boolean }> {
+): Promise<{ success: boolean; error?: string; alreadyExists?: boolean; message?: string }> {
   try {
     const token = await getCloudflareAccessToken(env);
     if (!token) return { success: false, error: 'Could not acquire Cloudflare management token' };
@@ -129,16 +133,19 @@ async function registerEmailWithCloudflare(
 
     const data = (await res.json()) as any;
     if (data.success) {
-      return { success: true };
+      return { success: true, message: 'Cloudflare sent verification email' };
     }
 
     const errorMsg = data?.errors?.[0]?.message || 'Failed to register destination address';
+    const errorCode = data?.errors?.[0]?.code;
     if (
       errorMsg.toLowerCase().includes('already') ||
       errorMsg.toLowerCase().includes('duplicate') ||
-      data?.errors?.[0]?.code === 1000
+      errorMsg.toLowerCase().includes('sent too recently') ||
+      errorCode === 1000 ||
+      errorCode === 2025
     ) {
-      return { success: true, alreadyExists: true };
+      return { success: true, alreadyExists: true, message: errorMsg };
     }
 
     return { success: false, error: errorMsg };
@@ -950,6 +957,64 @@ export default {
           env
         );
 
+        // If email was not dispatched immediately (e.g. pending Cloudflare address verification), queue in KV and alert Admin
+        if (!emailDispatchResult.success) {
+          if (env.LOGISTICS_CACHE) {
+            try {
+              await env.LOGISTICS_CACHE.put(
+                `pending_welcome:${email}`,
+                JSON.stringify({
+                  email,
+                  name: name || email.split('@')[0],
+                  company,
+                  password,
+                  merchantId,
+                  queuedAt: new Date().toISOString(),
+                }),
+                { expirationTtl: 86400 * 30 }
+              );
+            } catch {
+              // Non-blocking
+            }
+          }
+
+          // Send credentials backup copy to Super Admin (upreti.soben@gmail.com) so credentials are never delayed
+          try {
+            const adminNoticeHtml = `
+              <div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#0f172a;color:#f8fafc;padding:24px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+                  <span style="background:#ff6600;color:#fff;padding:4px 10px;border-radius:4px;font-size:11px;font-weight:700;">PROVISION RECORD</span>
+                  <span style="color:#94a3b8;font-size:12px;">Double 7 Logistics Headquarters</span>
+                </div>
+                <h2 style="color:#ff6600;margin-top:0;font-size:18px;">📋 Merchant Provisioned: ${name || email}</h2>
+                <p style="color:#cbd5e1;font-size:13px;line-height:1.5;">A new merchant account has been registered in Double 7 Logistics. Cloudflare Email Routing has dispatched a verification link to <strong>${email}</strong>.</p>
+                <div style="background:#1e293b;padding:16px;border-radius:8px;margin:16px 0;border-left:4px solid #ff6600;">
+                  <p style="margin:6px 0;font-size:13px;"><strong>Merchant ID:</strong> <code style="color:#f8fafc;">${merchantId}</code></p>
+                  <p style="margin:6px 0;font-size:13px;"><strong>Merchant Name:</strong> ${name || '(Not provided)'}</p>
+                  <p style="margin:6px 0;font-size:13px;"><strong>Company:</strong> ${company}</p>
+                  <p style="margin:6px 0;font-size:13px;"><strong>Login Email:</strong> <code style="color:#38bdf8;font-weight:700;">${email}</code></p>
+                  <p style="margin:6px 0;font-size:13px;"><strong>Login Password:</strong> <code style="color:#22c55e;font-weight:700;">${password || 'password123'}</code></p>
+                  <p style="margin:6px 0;font-size:13px;"><strong>Portal Link:</strong> <a href="https://sobinupreti.com.np/login" style="color:#38bdf8;">https://sobinupreti.com.np/login</a></p>
+                  <p style="margin:6px 0;font-size:13px;"><strong>Cloudflare Status:</strong> ⏳ Pending Verification Link Click in Gmail</p>
+                </div>
+                <p style="color:#94a3b8;font-size:12px;line-height:1.4;">Once the recipient clicks the verification link in their Gmail inbox, the Welcome Email and daily 6:00 PM operational summaries will be delivered automatically from <code>dispatch@sobinupreti.com.np</code>.</p>
+              </div>
+            `;
+            await dispatchEmailDirect(
+              {
+                to: (env as any).DAILY_SUMMARY_EMAIL || 'upreti.soben@gmail.com',
+                subject: `[Admin Alert] Merchant Provisioned: ${name || email} (${company}) • Credentials & Verification Record`,
+                html: adminNoticeHtml,
+                role: 'admin',
+                type: 'admin_credentials_backup',
+              },
+              env
+            );
+          } catch {
+            // Non-blocking
+          }
+        }
+
         // Cache registration in KV
         if (env.LOGISTICS_CACHE) {
           try {
@@ -984,8 +1049,122 @@ export default {
             message: emailDispatchResult.success
               ? `Merchant account registered! Login details and dashboard instructions dispatched to ${email}. (Daily reset: 6:00 PM).`
               : cfResult.success
-              ? `Merchant registered! Cloudflare verification link sent to ${email}. Click it to authorize receiving login credentials and 6:00 PM reports.`
+              ? `Merchant registered! Cloudflare verification link sent to ${email}. Once clicked in Gmail, automated 6:00 PM reports and official domain dispatch will activate.`
               : `Merchant account registered!`,
+          }),
+          { headers: CORS_HEADERS }
+        );
+      } catch (err: any) {
+        return new Response(JSON.stringify({ success: false, error: err?.message || String(err) }), {
+          status: 500,
+          headers: CORS_HEADERS,
+        });
+      }
+    }
+
+    // API: Resend Cloudflare Verification Email for Destination Address
+    if (url.pathname === '/api/resend-verification' && request.method === 'POST') {
+      try {
+        const body = (await request.json()) as any;
+        const email = (body.email || '').trim().toLowerCase();
+        if (!email || !email.includes('@')) {
+          return new Response(JSON.stringify({ success: false, error: 'Valid email address required' }), {
+            status: 400,
+            headers: CORS_HEADERS,
+          });
+        }
+        const reg = await registerEmailWithCloudflare(email, env);
+        return new Response(
+          JSON.stringify({
+            success: reg.success,
+            email,
+            alreadyExists: reg.alreadyExists || false,
+            message: reg.success
+              ? `Cloudflare verification email dispatched to ${email}. Please check your Gmail inbox (and Spam folder).`
+              : reg.error || 'Failed to dispatch verification email',
+          }),
+          { headers: CORS_HEADERS }
+        );
+      } catch (err: any) {
+        return new Response(JSON.stringify({ success: false, error: err?.message || String(err) }), {
+          status: 500,
+          headers: CORS_HEADERS,
+        });
+      }
+    }
+
+    // API: Check Cloudflare Verification Status & Auto-Dispatch Queued Welcome Email
+    if (url.pathname === '/api/check-and-dispatch' || url.pathname === '/api/check-verification') {
+      try {
+        let email = '';
+        if (request.method === 'POST') {
+          const body = (await request.json()) as any;
+          email = (body.email || '').trim().toLowerCase();
+        } else {
+          email = (url.searchParams.get('email') || '').trim().toLowerCase();
+        }
+
+        if (!email || !email.includes('@')) {
+          return new Response(JSON.stringify({ success: false, error: 'Valid email required' }), {
+            status: 400,
+            headers: CORS_HEADERS,
+          });
+        }
+
+        const addresses = await listCloudflareEmailAddresses(env);
+        const matched = addresses.find(a => a.email.toLowerCase() === email);
+        const isVerified = matched?.status === 'verified' || !!matched?.verified;
+
+        let dispatchedQueued = false;
+        let dispatchResult: any = null;
+
+        if (isVerified && env.LOGISTICS_CACHE) {
+          try {
+            const queuedRaw = await env.LOGISTICS_CACHE.get(`pending_welcome:${email}`);
+            if (queuedRaw) {
+              const queued = JSON.parse(queuedRaw);
+              const welcomeHtml = buildMerchantWelcomeHtml({
+                email,
+                name: queued.name || email.split('@')[0],
+                company: queued.company || 'Verified Nepal Merchant',
+                password: queued.password || '',
+                merchantId: queued.merchantId || '',
+              });
+              dispatchResult = await dispatchEmailDirect(
+                {
+                  to: email,
+                  subject: `🎉 Welcome to Double 7 Logistics • Merchant Account Activated & Login Credentials`,
+                  html: welcomeHtml,
+                  role: 'merchant',
+                  type: 'merchant_welcome',
+                },
+                env
+              );
+              dispatchedQueued = dispatchResult.success;
+              if (dispatchResult.success) {
+                await env.LOGISTICS_CACHE.delete(`pending_welcome:${email}`);
+              }
+            }
+          } catch {
+            // Non-blocking
+          }
+        }
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            email,
+            found: !!matched,
+            status: matched?.status || 'not_registered',
+            verified: isVerified,
+            verifiedAt: matched?.verified || null,
+            dispatchedQueued,
+            dispatchResult,
+            message: isVerified
+              ? dispatchedQueued
+                ? `✅ Address verified! Queued welcome email & credentials delivered to ${email}.`
+                : `✅ Address verified and ready for domain sending!`
+              : `⏳ Address is registered with Cloudflare, but verification link in Gmail has not been clicked yet (${email}).`,
           }),
           { headers: CORS_HEADERS }
         );
@@ -1308,6 +1487,13 @@ export default {
     }
 
     // Static Assets Fallback: Serves Next.js SSG output
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      return new Response(JSON.stringify({ success: false, error: 'API Endpoint Not Found', path: url.pathname }), {
+        status: 404,
+        headers: CORS_HEADERS,
+      });
+    }
+
     try {
       const response = await env.ASSETS.fetch(request);
       if (response.status === 404) {
