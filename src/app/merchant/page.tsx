@@ -26,6 +26,8 @@ import { getCurrentUser, logoutUser, User as AuthUser } from '../../lib/auth';
 import { getShipments, Shipment } from '../../lib/store';
 import PrintableLabel from '../../components/shipping/PrintableLabel';
 import EmailSummaryModal from '../../components/notifications/EmailSummaryModal';
+import AccountStructureAndCodWorkflow from '../../components/workflow/AccountStructureAndCodWorkflow';
+import MerchantToolsSuite from '../../components/merchant/MerchantToolsSuite';
 
 export default function MerchantPortal() {
   const router = useRouter();
@@ -34,6 +36,13 @@ export default function MerchantPortal() {
   const [searchTerm, setSearchTerm] = useState('');
   const [printingShipment, setPrintingShipment] = useState<Shipment | null>(null);
   const [showEmailModal, setShowEmailModal] = useState(false);
+  const [merchantTab, setMerchantTab] = useState<'dispatches' | 'tools' | 'workflow'>('dispatches');
+  const [actionNotice, setActionNotice] = useState<string>('');
+
+  const triggerNotice = (msg: string) => {
+    setActionNotice(msg);
+    setTimeout(() => setActionNotice(''), 3500);
+  };
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -117,8 +126,103 @@ export default function MerchantPortal() {
           </div>
         </div>
 
-        {/* Merchant Financials & Metrics */}
-        <div className="grid grid-cols-3 gap-6" style={{ marginBottom: '3rem' }}>
+        {/* ACTION FEEDBACK ALERT */}
+        {actionNotice && (
+          <div style={{
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            zIndex: 9999,
+            background: 'linear-gradient(135deg, #06b6d4, #0891b2)',
+            color: '#070a13',
+            padding: '0.85rem 1.4rem',
+            borderRadius: '10px',
+            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.4)',
+            fontSize: '0.9rem',
+            fontWeight: 800,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <CheckCircle2 size={18} />
+            <span>{actionNotice}</span>
+          </div>
+        )}
+
+        {/* Merchant Portal Navigation Tabs */}
+        <div style={{
+          display: 'flex',
+          background: 'rgba(11, 17, 32, 0.95)',
+          padding: '0.45rem',
+          borderRadius: '14px',
+          border: '1px solid var(--border-medium)',
+          gap: '0.5rem',
+          flexWrap: 'wrap',
+          marginBottom: '2.5rem'
+        }}>
+          <button
+            type="button"
+            onClick={() => setMerchantTab('dispatches')}
+            className={`tab-btn ${merchantTab === 'dispatches' ? 'active' : ''}`}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              fontSize: '0.84rem',
+              fontWeight: 700,
+              padding: '0.65rem 1.1rem',
+              borderRadius: '9px'
+            }}
+          >
+            <Truck size={15} />
+            <span>Consignment Dispatches &amp; Tracking ({shipments.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setMerchantTab('tools')}
+            className={`tab-btn ${merchantTab === 'tools' ? 'active' : ''}`}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              fontSize: '0.84rem',
+              fontWeight: 700,
+              padding: '0.65rem 1.1rem',
+              borderRadius: '9px',
+              background: merchantTab === 'tools' ? 'linear-gradient(135deg, #06b6d4, #0891b2)' : 'transparent',
+              color: merchantTab === 'tools' ? '#070a13' : undefined
+            }}
+          >
+            <Building size={15} />
+            <span>Merchant Admin Tools (Staff &amp; Payout)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setMerchantTab('workflow')}
+            className={`tab-btn ${merchantTab === 'workflow' ? 'active' : ''}`}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              fontSize: '0.84rem',
+              fontWeight: 700,
+              padding: '0.65rem 1.1rem',
+              borderRadius: '9px',
+              background: merchantTab === 'workflow' ? 'linear-gradient(135deg, #ff6600, #ea580c)' : 'transparent',
+              color: merchantTab === 'workflow' ? '#ffffff' : undefined
+            }}
+          >
+            <Sparkles size={15} />
+            <span>Account Structure &amp; Advanced COD Flow</span>
+          </button>
+        </div>
+
+        {merchantTab === 'dispatches' && (
+          <>
+            {/* Merchant Financials & Metrics */}
+            <div className="grid grid-cols-3 gap-6" style={{ marginBottom: '3rem' }}>
           {/* COD Balance */}
           <div className="card" style={{ padding: '1.75rem', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.02) 100%)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
@@ -310,6 +414,18 @@ export default function MerchantPortal() {
             </table>
           </div>
         </div>
+        </>
+        )}
+
+        {/* ================= TAB 2: MERCHANT ADMIN TOOLS SUITE ================= */}
+        {merchantTab === 'tools' && (
+          <MerchantToolsSuite onNotice={triggerNotice} />
+        )}
+
+        {/* ================= TAB 3: ACCOUNT STRUCTURE & COD WORKFLOW ================= */}
+        {merchantTab === 'workflow' && (
+          <AccountStructureAndCodWorkflow initialRole="merchant" />
+        )}
 
         {/* Printable Label Modal */}
         {printingShipment && (

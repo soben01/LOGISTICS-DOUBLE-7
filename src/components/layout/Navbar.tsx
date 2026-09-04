@@ -317,6 +317,51 @@ export default function Navbar() {
                 <Boxes size={14} color="var(--brand-orange)" />
                 <span>{currentUser.role === 'admin' ? 'All Bookings' : 'My Bookings'}</span>
               </Link>
+
+              {/* Priority 3: Dedicated Admin or Merchant Console */}
+              {currentUser.role === 'admin' ? (
+                <Link
+                  href="/admin"
+                  style={{
+                    fontSize: '0.88rem',
+                    fontWeight: 700,
+                    color: '#ffffff',
+                    background: 'rgba(255, 102, 0, 0.18)',
+                    border: '1px solid rgba(255, 102, 0, 0.5)',
+                    padding: '0.25rem 0.65rem',
+                    borderRadius: '6px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    whiteSpace: 'nowrap',
+                    transition: 'all var(--transition-fast)'
+                  }}
+                >
+                  <ShieldCheck size={14} color="var(--brand-orange)" />
+                  <span>Admin Tools</span>
+                </Link>
+              ) : (
+                <Link
+                  href="/merchant"
+                  style={{
+                    fontSize: '0.88rem',
+                    fontWeight: 700,
+                    color: '#ffffff',
+                    background: 'rgba(6, 182, 212, 0.18)',
+                    border: '1px solid rgba(6, 182, 212, 0.5)',
+                    padding: '0.25rem 0.65rem',
+                    borderRadius: '6px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    whiteSpace: 'nowrap',
+                    transition: 'all var(--transition-fast)'
+                  }}
+                >
+                  <Building size={14} color="var(--brand-cyan)" />
+                  <span>Merchant Tools</span>
+                </Link>
+              )}
             </>
           )}
 
@@ -548,6 +593,25 @@ export default function Navbar() {
                 >
                   <Boxes size={16} /> {currentUser.role === 'admin' ? 'All Bookings (Registry)' : 'My Bookings (Registry)'}
                 </Link>
+
+                {/* Priority 3: Admin Tools or Merchant Tools */}
+                {currentUser.role === 'admin' ? (
+                  <Link
+                    href="/admin"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ padding: '0.6rem 0', color: 'var(--brand-orange)', fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}
+                  >
+                    <ShieldCheck size={16} /> Admin Tools &amp; Control Tower
+                  </Link>
+                ) : (
+                  <Link
+                    href="/merchant"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ padding: '0.6rem 0', color: 'var(--brand-cyan)', fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}
+                  >
+                    <Building size={16} /> Merchant Tools &amp; Staff Hub
+                  </Link>
+                )}
               </>
             )}
 

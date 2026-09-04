@@ -386,3 +386,156 @@ export function toggleDisputeHold(
   saveCodRecords(current);
   return { success: true, record: rec };
 }
+
+export function resolveDiscrepancy(
+  recordId: string,
+  resolutionType: 'rider_shortage_debt' | 'merchant_voucher_discount' | 'admin_override_waive',
+  note: string,
+  actor: { name: string; role: string }
+): { success: boolean; record?: CodOrderRecord } {
+  const current = getCodRecords();
+  const index = current.findIndex(r => r.id === recordId);
+  if (index === -1) return { success: false };
+
+  const rec = { ...current[index] };
+  const nowStr = new Date().toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }) + ' NPT';
+
+  rec.isDiscrepancy = false;
+  rec.isPayoutHeld = false;
+  rec.holdReason = undefined;
+  rec.discrepancyReason = `Resolved via ${resolutionType.replace(/_/g, ' ')}: ${note}`;
+  rec.status = rec.reconciledAt ? 'reconciled' : (rec.hubRemittedAt ? 'remitted' : 'collected');
+
+  rec.auditTrail = [
+    {
+      id: `aud-${Date.now()}`,
+      timestamp: nowStr,
+      toStage: rec.stage,
+      actor: actor.name,
+      actorRole: actor.role,
+      note: `Discrepancy resolved (${resolutionType.toUpperCase()}): ${note}`,
+    },
+    ...rec.auditTrail,
+  ];
+
+  current[index] = rec;
+  saveCodRecords(current);
+  return { success: true, record: rec };
+}
+
+export function depositRiderCashBatchToHub(
+  riderId: string,
+  actor: { name: string; role: string }
+): { success: boolean; count: number; totalAmount: number } {
+  const current = getCodRecords();
+  const nowStr = new Date().toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }) + ' NPT';
+  let count = 0;
+  let totalAmount = 0;
+
+  for (let i = 0; i < current.length; i++) {
+    const rec = current[i];
+    if (rec.riderId === riderId && rec.stage === 'cash_collected') {
+      rec.stage = 'remitted_to_hub';
+      rec.hubRemittedAt = nowStr;
+      rec.remittedAmountNpr = rec.collectedAmountNpr || rec.orderAmountNpr;
+      rec.status = 'remitted';
+      count++;
+      totalAmount += rec.remittedAmountNpr;
+
+      rec.auditTrail = [
+        {
+          id: `aud-${Date.now()}-${i}`,
+          timestamp: nowStr,
+          fromStage: 'cash_collected',
+          toStage: 'remitted_to_hub',
+          actor: actor.name,
+          actorRole: actor.role,
+          note: `Batch hub safe deposit confirmed for rider ${rec.riderName} (Rs. ${rec.remittedAmountNpr.toLocaleString()})`,
+        },
+        ...rec.auditTrail,
+      ];
+    }
+  }
+
+  if (count > 0) {
+    saveCodRecords(current);
+    return { success: true, count, totalAmount };
+  }
+  return { success: false, count: 0, totalAmount: 0 };
+}
+
+export function scheduleNdrReattempt(
+  recordId: string,
+  newDateStr: string,
+  note: string,
+  actor: { name: string; role: string }
+): { success: boolean; record?: CodOrderRecord } {
+  const current = getCodRecords();
+  const index = current.findIndex(r => r.id === recordId);
+  if (index === -1) return { success: false };
+
+  const rec = { ...current[index] };
+  const nowStr = new Date().toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }) + ' NPT';
+
+  rec.stage = 'out_for_delivery';
+  rec.status = 'pending';
+
+  rec.auditTrail = [
+    {
+      id: `aud-${Date.now()}`,
+      timestamp: nowStr,
+      fromStage: 'failed',
+      toStage: 'out_for_delivery',
+      actor: actor.name,
+      actorRole: actor.role,
+      note: `NDR Re-attempt scheduled for ${newDateStr}: ${note}`,
+    },
+    ...rec.auditTrail,
+  ];
+
+  current[index] = rec;
+  saveCodRecords(current);
+  return { success: true, record: rec };
+}
+
+export function initiateRtoReturn(
+  recordId: string,
+  reason: string,
+  actor: { name: string; role: string }
+): { success: boolean; record?: CodOrderRecord } {
+  const current = getCodRecords();
+  const index = current.findIndex(r => r.id === recordId);
+  if (index === -1) return { success: false };
+
+  const rec = { ...current[index] };
+  const nowStr = new Date().toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }) + ' NPT';
+
+  rec.stage = 'failed';
+  rec.status = 'failed';
+  rec.holdReason = `RTO (Return to Origin) Initiated: ${reason}`;
+
+  rec.auditTrail = [
+    {
+      id: `aud-${Date.now()}`,
+      timestamp: nowStr,
+      fromStage: 'failed',
+      toStage: 'failed',
+      actor: actor.name,
+      actorRole: actor.role,
+      note: `RTO Initiated by ${actor.role}: ${reason}`,
+    },
+    ...rec.auditTrail,
+  ];
+
+  current[index] = rec;
+  saveCodRecords(current);
+  return { success: true, record: rec };
+}
+
+export function resetCodDemoData(): CodOrderRecord[] {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(COD_STORAGE_KEY, JSON.stringify(INITIAL_COD_RECORDS));
+    window.dispatchEvent(new Event('cod-records-change'));
+  }
+  return INITIAL_COD_RECORDS;
+}

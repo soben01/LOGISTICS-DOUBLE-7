@@ -29,7 +29,8 @@ import {
   Radio,
   Lock,
   Printer,
-  Mail
+  Mail,
+  Zap
 } from 'lucide-react';
 import {
   getShipments,
@@ -52,11 +53,13 @@ import {
 } from '../../lib/auth';
 import PrintableLabel from '../../components/shipping/PrintableLabel';
 import EmailSummaryModal from '../../components/notifications/EmailSummaryModal';
+import AccountStructureAndCodWorkflow from '../../components/workflow/AccountStructureAndCodWorkflow';
+import AdminToolsSuite from '../../components/admin/AdminToolsSuite';
 
 export default function AdminControlPanel() {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState<'shipments' | 'merchants' | 'waitlist' | 'hubs'>('shipments');
+  const [activeTab, setActiveTab] = useState<'shipments' | 'workflow' | 'admin_tools' | 'merchants' | 'waitlist' | 'hubs'>('shipments');
   const [printingShipment, setPrintingShipment] = useState<Shipment | null>(null);
   const [showEmailModal, setShowEmailModal] = useState(false);
 
@@ -369,44 +372,125 @@ export default function AdminControlPanel() {
             </div>
 
             {/* Navigation Tabs */}
-            <div className="tab-list" style={{ marginBottom: '2rem' }}>
+            <div className="tab-list" style={{
+              marginBottom: '2.25rem',
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '0.5rem',
+              background: 'rgba(11, 17, 32, 0.95)',
+              padding: '0.45rem',
+              borderRadius: '14px',
+              border: '1px solid var(--border-medium)'
+            }}>
               <button
                 type="button"
                 onClick={() => setActiveTab('shipments')}
                 className={`tab-btn ${activeTab === 'shipments' ? 'active' : ''}`}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  fontSize: '0.84rem',
+                  fontWeight: 700,
+                  padding: '0.65rem 1.1rem',
+                  borderRadius: '9px'
+                }}
               >
                 <Truck size={15} />
-                <span>Shipment Control &amp; Overrides ({shipments.length})</span>
+                <span>Shipment Overrides ({shipments.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('workflow')}
+                className={`tab-btn ${activeTab === 'workflow' ? 'active' : ''}`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  fontSize: '0.84rem',
+                  fontWeight: 700,
+                  padding: '0.65rem 1.1rem',
+                  borderRadius: '9px',
+                  background: activeTab === 'workflow' ? 'linear-gradient(135deg, #ff6600, #ea580c)' : 'transparent',
+                  color: activeTab === 'workflow' ? '#ffffff' : undefined
+                }}
+              >
+                <Zap size={15} />
+                <span>Account Structure &amp; Advanced COD Flow</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('admin_tools')}
+                className={`tab-btn ${activeTab === 'admin_tools' ? 'active' : ''}`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  fontSize: '0.84rem',
+                  fontWeight: 700,
+                  padding: '0.65rem 1.1rem',
+                  borderRadius: '9px',
+                  background: activeTab === 'admin_tools' ? 'linear-gradient(135deg, #06b6d4, #0891b2)' : 'transparent',
+                  color: activeTab === 'admin_tools' ? '#070a13' : undefined
+                }}
+              >
+                <Sliders size={15} />
+                <span>Admin Tools Suite</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setActiveTab('merchants')}
                 className={`tab-btn ${activeTab === 'merchants' ? 'active' : ''}`}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  fontSize: '0.84rem',
+                  fontWeight: 700,
+                  padding: '0.65rem 1.1rem',
+                  borderRadius: '9px'
+                }}
               >
                 <Users size={15} />
-                <span>Merchant Accounts &amp; COD ({merchants.length})</span>
+                <span>Merchants &amp; COD ({merchants.length})</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setActiveTab('waitlist')}
                 className={`tab-btn ${activeTab === 'waitlist' ? 'active' : ''}`}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  fontSize: '0.84rem',
+                  fontWeight: 700,
+                  padding: '0.65rem 1.1rem',
+                  borderRadius: '9px'
+                }}
               >
                 <Globe2 size={15} />
-                <span>International Waitlist Leads ({waitlist.length})</span>
+                <span>Waitlist Leads ({waitlist.length})</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setActiveTab('hubs')}
                 className={`tab-btn ${activeTab === 'hubs' ? 'active' : ''}`}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  fontSize: '0.84rem',
+                  fontWeight: 700,
+                  padding: '0.65rem 1.1rem',
+                  borderRadius: '9px'
+                }}
               >
-                <Sliders size={15} />
+                <Boxes size={15} />
                 <span>Hubs &amp; Tariffs Config</span>
               </button>
             </div>
@@ -573,6 +657,16 @@ export default function AdminControlPanel() {
                   </table>
                 </div>
               </div>
+            )}
+
+            {/* ================= TAB: ACCOUNT STRUCTURE & COD WORKFLOW ================= */}
+            {activeTab === 'workflow' && (
+              <AccountStructureAndCodWorkflow initialRole="admin" />
+            )}
+
+            {/* ================= TAB: ADMIN TOOLS SUITE ================= */}
+            {activeTab === 'admin_tools' && (
+              <AdminToolsSuite onNotice={triggerNotice} />
             )}
 
             {/* ================= TAB 2: MERCHANTS & COD ================= */}
