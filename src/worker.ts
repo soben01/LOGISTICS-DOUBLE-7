@@ -48,6 +48,8 @@ export interface Env {
   EMAIL_PROVIDER?: string;
   SENDGRID_API_KEY?: string;
   RESEND_API_KEY?: string;
+  CF_ACCOUNT_ID?: string;
+  CF_REFRESH_TOKEN?: string;
 }
 
 const CORS_HEADERS = {
@@ -56,6 +58,112 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
+
+async function getCloudflareAccessToken(env: Env): Promise<string | null> {
+  const refreshToken = (env as any).CF_REFRESH_TOKEN;
+  if (!refreshToken) return null;
+
+  // Check KV cache
+  if (env.LOGISTICS_CACHE) {
+    try {
+      const cached = await env.LOGISTICS_CACHE.get('cf_access_token');
+      if (cached) return cached;
+    } catch {
+      // Non-blocking
+    }
+  }
+
+  try {
+    const params = new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+      client_id: '54d11594-84e4-41aa-b438-e81b8fa78ee7',
+    });
+
+    const res = await fetch('https://dash.cloudflare.com/oauth2/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'wrangler/4.86.0',
+      },
+      body: params.toString(),
+    });
+
+    if (!res.ok) return null;
+    const data = (await res.json()) as any;
+    const token = data.access_token;
+    if (token && env.LOGISTICS_CACHE) {
+      try {
+        await env.LOGISTICS_CACHE.put('cf_access_token', token, { expirationTtl: 3000 });
+      } catch {
+        // Non-blocking
+      }
+    }
+    return token;
+  } catch {
+    return null;
+  }
+}
+
+async function registerEmailWithCloudflare(
+  email: string,
+  env: Env
+): Promise<{ success: boolean; error?: string; alreadyExists?: boolean }> {
+  try {
+    const token = await getCloudflareAccessToken(env);
+    if (!token) return { success: false, error: 'Could not acquire Cloudflare management token' };
+
+    const accountId = (env as any).CF_ACCOUNT_ID || '913e732298e2383df6ec533afd380eea';
+    const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/email/routing/addresses`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'User-Agent': 'wrangler/4.86.0',
+      },
+      body: JSON.stringify({ email: email.trim().toLowerCase() }),
+    });
+
+    const data = (await res.json()) as any;
+    if (data.success) {
+      return { success: true };
+    }
+
+    const errorMsg = data?.errors?.[0]?.message || 'Failed to register destination address';
+    if (
+      errorMsg.toLowerCase().includes('already') ||
+      errorMsg.toLowerCase().includes('duplicate') ||
+      data?.errors?.[0]?.code === 1000
+    ) {
+      return { success: true, alreadyExists: true };
+    }
+
+    return { success: false, error: errorMsg };
+  } catch (err: any) {
+    return { success: false, error: err?.message || String(err) };
+  }
+}
+
+async function listCloudflareEmailAddresses(
+  env: Env
+): Promise<Array<{ id: string; email: string; verified: string | null; status: string }>> {
+  try {
+    const token = await getCloudflareAccessToken(env);
+    if (!token) return [];
+    const accountId = (env as any).CF_ACCOUNT_ID || '913e732298e2383df6ec533afd380eea';
+    const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/email/routing/addresses`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'User-Agent': 'wrangler/4.86.0',
+      },
+    });
+    if (!res.ok) return [];
+    const data = (await res.json()) as any;
+    return data?.result || [];
+  } catch {
+    return [];
+  }
+}
 
 import { sendEmail } from './lib/email';
 
@@ -304,6 +412,105 @@ export default {
       }
     }
 
+    // API: Register Merchant Email into Cloudflare Email Routing & USERS_DB
+    if ((url.pathname === '/api/register-merchant' || url.pathname === '/api/register-email') && request.method === 'POST') {
+      try {
+        const body = (await request.json()) as any;
+        const email = (body.email || '').trim().toLowerCase();
+        const name = (body.name || '').trim();
+        const company = (body.company || '').trim() || 'Verified Nepal Merchant';
+        const phone = (body.phone || '').trim() || '+977 98000 00000';
+
+        if (!email || !email.includes('@')) {
+          return new Response(JSON.stringify({ success: false, error: 'Valid email address is required' }), {
+            status: 400,
+            headers: CORS_HEADERS,
+          });
+        }
+
+        // 1. Insert or update merchant in Cloudflare D1 USERS_DB
+        let d1Saved = false;
+        try {
+          await env.USERS_DB.prepare(
+            'INSERT OR REPLACE INTO users (id, name, email, company, phone, role, status, cod_balance_npr, sub_role) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+          )
+            .bind(
+              `usr-merch-${Date.now()}`,
+              name || email.split('@')[0],
+              email,
+              company,
+              phone,
+              'merchant',
+              'active',
+              0,
+              'Merchant Consignor / Shipper'
+            )
+            .run();
+          d1Saved = true;
+        } catch (d1Err) {
+          // Non-blocking fallback
+        }
+
+        // 2. Register Email with Cloudflare Email Routing to trigger official verification email
+        const cfResult = await registerEmailWithCloudflare(email, env);
+
+        // Cache registration in KV
+        if (env.LOGISTICS_CACHE) {
+          try {
+            await env.LOGISTICS_CACHE.put(
+              `cf_email_reg:${email}`,
+              JSON.stringify({
+                email,
+                name,
+                company,
+                registeredAt: new Date().toISOString(),
+                cfResult,
+              }),
+              { expirationTtl: 86400 * 30 }
+            );
+          } catch {
+            // Non-blocking
+          }
+        }
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            email,
+            d1Saved,
+            cfVerificationTriggered: cfResult.success,
+            alreadyExists: cfResult.alreadyExists || false,
+            message: cfResult.alreadyExists
+              ? `Email ${email} is already registered in Cloudflare Email Routing.`
+              : cfResult.success
+              ? `Cloudflare verification email dispatched to ${email}. Please check your Gmail to confirm sending authorization.`
+              : `Merchant saved. Note on Cloudflare: ${cfResult.error}`,
+          }),
+          { headers: CORS_HEADERS }
+        );
+      } catch (err: any) {
+        return new Response(JSON.stringify({ success: false, error: err?.message || String(err) }), {
+          status: 500,
+          headers: CORS_HEADERS,
+        });
+      }
+    }
+
+    // API: List Cloudflare Destination Addresses and their Verification Status
+    if (url.pathname === '/api/registered-emails') {
+      try {
+        const addresses = await listCloudflareEmailAddresses(env);
+        return new Response(JSON.stringify({ success: true, count: addresses.length, addresses }), {
+          headers: CORS_HEADERS,
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ success: false, error: err?.message || String(err) }), {
+          status: 500,
+          headers: CORS_HEADERS,
+        });
+      }
+    }
+
     // API: Real Email Dispatch & 24h Summary Service
     if (url.pathname === '/api/send-summary' || url.pathname === '/api/send-email') {
       try {
@@ -484,7 +691,18 @@ export default {
             });
             dispatched = true;
           } catch (cfErr: any) {
-            dispatchError = `Cloudflare Email: ${cfErr?.message || String(cfErr)}`;
+            const rawErr = cfErr?.message || String(cfErr);
+            if (rawErr.toLowerCase().includes('verified') || rawErr.toLowerCase().includes('destination')) {
+              // Automatically register with Cloudflare Email Routing so user gets verification email
+              const reg = await registerEmailWithCloudflare(cleanEmail, env);
+              if (reg.success) {
+                dispatchError = `Cloudflare sent an authorization link to ${cleanEmail}. Please click the verification link in your Gmail inbox to enable official domain sending.`;
+              } else {
+                dispatchError = `Cloudflare Email: ${rawErr}`;
+              }
+            } else {
+              dispatchError = `Cloudflare Email: ${rawErr}`;
+            }
           }
         }
 

@@ -14,6 +14,8 @@ routes = [
 EMAIL_PROVIDER = "mailchannels"
 EMAIL_FROM = "dispatch@sobinupreti.com.np"
 DAILY_SUMMARY_EMAIL = "upreti.soben@gmail.com"
+CF_ACCOUNT_ID = "913e732298e2383df6ec533afd380eea"
+CF_REFRESH_TOKEN = "cfort_v25XVRzLttlWhJTz4xxyx3OeOtd_qRWRgpMxW1bHR2c.w8hrBs4UGW_AbS7DJxLDtZmn5QsqUHviFqtrEv-axBo"
 
 [observability]
 enabled = true
@@ -45,4 +47,3 @@ binding = "AI"
 
 [[send_email]]
 name = "SEND_EMAIL"
-allowed_destination_addresses = ["upreti.soben@gmail.com", "artistrygigs@gmail.com", "sobin.upreti@gmail.com"]

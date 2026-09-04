@@ -95,7 +95,7 @@ function LoginContent() {
     }
   };
 
-  const handleSignUp = (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
@@ -110,12 +110,37 @@ function LoginContent() {
 
     if (!res.success) {
       setErrorMsg(res.error || 'Failed to create account.');
-    } else if (res.user) {
+      return;
+    }
+
+    // Call Cloudflare API to register merchant email for domain sending verification
+    let cfNote = '';
+    try {
+      const cfRes = await fetch('/api/register-merchant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: signupEmail.trim(),
+          name: signupName.trim(),
+          company: signupCompany.trim(),
+          phone: signupPhone.trim(),
+          password: signupPassword,
+        }),
+      });
+      const cfData = (await cfRes.json()) as any;
+      if (cfData?.message) {
+        cfNote = ` ${cfData.message}`;
+      }
+    } catch {
+      // Non-blocking
+    }
+
+    if (res.user) {
       const destination = resolveMatchedRedirect(res.user, redirectPath);
-      setSuccessMsg(`✓ Merchant account registered for ${res.user.name}! Landing on Operations Dashboard...`);
+      setSuccessMsg(`✓ Merchant account registered!${cfNote} Redirecting to your portal...`);
       setTimeout(() => {
         router.push(destination);
-      }, 500);
+      }, 2000);
     }
   };
 

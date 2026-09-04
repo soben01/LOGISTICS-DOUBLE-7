@@ -109,6 +109,17 @@ export default function EmailSummaryModal({
     setErrorMessage('');
     setIsSending(true);
     try {
+      // Auto-register to ensure address is submitted to Cloudflare Email Routing
+      try {
+        await fetch('/api/register-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.trim() }),
+        });
+      } catch {
+        // non-blocking
+      }
+
       const res = await fetch('/api/send-summary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -122,9 +133,9 @@ export default function EmailSummaryModal({
             : `[Double 7] Sample 24-Hour Logistics & COD Digest (${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })})`,
         }),
       });
-      const data = await res.json() as any;
+      const data = (await res.json()) as any;
       if (!res.ok || !data.success) {
-        throw new Error(data?.error || 'Failed to dispatch email.');
+        throw new Error(data?.error || data?.message || 'Failed to dispatch email.');
       }
       setTestSent(true);
       setTimeout(() => setTestSent(false), 4000);
