@@ -22,12 +22,10 @@ import {
   Boxes
 } from 'lucide-react';
 import { getCurrentUser, logoutUser, User } from '../../lib/auth';
-import ProfilePortalDrawer from './ProfilePortalDrawer';
 
 export default function Navbar() {
   const [quickTrackId, setQuickTrackId] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const router = useRouter();
 
@@ -114,22 +112,21 @@ export default function Navbar() {
               <Radio size={12} className="animate-pulse" /> 24/7 Dispatch Control
             </span>
 
-            {/* Profile Section moved into Top Bar */}
+            {/* Direct Portal Links in Top Bar */}
             {currentUser ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
-                <button
-                  type="button"
-                  onClick={() => setProfileDrawerOpen(true)}
-                  title="Open Account Control & All Portals"
+                <Link
+                  href={currentUser.role === 'admin' ? '/admin' : '/merchant'}
+                  title={`Go to ${currentUser.role === 'admin' ? 'Super Admin Tower' : 'Merchant Portal'}`}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
                     background: 'rgba(255, 255, 255, 0.05)',
                     border: currentUser.role === 'admin' ? '1px solid rgba(255, 102, 0, 0.45)' : '1px solid rgba(6, 182, 212, 0.45)',
-                    padding: '0.2rem 0.6rem',
+                    padding: '0.25rem 0.65rem',
                     borderRadius: '8px',
-                    cursor: 'pointer',
+                    textDecoration: 'none',
                     textAlign: 'left',
                     transition: 'all 0.15s ease'
                   }}
@@ -159,10 +156,10 @@ export default function Navbar() {
                       </span>
                     </div>
                     <div style={{ fontSize: '0.62rem', color: currentUser.role === 'admin' ? 'var(--brand-orange)' : 'var(--brand-cyan)', marginTop: '1px' }}>
-                      My Profile &bull; All Portals ▾
+                      {currentUser.role === 'admin' ? 'Admin Portal →' : 'Merchant Portal →'}
                     </div>
                   </div>
-                </button>
+                </Link>
 
                 <button
                   type="button"
@@ -175,9 +172,8 @@ export default function Navbar() {
                 </button>
               </div>
             ) : (
-              <button
-                type="button"
-                onClick={() => setProfileDrawerOpen(true)}
+              <Link
+                href="/login"
                 style={{
                   fontSize: '0.7rem',
                   background: 'rgba(255, 255, 255, 0.05)',
@@ -190,12 +186,12 @@ export default function Navbar() {
                   alignItems: 'center',
                   gap: '0.35rem',
                   whiteSpace: 'nowrap',
-                  cursor: 'pointer'
+                  textDecoration: 'none'
                 }}
               >
                 <Lock size={12} />
-                <span>Portal Login ▾</span>
-              </button>
+                <span>Portal Login</span>
+              </Link>
             )}
           </div>
         </div>
@@ -538,15 +534,13 @@ export default function Navbar() {
                   Role: {currentUser.subRole || (currentUser.role === 'admin' ? 'Super Admin' : 'Merchant Consignor')}
                 </div>
               </div>
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  setProfileDrawerOpen(true);
-                }}
+              <Link
+                href={currentUser.role === 'admin' ? '/admin' : '/merchant'}
+                onClick={() => setMobileMenuOpen(false)}
                 className="btn btn-primary btn-sm"
               >
-                My Profile ▾
-              </button>
+                {currentUser.role === 'admin' ? 'Admin Portal →' : 'Merchant Portal →'}
+              </Link>
             </div>
           ) : (
             <Link
@@ -663,12 +657,7 @@ export default function Navbar() {
         </div>
       )}
 
-      {/* Render Profile and Relative Portals Drawer */}
-      <ProfilePortalDrawer
-        isOpen={profileDrawerOpen}
-        onClose={() => setProfileDrawerOpen(false)}
-        currentUser={currentUser}
-      />
+
 
       {/* Breakpoint Style Rules */}
       <style jsx global>{`
