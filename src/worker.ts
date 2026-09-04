@@ -1000,10 +1000,36 @@ export default {
     // API: List Cloudflare Destination Addresses and their Verification Status
     if (url.pathname === '/api/registered-emails') {
       try {
-        const addresses = await listCloudflareEmailAddresses(env);
-        return new Response(JSON.stringify({ success: true, count: addresses.length, addresses }), {
-          headers: CORS_HEADERS,
+        const token = await getCloudflareAccessToken(env);
+        const accountId = (env as any).CF_ACCOUNT_ID || '913e732298e2383df6ec533afd380eea';
+        if (!token) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: 'No token available',
+              hasDirectToken: !!(env as any).CF_API_TOKEN,
+              hasRefreshToken: !!(env as any).CF_REFRESH_TOKEN,
+            }),
+            { headers: CORS_HEADERS }
+          );
+        }
+        const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/email/routing/addresses`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'User-Agent': 'wrangler/4.86.0',
+          },
         });
+        const data = (await res.json()) as any;
+        return new Response(
+          JSON.stringify({
+            success: res.ok,
+            status: res.status,
+            count: data?.result?.length || 0,
+            addresses: data?.result || [],
+            cfResponse: data,
+          }),
+          { headers: CORS_HEADERS }
+        );
       } catch (err: any) {
         return new Response(JSON.stringify({ success: false, error: err?.message || String(err) }), {
           status: 500,
