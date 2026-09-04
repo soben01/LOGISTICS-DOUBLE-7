@@ -299,7 +299,7 @@ export default function MerchantPortal() {
                 <span className="badge badge-emerald" style={{ fontSize: '0.65rem' }}>ACTIVE 24H SCHEDULE</span>
               </div>
               <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>
-                Automated 24-hr summary dispatched to <strong>{currentUser.email}</strong> daily at 08:00 NPT (Active Linehauls, Delivered Parcels, and COD Remittance Report).
+                Automated 24-hr summary dispatched to <strong>{currentUser.email}</strong> upon daily operational reset at 6:00 PM (18:00 NPT). Full details on linehauls, dispatches &amp; COD remittances.
               </p>
             </div>
           </div>
@@ -311,7 +311,7 @@ export default function MerchantPortal() {
             style={{ fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '0.4rem', borderColor: 'var(--brand-orange)', color: '#ffffff' }}
           >
             <Clock size={14} color="var(--brand-orange)" />
-            <span>Configure 24h Gmail Alerts</span>
+            <span>24h Summary (Reset: 6 PM)</span>
           </button>
         </div>
 

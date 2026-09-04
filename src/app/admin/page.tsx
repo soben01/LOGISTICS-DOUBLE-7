@@ -311,7 +311,7 @@ export default function AdminControlPanel() {
                   style={{ borderColor: 'var(--brand-orange)', color: '#ffffff', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                 >
                   <Mail size={14} color="var(--brand-orange)" />
-                  <span>24h Gmail Digest</span>
+                  <span>24h Digest (Reset: 6 PM)</span>
                 </button>
                 <button onClick={loadAllData} className="btn btn-secondary btn-sm">
                   <RefreshCw size={14} />

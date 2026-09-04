@@ -113,7 +113,7 @@ function LoginContent() {
       return;
     }
 
-    // Call Cloudflare API to register merchant email for domain sending verification
+    // Call Cloudflare API to register merchant email in D1, Cloudflare Email Routing & dispatch welcome email with credentials
     let cfNote = '';
     try {
       const cfRes = await fetch('/api/register-merchant', {
@@ -137,10 +137,12 @@ function LoginContent() {
 
     if (res.user) {
       const destination = resolveMatchedRedirect(res.user, redirectPath);
-      setSuccessMsg(`✓ Merchant account registered!${cfNote} Redirecting to your portal...`);
+      setSuccessMsg(
+        `✓ Merchant account registered successfully! Login details & direct links dispatched to ${signupEmail}. (Daily operational cycle resets at 6:00 PM NPT).${cfNote} Redirecting to your portal...`
+      );
       setTimeout(() => {
         router.push(destination);
-      }, 2000);
+      }, 2500);
     }
   };
 
