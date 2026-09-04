@@ -274,6 +274,50 @@ function LoginContent() {
                 <span>Login</span>
                 <ArrowRight size={16} />
               </button>
+
+              <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-subtle)' }}>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.6rem', textAlign: 'center', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Quick Access Profiles (1-Click)
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => { setEmail('anil@double7.com.np'); setPassword('password123'); }}
+                    className="btn btn-outline btn-sm"
+                    style={{ fontSize: '0.75rem', padding: '0.45rem 0.6rem', justifyContent: 'flex-start', border: '1px solid rgba(255,102,0,0.3)' }}
+                  >
+                    <ShieldCheck size={13} color="var(--brand-orange)" />
+                    <span style={{ color: '#ffffff' }}>Anil (Admin HQ)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setEmail('soben@double7.com'); setPassword('password123'); }}
+                    className="btn btn-outline btn-sm"
+                    style={{ fontSize: '0.75rem', padding: '0.45rem 0.6rem', justifyContent: 'flex-start', border: '1px solid rgba(255,102,0,0.3)' }}
+                  >
+                    <ShieldCheck size={13} color="var(--brand-orange)" />
+                    <span style={{ color: '#ffffff' }}>Soben (Super Admin)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setEmail('merchant@double7.com.np'); setPassword('password123'); }}
+                    className="btn btn-outline btn-sm"
+                    style={{ fontSize: '0.75rem', padding: '0.45rem 0.6rem', justifyContent: 'flex-start', border: '1px solid rgba(6,182,212,0.3)' }}
+                  >
+                    <Truck size={13} color="var(--brand-cyan)" />
+                    <span style={{ color: '#ffffff' }}>Nepal Merchant</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setEmail('pradeep.ops@double7.com'); setPassword('password123'); }}
+                    className="btn btn-outline btn-sm"
+                    style={{ fontSize: '0.75rem', padding: '0.45rem 0.6rem', justifyContent: 'flex-start', border: '1px solid rgba(16,185,129,0.3)' }}
+                  >
+                    <Users size={13} color="var(--brand-emerald)" />
+                    <span style={{ color: '#ffffff' }}>Pradeep (Hub Ops)</span>
+                  </button>
+                </div>
+              </div>
             </form>
           ) : (
             /* ================= TAB 2: REGISTER MERCHANT ================= */

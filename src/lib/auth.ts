@@ -18,6 +18,32 @@ const CURRENT_USER_KEY = 'double7_current_user_v1';
 
 const DEFAULT_USERS: User[] = [
   {
+    id: 'usr-admin-anil',
+    name: 'Anil',
+    email: 'anil@double7.com.np',
+    company: 'Double 7 Logistics Command HQ',
+    phone: '+977 1 4411000',
+    role: 'admin',
+    subRole: 'Command HQ / Operations Admin',
+    status: 'active',
+    codBalanceNpr: 0,
+    totalShipments: 0,
+    createdAt: '2026-01-01',
+  },
+  {
+    id: 'usr-admin-anil-com',
+    name: 'Anil',
+    email: 'anil@double7.com',
+    company: 'Double 7 Logistics Command HQ',
+    phone: '+977 1 4411000',
+    role: 'admin',
+    subRole: 'Command HQ / Operations Admin',
+    status: 'active',
+    codBalanceNpr: 0,
+    totalShipments: 0,
+    createdAt: '2026-01-01',
+  },
+  {
     id: 'usr-admin-1',
     name: 'Soben',
     email: 'soben@double7.com',
@@ -29,6 +55,71 @@ const DEFAULT_USERS: User[] = [
     codBalanceNpr: 0,
     totalShipments: 0,
     createdAt: '2026-01-01',
+  },
+  {
+    id: 'usr-admin-soben-11',
+    name: 'Soben',
+    email: 'soben@double11.com',
+    company: 'Double 7 Logistics Command HQ',
+    phone: '+977 1 4411000',
+    role: 'admin',
+    subRole: 'Command HQ / Super Admin',
+    status: 'active',
+    codBalanceNpr: 0,
+    totalShipments: 0,
+    createdAt: '2026-01-01',
+  },
+  {
+    id: 'usr-admin-artistry',
+    name: 'Soben (Artistry)',
+    email: 'artistrygigs@gmail.com',
+    company: 'Double 7 Logistics Command HQ',
+    phone: '+977 98000 00000',
+    role: 'admin',
+    subRole: 'Command HQ / Executive Lead',
+    status: 'active',
+    codBalanceNpr: 0,
+    totalShipments: 0,
+    createdAt: '2026-01-01',
+  },
+  {
+    id: 'usr-admin-upreti',
+    name: 'Soben Upreti',
+    email: 'upreti.soben@gmail.com',
+    company: 'Double 7 Logistics Command HQ',
+    phone: '+977 1 4411000',
+    role: 'admin',
+    subRole: 'Command HQ / Executive Director',
+    status: 'active',
+    codBalanceNpr: 0,
+    totalShipments: 0,
+    createdAt: '2026-01-01',
+  },
+  {
+    id: 'usr-merch-1',
+    name: 'Sobin Upreti',
+    email: 'sobin@merchant.com',
+    company: 'Himalayan Commerce Pvt Ltd',
+    phone: '+977 98412 88990',
+    role: 'merchant',
+    subRole: 'Merchant Consignor / Shipper',
+    status: 'active',
+    codBalanceNpr: 45200,
+    totalShipments: 18,
+    createdAt: '2026-01-15',
+  },
+  {
+    id: 'usr-merch-default',
+    name: 'Nepal Merchant',
+    email: 'merchant@double7.com.np',
+    company: 'Everest Retail & Cargo Hub',
+    phone: '+977 98000 12345',
+    role: 'merchant',
+    subRole: 'Merchant Consignor / Shipper',
+    status: 'active',
+    codBalanceNpr: 32400,
+    totalShipments: 12,
+    createdAt: '2026-02-01',
   },
 ];
 
@@ -43,7 +134,19 @@ export function getUsers(): User[] {
       localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(DEFAULT_USERS));
       return DEFAULT_USERS;
     }
-    return JSON.parse(raw);
+    const parsed: User[] = JSON.parse(raw);
+    // Ensure all DEFAULT_USERS are present in stored users
+    let updated = false;
+    for (const def of DEFAULT_USERS) {
+      if (!parsed.some(p => p.email.toLowerCase() === def.email.toLowerCase())) {
+        parsed.push(def);
+        updated = true;
+      }
+    }
+    if (updated) {
+      localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(parsed));
+    }
+    return parsed;
   } catch {
     return DEFAULT_USERS;
   }
@@ -63,18 +166,66 @@ export function getCurrentUser(): User | null {
 }
 
 export function loginUser(email: string, password?: string, subRole?: string): { success: boolean; user?: User; error?: string } {
-  if (!email.trim()) {
+  if (!email || !email.trim()) {
     return { success: false, error: 'Please enter your registered email address.' };
   }
 
-  const users = getUsers();
   const normalizedEmail = email.trim().toLowerCase();
-  const user = users.find(u => {
+  const users = getUsers();
+  let user = users.find(u => {
     const uEmail = u.email.toLowerCase();
     return uEmail === normalizedEmail ||
       (normalizedEmail === 'soben@double11.com' && uEmail === 'soben@double7.com') ||
-      (normalizedEmail === 'soben@double7.com' && uEmail === 'soben@double11.com');
+      (normalizedEmail === 'soben@double7.com' && uEmail === 'soben@double11.com') ||
+      (normalizedEmail === 'anil@double7.com' && uEmail === 'anil@double7.com.np') ||
+      (normalizedEmail === 'anil@double7.com.np' && uEmail === 'anil@double7.com');
   });
+
+  // 1. Check SubUsers if not in primary users
+  if (!user) {
+    const subUsers = getSubUsers();
+    const subUser = subUsers.find(su => su.email.toLowerCase() === normalizedEmail);
+    if (subUser) {
+      const switched = switchActiveSubUser(subUser);
+      return { success: true, user: switched };
+    }
+  }
+
+  // 2. Corporate auto-provision for Double 7 team (@double7.com.np, @double7.com, @double11.com, @sobinupreti.com.np)
+  if (!user) {
+    const isCorporateAdmin =
+      normalizedEmail.endsWith('@double7.com.np') ||
+      normalizedEmail.endsWith('@double7.com') ||
+      normalizedEmail.endsWith('@double11.com') ||
+      normalizedEmail.endsWith('@sobinupreti.com.np');
+
+    const isMerchantDomain =
+      normalizedEmail.endsWith('@merchant.np') ||
+      normalizedEmail.endsWith('@merchant.com');
+
+    if (isCorporateAdmin || isMerchantDomain) {
+      const rawName = normalizedEmail.split('@')[0].replace(/[._-]/g, ' ');
+      const name = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+      user = {
+        id: isCorporateAdmin ? `usr-admin-${Date.now()}` : `usr-merch-${Date.now()}`,
+        name,
+        email: normalizedEmail,
+        company: isCorporateAdmin ? 'Double 7 Logistics Command HQ' : 'Nepal Merchant Commerce Pvt Ltd',
+        phone: '+977 1 4411000',
+        role: isCorporateAdmin ? 'admin' : 'merchant',
+        subRole: isCorporateAdmin ? 'Command HQ / Operations Admin' : 'Merchant Consignor / Shipper',
+        status: 'active',
+        codBalanceNpr: isCorporateAdmin ? 0 : 25000,
+        totalShipments: isCorporateAdmin ? 0 : 5,
+        createdAt: new Date().toISOString().split('T')[0],
+      };
+
+      const updatedUsers = [...users, user];
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(updatedUsers));
+      }
+    }
+  }
 
   if (!user) {
     return {
@@ -86,7 +237,7 @@ export function loginUser(email: string, password?: string, subRole?: string): {
   if (user.status === 'suspended') {
     return {
       success: false,
-      error: 'This merchant account has been suspended by the Admin. Please contact Double 7 support.',
+      error: 'This account has been suspended. Please contact Double 7 Command HQ support.',
     };
   }
 
@@ -231,7 +382,74 @@ export function findUserByEmail(email: string): User | undefined {
   if (!email || !email.trim()) return undefined;
   const normalized = email.trim().toLowerCase();
   const users = getUsers();
-  return users.find(u => u.email.toLowerCase() === normalized);
+  const found = users.find(u => {
+    const uEmail = u.email.toLowerCase();
+    return uEmail === normalized ||
+      (normalized === 'anil@double7.com' && uEmail === 'anil@double7.com.np') ||
+      (normalized === 'anil@double7.com.np' && uEmail === 'anil@double7.com');
+  });
+  if (found) return found;
+
+  // Check sub-users
+  const subUsers = getSubUsers();
+  const sub = subUsers.find(s => s.email.toLowerCase() === normalized);
+  if (sub) {
+    return {
+      id: sub.id,
+      name: sub.name,
+      email: sub.email,
+      company: sub.role === 'admin' ? 'Double 7 Command HQ' : 'Nepal Merchant Staff',
+      phone: sub.phone || '+977 98000 00000',
+      role: sub.role,
+      subRole: sub.subRole,
+      status: sub.status,
+      codBalanceNpr: 0,
+      totalShipments: 0,
+      createdAt: sub.createdAt,
+    };
+  }
+
+  // Detect corporate Double 7 domain
+  if (
+    normalized.endsWith('@double7.com.np') ||
+    normalized.endsWith('@double7.com') ||
+    normalized.endsWith('@double11.com') ||
+    normalized.endsWith('@sobinupreti.com.np')
+  ) {
+    const rawName = normalized.split('@')[0].replace(/[._-]/g, ' ');
+    const name = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+    return {
+      id: `usr-admin-detected`,
+      name,
+      email: normalized,
+      company: 'Double 7 Logistics Command HQ',
+      phone: '+977 1 4411000',
+      role: 'admin',
+      subRole: 'Command HQ / Operations Admin',
+      status: 'active',
+      codBalanceNpr: 0,
+      totalShipments: 0,
+      createdAt: '2026-01-01',
+    };
+  }
+
+  if (normalized.endsWith('@merchant.np') || normalized.endsWith('@merchant.com')) {
+    return {
+      id: `usr-merch-detected`,
+      name: 'Nepal Merchant Partner',
+      email: normalized,
+      company: 'Verified Nepal Merchant',
+      phone: '+977 98000 00000',
+      role: 'merchant',
+      subRole: 'Merchant Consignor / Shipper',
+      status: 'active',
+      codBalanceNpr: 35000,
+      totalShipments: 10,
+      createdAt: '2026-01-01',
+    };
+  }
+
+  return undefined;
 }
 
 export interface PortalConfig {
