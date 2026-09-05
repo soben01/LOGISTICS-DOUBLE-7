@@ -147,10 +147,10 @@ function LoginContent() {
   };
 
   return (
-    <div style={{ padding: '3.5rem 0 6rem 0' }}>
+    <div className="auth-page-container">
       <div className="container-narrow">
         {/* Page Header */}
-        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div className="badge badge-orange" style={{ marginBottom: '0.75rem' }}>
             <Sparkles size={13} /> DOUBLE 7 AUTHENTICATION
           </div>
@@ -161,7 +161,7 @@ function LoginContent() {
         </div>
 
         {/* Main Form Glass Panel */}
-        <div className="glass-panel" style={{ maxWidth: '540px', margin: '0 auto', padding: '2.5rem' }}>
+        <div className="glass-panel auth-card" style={{ maxWidth: '520px', width: '100%', margin: '0 auto' }}>
           {/* Sub-tabs: Login vs Register */}
           <div className="tab-list" style={{ marginBottom: '1.75rem' }}>
             <button
@@ -306,7 +306,7 @@ function LoginContent() {
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.6rem', textAlign: 'center', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Quick Access Profiles (1-Click)
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem' }}>
                   <button
                     type="button"
                     onClick={() => { setEmail('anil@double7.com.np'); setPassword('password123'); }}

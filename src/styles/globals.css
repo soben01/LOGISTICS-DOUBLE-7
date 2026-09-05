@@ -1268,7 +1268,7 @@ a {
 @media (max-width: 768px) {
   .mobile-bottom-nav-spacer {
     display: block;
-    height: calc(64px + var(--sab));
+    height: calc(70px + max(10px, var(--sab)));
     width: 100%;
   }
 }
@@ -1284,13 +1284,13 @@ a {
     bottom: 0;
     left: 0;
     right: 0;
-    height: calc(62px + var(--sab));
-    padding-bottom: var(--sab);
-    background: rgba(7, 11, 22, 0.96);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    height: calc(64px + max(10px, var(--sab)));
+    padding-bottom: max(10px, var(--sab));
+    background: rgba(8, 12, 24, 0.98);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.65);
+    box-shadow: 0 -10px 36px rgba(0, 0, 0, 0.75);
     z-index: 999;
     align-items: center;
     justify-content: space-around;
@@ -1302,10 +1302,10 @@ a {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
+    gap: 4px;
     padding: 6px 0;
     color: var(--text-muted);
-    font-size: 0.68rem;
+    font-size: 0.7rem;
     font-weight: 600;
     text-decoration: none;
     transition: color var(--transition-fast), transform var(--transition-fast);
@@ -1324,21 +1324,45 @@ a {
 
   .mobile-bottom-nav-center-btn {
     position: relative;
-    top: -12px;
-    width: 48px;
-    height: 48px;
+    top: -14px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     background: linear-gradient(135deg, #ff6600 0%, #ea580c 100%);
     color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 20px rgba(255, 102, 0, 0.55), 0 0 0 4px #070b16;
+    box-shadow: 0 4px 20px rgba(255, 102, 0, 0.6), 0 0 0 4px #080c18;
     transition: transform var(--transition-fast);
+    flex-shrink: 0;
   }
 
   .mobile-bottom-nav-center-btn:active {
     transform: scale(0.9);
+  }
+}
+
+/* 7. Auth Page & Card Mobile Sizing */
+.auth-page-container {
+  padding: 3.5rem 0 6rem 0;
+}
+
+.auth-card {
+  padding: 2.5rem;
+}
+
+@media (max-width: 640px) {
+  .auth-page-container {
+    padding: 1.5rem 0 3.5rem 0 !important;
+  }
+  .auth-card {
+    padding: 1.35rem 1rem !important;
+    border-radius: var(--radius-md) !important;
+  }
+  .container-narrow {
+    width: 100% !important;
+    padding: 0 0.85rem !important;
   }
 }
 

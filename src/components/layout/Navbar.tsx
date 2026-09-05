@@ -174,6 +174,7 @@ export default function Navbar() {
             ) : (
               <Link
                 href="/login"
+                className="ticker-hide-sm"
                 style={{
                   fontSize: '0.7rem',
                   background: 'rgba(255, 255, 255, 0.05)',
@@ -253,7 +254,7 @@ export default function Navbar() {
                 whiteSpace: 'nowrap'
               }}>LOGISTICS</span>
             </div>
-            <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>
+            <div className="nav-tagline" style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>
               Nepal Nationwide &bull; International Coming Soon
             </div>
           </div>
@@ -463,7 +464,7 @@ export default function Navbar() {
           </form>
 
           {/* Main Navbar Right Actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexShrink: 0 }}>
+          <div className="nav-desktop-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexShrink: 0 }}>
             {!currentUser && (
               <Link
                 href="/login"
@@ -689,6 +690,19 @@ export default function Navbar() {
 
         /* Mobile ticker hide */
         @media (max-width: 700px) {
+          .ticker-hide-sm {
+            display: none !important;
+          }
+        }
+
+        /* Mobile navbar cleanups: hide redundant desktop action buttons so header is spacious */
+        @media (max-width: 768px) {
+          .nav-desktop-actions {
+            display: none !important;
+          }
+          .nav-tagline {
+            display: none !important;
+          }
           .ticker-hide-sm {
             display: none !important;
           }
