@@ -186,14 +186,16 @@ export default function AdminToolsSuite({ onNotice }: Props) {
   return (
     <div style={{ marginTop: '2rem' }}>
       {/* Tool Navigation Tabs */}
-      <div style={{
+      <div className="mobile-scroll-x" style={{
         display: 'flex',
         background: 'rgba(11, 17, 32, 0.95)',
         padding: '0.4rem',
         borderRadius: '12px',
         border: '1px solid var(--border-medium)',
         gap: '0.35rem',
-        flexWrap: 'wrap',
+        overflowX: 'auto',
+        maxWidth: '100%',
+        whiteSpace: 'nowrap',
         marginBottom: '2rem'
       }}>
         {[
@@ -250,9 +252,9 @@ export default function AdminToolsSuite({ onNotice }: Props) {
       {/* 1. SCOPED SUB-ADMINS TOOL                                */}
       {/* ======================================================== */}
       {activeTool === 'sub_admins' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '2rem' }}>
+        <div className="grid-responsive-2">
           {/* Create Sub-Admin Form */}
-          <div className="card" style={{ padding: '2rem' }}>
+          <div className="card card-responsive">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
               <Users size={18} color="var(--brand-orange)" />
               <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Provision Scoped Sub-Admin</h3>
@@ -709,9 +711,9 @@ export default function AdminToolsSuite({ onNotice }: Props) {
       {/* 3. RIDER FLEET & CASH ALLOCATOR                          */}
       {/* ======================================================== */}
       {activeTool === 'rider_fleet' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '2rem' }}>
+        <div className="grid-responsive-2">
           {/* Active Rider List */}
-          <div className="card" style={{ padding: '2rem' }}>
+          <div className="card card-responsive">
             <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Active Rider Telemetry &amp; Pocket Cash</h3>
             <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
               Real-time cash in transit held by linehaul and last-mile electric courier drivers.
@@ -774,7 +776,7 @@ export default function AdminToolsSuite({ onNotice }: Props) {
           </div>
 
           {/* Assign Fleet Unit to Consignment */}
-          <div className="card" style={{ padding: '2rem' }}>
+          <div className="card card-responsive">
             <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Assign Consignment Fleet Unit</h3>
             <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
               Dispatch or re-assign transport vehicles to active shipments.

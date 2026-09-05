@@ -29,7 +29,9 @@ import {
   Calculator,
   ArrowRight,
   ShieldCheck,
-  Send
+  Send,
+  Code,
+  Terminal
 } from 'lucide-react';
 import {
   SubUser,
@@ -52,12 +54,19 @@ import { calculateDomesticFreightRate, createShipment } from '../../lib/store';
 
 interface Props {
   onNotice?: (msg: string) => void;
+  initialTool?: 'staff' | 'cod_settlement' | 'ndr_manager' | 'bulk_dispatch' | 'rate_calc' | 'api_webhooks';
 }
 
-export default function MerchantToolsSuite({ onNotice }: Props) {
+export default function MerchantToolsSuite({ onNotice, initialTool = 'staff' }: Props) {
   const [activeTool, setActiveTool] = useState<
     'staff' | 'cod_settlement' | 'ndr_manager' | 'bulk_dispatch' | 'rate_calc' | 'api_webhooks'
-  >('staff');
+  >(initialTool);
+
+  useEffect(() => {
+    if (initialTool) {
+      setActiveTool(initialTool);
+    }
+  }, [initialTool]);
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [subStaff, setSubStaff] = useState<SubUser[]>([]);
@@ -95,6 +104,8 @@ export default function MerchantToolsSuite({ onNotice }: Props) {
   const [apiKeyCopied, setApiKeyCopied] = useState(false);
   const [webhookUrl, setWebhookUrl] = useState('https://mystore.np/api/double7-webhook');
   const [webhookTestStatus, setWebhookTestStatus] = useState<string>('');
+  const [codeLang, setCodeLang] = useState<'curl' | 'nodejs' | 'python' | 'webhook'>('curl');
+  const [codeCopied, setCodeCopied] = useState(false);
 
   const triggerAlert = (msg: string) => {
     if (onNotice) onNotice(msg);
@@ -266,14 +277,17 @@ export default function MerchantToolsSuite({ onNotice }: Props) {
         </div>
 
         {/* Navigation Tabs */}
-        <div style={{
+        {/* Navigation Tabs */}
+        <div className="mobile-scroll-x" style={{
           display: 'flex',
           background: 'rgba(11, 17, 32, 0.95)',
           padding: '0.35rem',
           borderRadius: '10px',
           border: '1px solid var(--border-medium)',
           gap: '0.3rem',
-          flexWrap: 'wrap'
+          overflowX: 'auto',
+          maxWidth: '100%',
+          whiteSpace: 'nowrap'
         }}>
           {[
             { id: 'staff', label: 'Store Staff (Sub-Merchants)', icon: Users, count: subStaff.length },
@@ -328,9 +342,9 @@ export default function MerchantToolsSuite({ onNotice }: Props) {
       {/* 1. STORE STAFF (SUB-MERCHANTS)                           */}
       {/* ======================================================== */}
       {activeTool === 'staff' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '2rem' }}>
+        <div className="grid-responsive-2">
           {/* Add Staff Form */}
-          <div className="card" style={{ padding: '2rem' }}>
+          <div className="card card-responsive">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
               <Users size={18} color="var(--brand-cyan)" />
               <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Add Sub-Merchant Staff</h3>
@@ -360,7 +374,7 @@ export default function MerchantToolsSuite({ onNotice }: Props) {
             </div>
 
             <form onSubmit={handleCreateStaff}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div className="grid-form-2" style={{ marginBottom: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.3rem', fontWeight: 600 }}>
                     STAFF NAME
@@ -392,7 +406,7 @@ export default function MerchantToolsSuite({ onNotice }: Props) {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+              <div className="grid-form-2" style={{ marginBottom: '1.25rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.3rem', fontWeight: 600 }}>
                     POSITION / SUB-ROLE
@@ -478,7 +492,7 @@ export default function MerchantToolsSuite({ onNotice }: Props) {
           </div>
 
           {/* Active Staff List */}
-          <div className="card" style={{ padding: '2rem' }}>
+          <div className="card card-responsive">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Active Store Staff ({subStaff.length})</h3>
               <span className="badge badge-cyan" style={{ fontSize: '0.7rem' }}>STORE SCOPED</span>
@@ -514,22 +528,9 @@ export default function MerchantToolsSuite({ onNotice }: Props) {
                     <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                       {su.email} &bull; <strong style={{ color: 'var(--brand-cyan)' }}>{su.subRole}</strong> &bull; {su.phone}
                     </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginTop: '0.4rem' }}>
-                      {su.permissions.map((p, idx) => (
-                        <span key={idx} style={{
-                          fontSize: '0.65rem',
-                          background: 'rgba(255,255,255,0.06)',
-                          padding: '0.1rem 0.35rem',
-                          borderRadius: '4px',
-                          color: 'var(--text-secondary)'
-                        }}>
-                          {p}
-                        </span>
-                      ))}
-                    </div>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                     <button
                       type="button"
                       onClick={() => {
@@ -537,20 +538,33 @@ export default function MerchantToolsSuite({ onNotice }: Props) {
                         loadData();
                         triggerAlert(`Toggled status for ${su.name}`);
                       }}
-                      className="btn btn-secondary btn-sm"
-                      style={{ fontSize: '0.74rem' }}
+                      className="btn btn-outline btn-sm"
+                      style={{ fontSize: '0.75rem' }}
                     >
-                      {su.status === 'active' ? 'Suspend' : 'Activate'}
+                      {su.status === 'active' ? 'Disable' : 'Enable'}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        deleteSubUser(su.id);
+                        loadData();
+                        triggerAlert(`Removed ${su.name} from store staff.`);
+                      }}
+                      className="btn btn-danger btn-sm"
+                      style={{ fontSize: '0.75rem' }}
+                    >
+                      Remove
                     </button>
 
                     <button
                       type="button"
                       onClick={() => {
                         switchActiveSubUser(su);
-                        triggerAlert(`Switched session to ${su.name} (${su.subRole})`);
+                        triggerAlert(`Switched session context to ${su.name} (${su.subRole})`);
                       }}
-                      className="btn btn-outline btn-sm"
-                      style={{ fontSize: '0.74rem', borderColor: 'var(--brand-cyan)', color: 'var(--brand-cyan)' }}
+                      className="btn btn-secondary btn-sm"
+                      style={{ fontSize: '0.75rem' }}
                     >
                       Test Login
                     </button>
@@ -566,9 +580,9 @@ export default function MerchantToolsSuite({ onNotice }: Props) {
       {/* 2. COD SETTLEMENT & BANK PAYOUT CONSOLE                  */}
       {/* ======================================================== */}
       {activeTool === 'cod_settlement' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '2rem' }}>
+        <div className="grid-responsive-2">
           {/* Balance Cards & Request Payout */}
-          <div className="card" style={{ padding: '2rem' }}>
+          <div className="card card-responsive">
             <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Request Bank Remittance Transfer</h3>
             <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
               Remittance payouts are deposited daily at 10:00 AM NPT via Nepal Clearing House (NCHL-IPS / ConnectIPS).
@@ -582,7 +596,7 @@ export default function MerchantToolsSuite({ onNotice }: Props) {
               marginBottom: '1.5rem'
             }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>AVAILABLE RECONCILED COD</span>
-              <div style={{ fontSize: '2rem', fontWeight: 900, color: '#ffffff', fontFamily: 'var(--font-mono)', margin: '0.3rem 0' }}>
+              <div style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)', fontWeight: 900, color: '#ffffff', fontFamily: 'var(--font-mono)', margin: '0.3rem 0' }}>
                 Rs. {(currentUser?.codBalanceNpr || 24500).toLocaleString()} NPR
               </div>
               <div style={{ fontSize: '0.75rem', color: '#10b981' }}>
@@ -627,7 +641,7 @@ export default function MerchantToolsSuite({ onNotice }: Props) {
           </div>
 
           {/* Settlement Voucher & Payout History */}
-          <div className="card" style={{ padding: '2rem' }}>
+          <div className="card card-responsive">
             <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Settlement Voucher &amp; Statement</h3>
             <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
               Official tax invoice and bank payout clearing statements for your accounting ledger.
@@ -681,7 +695,7 @@ export default function MerchantToolsSuite({ onNotice }: Props) {
       {/* 3. NDR RE-ATTEMPT DESK                                  */}
       {/* ======================================================== */}
       {activeTool === 'ndr_manager' && (
-        <div className="card" style={{ padding: '2rem' }}>
+        <div className="card card-responsive">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
             <div>
               <h3 style={{ fontSize: '1.3rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -781,7 +795,7 @@ export default function MerchantToolsSuite({ onNotice }: Props) {
       {/* 4. BULK BATCH DISPATCH TOOL                              */}
       {/* ======================================================== */}
       {activeTool === 'bulk_dispatch' && (
-        <div className="card" style={{ padding: '2rem' }}>
+        <div className="card card-responsive">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
             <div>
               <h3 style={{ fontSize: '1.3rem', margin: 0 }}>Bulk Consignment &amp; Manifest Generator</h3>
@@ -808,7 +822,7 @@ export default function MerchantToolsSuite({ onNotice }: Props) {
               rows={4}
               placeholder={`Recipient Name, Phone, Destination City, Cargo Description, COD Amount (NPR)\nAarav Shrestha, +977 98412 11002, Pokhara, Pashmina Shawls, 4500\nPooja Karki, +977 98510 44221, Biratnagar, Organic Tea, 12800`}
               className="input-field"
-              style={{ fontFamily: 'var(--font-mono)', fontSize: '0.82rem', width: '100%' }}
+              style={{ fontFamily: 'var(--font-mono)', fontSize: '0.82rem', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
             />
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem', gap: '0.5rem' }}>
               <button
@@ -827,16 +841,16 @@ export default function MerchantToolsSuite({ onNotice }: Props) {
       {/* 5. SHIPPING CALCULATOR                                   */}
       {/* ======================================================== */}
       {activeTool === 'rate_calc' && (
-        <div className="card" style={{ padding: '2rem' }}>
+        <div className="card card-responsive">
           <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem' }}>Dimensional Weight &amp; Shipping Cost Estimator</h3>
           <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginBottom: '1.75rem' }}>
             Calculate volumetric billing weight and check rates across Kathmandu Valley, Outstation Linehaul, and Express Rush.
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
+          <div className="grid-responsive-2">
             {/* Input Controls */}
             <div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div className="grid-form-2" style={{ marginBottom: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.3rem', fontWeight: 600 }}>
                     ORIGIN CITY
@@ -874,7 +888,7 @@ export default function MerchantToolsSuite({ onNotice }: Props) {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '0.6rem', marginBottom: '1rem' }}>
+              <div className="grid-dimensions-4" style={{ marginBottom: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>WEIGHT (KG)</label>
                   <input
@@ -961,96 +975,304 @@ export default function MerchantToolsSuite({ onNotice }: Props) {
       )}
 
       {/* ======================================================== */}
-      {/* 6. API KEYS & WEBHOOKS                                   */}
+      {/* 6. API KEYS & WEBHOOKS & CODE INTEGRATION                */}
       {/* ======================================================== */}
       {activeTool === 'api_webhooks' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '2rem' }}>
-          <div className="card" style={{ padding: '2rem' }}>
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Developer API Credentials</h3>
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-              Authenticate your Shopify, WooCommerce, or custom storefront to book consignments and query tracking automatically.
-            </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div className="grid-responsive-2">
+            <div className="card card-responsive">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                <KeyRound size={18} color="var(--brand-cyan)" />
+                <h3 style={{ fontSize: '1.25rem', margin: 0 }}>Developer API Credentials</h3>
+              </div>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+                Authenticate your Shopify, WooCommerce, or custom storefront to book consignments and query tracking automatically.
+              </p>
 
-            <div style={{ marginBottom: '1.25rem' }}>
-              <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.3rem', fontWeight: 600 }}>
-                PUBLISHABLE MERCHANT API KEY
-              </label>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <input
-                  type="text"
-                  readOnly
-                  value="d7_live_pk_994038102488aefc"
-                  className="input-field"
-                  style={{ fontFamily: 'var(--font-mono)', fontSize: '0.82rem' }}
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText('d7_live_pk_994038102488aefc');
-                    setApiKeyCopied(true);
-                    setTimeout(() => setApiKeyCopied(false), 2000);
-                  }}
-                  className="btn btn-secondary btn-sm"
-                >
-                  {apiKeyCopied ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
-                </button>
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem', fontWeight: 700 }}>
+                  BASE API ENDPOINT
+                </label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    readOnly
+                    value="https://sobinupreti.com.np/api/v1"
+                    className="input-field"
+                    style={{ fontFamily: 'var(--font-mono)', fontSize: '0.82rem', width: '100%', minWidth: 0 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText('https://sobinupreti.com.np/api/v1');
+                      triggerAlert('Copied Base API Endpoint!');
+                    }}
+                    className="btn btn-secondary btn-sm"
+                    style={{ flexShrink: 0 }}
+                  >
+                    <Copy size={14} />
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem', fontWeight: 700 }}>
+                  PUBLISHABLE MERCHANT API KEY
+                </label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    readOnly
+                    value="d7_live_pk_994038102488aefc"
+                    className="input-field"
+                    style={{ fontFamily: 'var(--font-mono)', fontSize: '0.82rem', width: '100%', minWidth: 0 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText('d7_live_pk_994038102488aefc');
+                      setApiKeyCopied(true);
+                      setTimeout(() => setApiKeyCopied(false), 2000);
+                    }}
+                    className="btn btn-secondary btn-sm"
+                    style={{ flexShrink: 0 }}
+                  >
+                    {apiKeyCopied ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem', fontWeight: 700 }}>
+                  REST SECRET KEY (KEEP PRIVATE)
+                </label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    type="password"
+                    readOnly
+                    value="d7_sec_994038102488aefc_secret_production"
+                    className="input-field"
+                    style={{ fontFamily: 'var(--font-mono)', fontSize: '0.82rem', width: '100%', minWidth: 0 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText('d7_sec_994038102488aefc_secret_production');
+                      triggerAlert('Copied API Secret Key!');
+                    }}
+                    className="btn btn-secondary btn-sm"
+                    style={{ flexShrink: 0 }}
+                  >
+                    <Copy size={14} />
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.3rem', fontWeight: 600 }}>
-                REST SECRET KEY (KEEP PRIVATE)
-              </label>
-              <input
-                type="password"
-                readOnly
-                value="d7_sec_994038102488aefc_secret_production"
-                className="input-field"
-                style={{ fontFamily: 'var(--font-mono)', fontSize: '0.82rem' }}
-              />
+            <div className="card card-responsive">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                <Send size={18} color="var(--brand-cyan)" />
+                <h3 style={{ fontSize: '1.25rem', margin: 0 }}>Webhook Dispatch Notifications</h3>
+              </div>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+                Double 7 posts real-time HTTP payloads whenever a parcel changes status or cash is remitted.
+              </p>
+
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem', fontWeight: 700 }}>
+                  YOUR WEBHOOK ENDPOINT URL
+                </label>
+                <input
+                  type="url"
+                  value={webhookUrl}
+                  onChange={(e) => setWebhookUrl(e.target.value)}
+                  className="input-field"
+                  style={{ fontSize: '0.82rem', width: '100%', minWidth: 0 }}
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setWebhookTestStatus('Simulating delivery event dispatch to your webhook...');
+                  setTimeout(() => {
+                    setWebhookTestStatus('HTTP 200 OK received from endpoint in 42ms.');
+                    triggerAlert('Webhook test ping succeeded!');
+                  }, 800);
+                }}
+                className="btn btn-outline btn-sm"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', borderColor: 'var(--brand-cyan)', color: 'var(--brand-cyan)' }}
+              >
+                <Send size={13} />
+                <span>Send Test Webhook Ping</span>
+              </button>
+
+              {webhookTestStatus && (
+                <div style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: '#10b981', fontFamily: 'var(--font-mono)' }}>
+                  {webhookTestStatus}
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="card" style={{ padding: '2rem' }}>
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Webhook Dispatch Notifications</h3>
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-              Double 7 posts real-time HTTP payloads whenever a parcel changes status or cash is remitted.
-            </p>
+          {/* CODE INTEGRATION SNIPPETS PANEL */}
+          <div className="card card-responsive">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Code size={18} color="var(--brand-cyan)" />
+                  <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Developer Code Integration &amp; SDK Snippets</h3>
+                </div>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.25rem', marginBottom: 0 }}>
+                  Production-ready sample code for consignment creation, waybill generation, and webhook listening.
+                </p>
+              </div>
 
-            <div style={{ marginBottom: '1.25rem' }}>
-              <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.3rem', fontWeight: 600 }}>
-                YOUR WEBHOOK ENDPOINT URL
-              </label>
-              <input
-                type="url"
-                value={webhookUrl}
-                onChange={(e) => setWebhookUrl(e.target.value)}
-                className="input-field"
-                style={{ fontSize: '0.82rem' }}
-              />
+              {/* Code Language Pills */}
+              <div className="mobile-scroll-x" style={{ display: 'flex', gap: '0.35rem', background: 'rgba(255, 255, 255, 0.04)', padding: '0.25rem', borderRadius: '8px' }}>
+                {[
+                  { id: 'curl', label: 'cURL / Bash' },
+                  { id: 'nodejs', label: 'Node.js Fetch' },
+                  { id: 'python', label: 'Python 3' },
+                  { id: 'webhook', label: 'Webhook JSON' },
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setCodeLang(tab.id as any)}
+                    style={{
+                      padding: '0.35rem 0.75rem',
+                      borderRadius: '6px',
+                      fontSize: '0.75rem',
+                      fontWeight: codeLang === tab.id ? 700 : 500,
+                      backgroundColor: codeLang === tab.id ? 'var(--brand-cyan)' : 'transparent',
+                      color: codeLang === tab.id ? '#070a13' : 'var(--text-secondary)',
+                      border: 'none',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                setWebhookTestStatus('Simulating delivery event dispatch...');
-                setTimeout(() => {
-                  setWebhookTestStatus('HTTP 200 OK received from endpoint in 42ms.');
-                  triggerAlert('Webhook test ping succeeded!');
-                }, 800);
-              }}
-              className="btn btn-outline btn-sm"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', borderColor: 'var(--brand-cyan)', color: 'var(--brand-cyan)' }}
-            >
-              <Send size={13} />
-              <span>Send Test Webhook Ping</span>
-            </button>
-
-            {webhookTestStatus && (
-              <div style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: '#10b981', fontFamily: 'var(--font-mono)' }}>
-                {webhookTestStatus}
+            {/* Code Block Content */}
+            <div style={{ position: 'relative' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentCode =
+                      codeLang === 'curl'
+                        ? `curl -X POST https://sobinupreti.com.np/api/v1/shipments/create \\\n  -H "Authorization: Bearer d7_sec_994038102488aefc_secret_production" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "sender": { "company": "${currentUser?.company || 'Nepal Merchant'}" },\n    "recipient": {\n      "name": "Aarav Sharma",\n      "phone": "+977 9841234567",\n      "city": "Pokhara",\n      "address": "Lakeside Marg 4"\n    },\n    "cargo": { "description": "Apparel Box", "weightKg": 2.0 },\n    "codAmountNpr": 4500,\n    "serviceType": "STANDARD_DOORSTEP"\n  }'`
+                        : codeLang === 'nodejs'
+                        ? `// Create Consignment with Double 7 API\nconst response = await fetch('https://sobinupreti.com.np/api/v1/shipments/create', {\n  method: 'POST',\n  headers: {\n    'Authorization': 'Bearer d7_sec_994038102488aefc_secret_production',\n    'Content-Type': 'application/json'\n  },\n  body: JSON.stringify({\n    recipient: {\n      name: 'Aarav Sharma',\n      phone: '+977 9841234567',\n      city: 'Pokhara',\n      address: 'Lakeside Marg 4'\n    },\n    cargo: { description: 'Apparel Box', weightKg: 2.0 },\n    codAmountNpr: 4500\n  })\n});\n\nconst consignment = await response.json();\nconsole.log('Waybill Generated:', consignment.trackingId);`
+                        : codeLang === 'python'
+                        ? `import requests\n\nurl = "https://sobinupreti.com.np/api/v1/shipments/create"\nheaders = {\n    "Authorization": "Bearer d7_sec_994038102488aefc_secret_production",\n    "Content-Type": "application/json"\n}\npayload = {\n    "recipient": {\n        "name": "Aarav Sharma",\n        "phone": "+977 9841234567",\n        "city": "Pokhara",\n        "address": "Lakeside Marg 4"\n    },\n    "cargo": {"description": "Apparel Box", "weightKg": 2.0},\n    "codAmountNpr": 4500\n}\n\nresponse = requests.post(url, json=payload, headers=headers)\nprint("Tracking ID:", response.json().get("trackingId"))`
+                        : `{\n  "event": "parcel.delivered",\n  "eventId": "evt_d7_9940182",\n  "timestamp": "2026-09-05T18:00:00+05:45",\n  "data": {\n    "trackingId": "D7-PKR-90214",\n    "merchantId": "${currentUser?.id || 'usr-merch-01'}",\n    "status": "Delivered",\n    "codCollectedNpr": 4500,\n    "rider": "Dipendra Shrestha",\n    "hub": "Pokhara Hub",\n    "clearedToLedger": true\n  }\n}`;
+                    navigator.clipboard.writeText(currentCode);
+                    setCodeCopied(true);
+                    setTimeout(() => setCodeCopied(false), 2000);
+                  }}
+                  className="btn btn-secondary btn-sm"
+                  style={{ fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                >
+                  {codeCopied ? <Check size={13} color="#10b981" /> : <Copy size={13} />}
+                  <span>{codeCopied ? 'Copied Code!' : 'Copy Snippet'}</span>
+                </button>
               </div>
-            )}
+
+              <pre className="code-block-responsive">
+                <code>
+                  {codeLang === 'curl' && (
+`# Book a new Doorstep Consignment
+curl -X POST https://sobinupreti.com.np/api/v1/shipments/create \\
+  -H "Authorization: Bearer d7_sec_994038102488aefc_secret_production" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "sender": { "company": "${currentUser?.company || 'Nepal Merchant'}" },
+    "recipient": {
+      "name": "Aarav Sharma",
+      "phone": "+977 9841234567",
+      "city": "Pokhara",
+      "address": "Lakeside Marg 4"
+    },
+    "cargo": { "description": "Apparel Box", "weightKg": 2.0 },
+    "codAmountNpr": 4500,
+    "serviceType": "STANDARD_DOORSTEP"
+  }'`
+                  )}
+
+                  {codeLang === 'nodejs' && (
+`// Node.js 18+ (Fetch API)
+const response = await fetch('https://sobinupreti.com.np/api/v1/shipments/create', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer d7_sec_994038102488aefc_secret_production',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    recipient: {
+      name: 'Aarav Sharma',
+      phone: '+977 9841234567',
+      city: 'Pokhara',
+      address: 'Lakeside Marg 4'
+    },
+    cargo: { description: 'Apparel Box', weightKg: 2.0 },
+    codAmountNpr: 4500
+  })
+});
+
+const consignment = await response.json();
+console.log('Waybill Generated:', consignment.trackingId);`
+                  )}
+
+                  {codeLang === 'python' && (
+`# Python 3 with requests
+import requests
+
+url = "https://sobinupreti.com.np/api/v1/shipments/create"
+headers = {
+    "Authorization": "Bearer d7_sec_994038102488aefc_secret_production",
+    "Content-Type": "application/json"
+}
+payload = {
+    "recipient": {
+        "name": "Aarav Sharma",
+        "phone": "+977 9841234567",
+        "city": "Pokhara",
+        "address": "Lakeside Marg 4"
+    },
+    "cargo": {"description": "Apparel Box", "weightKg": 2.0},
+    "codAmountNpr": 4500
+}
+
+response = requests.post(url, json=payload, headers=headers)
+print("Tracking ID:", response.json().get("trackingId"))`
+                  )}
+
+                  {codeLang === 'webhook' && (
+`// Sample Webhook JSON payload sent on status change
+{
+  "event": "parcel.delivered",
+  "eventId": "evt_d7_9940182",
+  "timestamp": "2026-09-05T18:00:00+05:45",
+  "data": {
+    "trackingId": "D7-PKR-90214",
+    "merchantId": "${currentUser?.id || 'usr-merch-01'}",
+    "status": "Delivered",
+    "codCollectedNpr": 4500,
+    "rider": "Dipendra Shrestha",
+    "hub": "Pokhara Hub",
+    "clearedToLedger": true
+  }
+}`
+                  )}
+                </code>
+              </pre>
+            </div>
           </div>
         </div>
       )}

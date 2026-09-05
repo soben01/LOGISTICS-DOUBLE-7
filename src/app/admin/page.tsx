@@ -1209,7 +1209,7 @@ export default function AdminControlPanel() {
                 </div>
 
                 {/* Quick Master Shortcuts */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+                <div className="grid-responsive-2">
                   {/* Shortcut 1: Manage Accounts */}
                   <div style={{
                     padding: '1.5rem',
@@ -2211,7 +2211,7 @@ export default function AdminControlPanel() {
                 </div>
 
                 {/* Edge Bindings Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.25rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1.25rem' }}>
                   <div style={{ padding: '1.5rem', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                       <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#f8fafc' }}>D1 tracking_db</span>

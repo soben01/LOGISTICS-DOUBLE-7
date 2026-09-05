@@ -273,10 +273,9 @@ export default function AccountStructureAndCodWorkflow({
           </div>
 
           {/* DIAGRAM 1: CLEAN VISUAL STRUCTURE MATCHING SCREENSHOT */}
-          <div style={{
+          <div className="card card-responsive" style={{
             maxWidth: '820px',
             margin: '0 auto',
-            padding: '2rem 1.5rem',
             background: 'rgba(7, 10, 18, 0.65)',
             borderRadius: '16px',
             border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -285,8 +284,8 @@ export default function AccountStructureAndCodWorkflow({
             {/* Top Row: Admin Portal (Left) and Merchant Portal (Right) */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-              gap: '2.5rem',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 270px), 1fr))',
+              gap: '1.5rem',
               marginBottom: '2rem'
             }}>
               {/* Admin Portal Card (Blue theme) */}
@@ -676,8 +675,8 @@ export default function AccountStructureAndCodWorkflow({
                 Failed Branch: Downward arrow -> Failed (Reattempt or return) */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: '2rem',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))',
+              gap: '1.5rem',
               alignItems: 'start'
             }}>
               {/* Left Column: The Cash Collection -> Settlement Pipeline */}
@@ -812,7 +811,7 @@ export default function AccountStructureAndCodWorkflow({
 
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
                 gap: '0.75rem',
                 fontSize: '0.84rem',
                 color: 'var(--text-secondary)'
@@ -986,7 +985,7 @@ export default function AccountStructureAndCodWorkflow({
                   </div>
 
                   {/* Action Controls for this record */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1.25rem' }}>
                     {/* Advance Stage Form */}
                     <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
                       <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#ffffff', marginBottom: '0.6rem' }}>
@@ -1124,11 +1123,10 @@ export default function AccountStructureAndCodWorkflow({
       {/* 3. PER-RIDER & PER-MERCHANT LEDGERS TAB                  */}
       {/* ======================================================== */}
       {activeTab === 'ledgers' && (
-        <div style={{
+        <div className="card card-responsive" style={{
           background: 'var(--bg-card)',
           borderRadius: '16px',
           border: '1px solid var(--border-subtle)',
-          padding: '2.5rem 2rem',
           boxShadow: 'var(--shadow-md)'
         }}>
           <h3 style={{ fontSize: '1.35rem', marginBottom: '0.5rem' }}>
@@ -1138,7 +1136,7 @@ export default function AccountStructureAndCodWorkflow({
             Live cash balance in rider custody, unremitted cash past SLA, and merchant balance awaiting bank payout.
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+          <div className="grid-responsive-2">
             {/* Rider Cash in Hand Ledger */}
             <div className="card" style={{ padding: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>

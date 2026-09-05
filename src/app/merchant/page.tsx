@@ -187,10 +187,10 @@ export default function MerchantPortal() {
                   <ShieldCheck size={12} /> VERIFIED SHIPPER
                 </span>
               </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', wordBreak: 'break-word' }}>
                 <span>ID: <strong style={{ color: '#f8fafc', fontFamily: 'monospace' }}>{currentUser.id}</strong></span>
                 <span>&bull;</span>
-                <span>Contact: {currentUser.name} ({currentUser.email})</span>
+                <span style={{ wordBreak: 'break-all' }}>Contact: {currentUser.name} ({currentUser.email})</span>
               </div>
             </div>
           </div>
@@ -275,7 +275,7 @@ export default function MerchantPortal() {
 
       {/* KPI Cards Strip */}
       <div className="container" style={{ marginTop: '2rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '1.25rem' }}>
           {/* Card 1: Available COD */}
           <div style={{
             padding: '1.5rem',
@@ -560,12 +560,14 @@ export default function MerchantPortal() {
         {/* ========================================================================= */}
         {/* TAB 2: COD SETTLEMENTS & BANK LEDGER */}
         {/* ========================================================================= */}
+        {/* ========================================================================= */}
+        {/* TAB 2: COD SETTLEMENTS & BANK LEDGER */}
+        {/* ========================================================================= */}
         {activeTab === 'cod_settlements' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            <div className="grid-responsive-2">
               {/* Card 1: Balance & Request Payout */}
-              <div style={{
-                padding: '1.75rem',
+              <div className="card-responsive" style={{
                 borderRadius: '12px',
                 backgroundColor: 'rgba(255, 255, 255, 0.02)',
                 border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -578,7 +580,7 @@ export default function MerchantPortal() {
                     <Banknote size={20} color="#10b981" />
                     <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>Settlement Balance</h3>
                   </div>
-                  <div style={{ fontSize: '2.25rem', fontWeight: 800, color: '#10b981', marginBottom: '0.5rem' }}>
+                  <div style={{ fontSize: 'clamp(1.6rem, 5vw, 2.25rem)', fontWeight: 800, color: '#10b981', marginBottom: '0.5rem' }}>
                     Rs. {totalCodReconciled.toLocaleString()}
                   </div>
                   <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
@@ -604,8 +606,7 @@ export default function MerchantPortal() {
               </div>
 
               {/* Card 2: Registered Bank Details */}
-              <div style={{
-                padding: '1.75rem',
+              <div className="card-responsive" style={{
                 borderRadius: '12px',
                 backgroundColor: 'rgba(255, 255, 255, 0.02)',
                 border: '1px solid rgba(255, 255, 255, 0.08)'
@@ -636,11 +637,10 @@ export default function MerchantPortal() {
             </div>
 
             {/* Past Remittances History */}
-            <div style={{
+            <div className="card-responsive" style={{
               backgroundColor: 'rgba(255, 255, 255, 0.02)',
               borderRadius: '12px',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              padding: '1.5rem'
+              border: '1px solid rgba(255, 255, 255, 0.08)'
             }}>
               <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem' }}>
                 Recent Bank Remittances & Tax Vouchers
@@ -685,7 +685,13 @@ export default function MerchantPortal() {
         {/* TAB 3, 4, 5: EMBEDDED MERCHANT TOOLS SUITE */}
         {/* ========================================================================= */}
         {(activeTab === 'ndr_desk' || activeTab === 'staff' || activeTab === 'profile_api') && (
-          <MerchantToolsSuite />
+          <MerchantToolsSuite
+            onNotice={triggerNotice}
+            initialTool={
+              activeTab === 'profile_api' ? 'api_webhooks' :
+              activeTab === 'ndr_desk' ? 'ndr_manager' : 'staff'
+            }
+          />
         )}
 
         {/* ========================================================================= */}
