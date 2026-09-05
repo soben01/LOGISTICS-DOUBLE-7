@@ -358,7 +358,7 @@ export default function MerchantPortal() {
 
       {/* Navigation Tabs */}
       <div className="container" style={{ marginTop: '2rem' }}>
-        <div style={{
+        <div className="mobile-scroll-x" style={{
           display: 'flex',
           gap: '0.5rem',
           borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
@@ -466,11 +466,10 @@ export default function MerchantPortal() {
             </div>
 
             {/* Consignments Table */}
-            <div style={{
+            <div className="table-responsive" style={{
               backgroundColor: 'rgba(255, 255, 255, 0.02)',
               borderRadius: '12px',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              overflowX: 'auto'
+              border: '1px solid rgba(255, 255, 255, 0.08)'
             }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                 <thead>
@@ -646,35 +645,38 @@ export default function MerchantPortal() {
               <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem' }}>
                 Recent Bank Remittances & Tax Vouchers
               </h3>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: 'var(--text-secondary)', textAlign: 'left', fontSize: '0.75rem' }}>
-                    <th style={{ padding: '0.75rem 0.5rem' }}>Voucher Ref</th>
-                    <th style={{ padding: '0.75rem 0.5rem' }}>Transfer Date</th>
-                    <th style={{ padding: '0.75rem 0.5rem' }}>Amount Transferred</th>
-                    <th style={{ padding: '0.75rem 0.5rem' }}>Clearing Method</th>
-                    <th style={{ padding: '0.75rem 0.5rem' }}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    { ref: 'NCHL-TX-9921', date: 'Sep 3, 2026', amount: 38400, method: 'NCHL-IPS Direct Credit', status: 'Settled & Cleared' },
-                    { ref: 'NCHL-TX-8812', date: 'Aug 28, 2026', amount: 52100, method: 'NCHL-IPS Direct Credit', status: 'Settled & Cleared' },
-                  ].map(tx => (
-                    <tr key={tx.ref} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
-                      <td style={{ padding: '0.85rem 0.5rem', fontFamily: 'monospace', color: '#3b82f6', fontWeight: 700 }}>{tx.ref}</td>
-                      <td style={{ padding: '0.85rem 0.5rem', color: 'var(--text-secondary)' }}>{tx.date}</td>
-                      <td style={{ padding: '0.85rem 0.5rem', fontWeight: 700, color: '#10b981' }}>Rs. {tx.amount.toLocaleString()}</td>
-                      <td style={{ padding: '0.85rem 0.5rem', color: 'var(--text-secondary)' }}>{tx.method}</td>
-                      <td style={{ padding: '0.85rem 0.5rem' }}>
-                        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.15)', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>
-                          {tx.status}
-                        </span>
-                      </td>
+              <div className="table-responsive">
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: 'var(--text-secondary)', textAlign: 'left', fontSize: '0.75rem' }}>
+                      <th style={{ padding: '0.75rem 0.5rem' }}>Voucher Ref</th>
+                      <th style={{ padding: '0.75rem 0.5rem' }}>Transfer Date</th>
+                      <th style={{ padding: '0.75rem 0.5rem' }}>Amount Transferred</th>
+                      <th style={{ padding: '0.75rem 0.5rem' }}>Clearing Method</th>
+                      <th style={{ padding: '0.75rem 0.5rem' }}>Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {[
+                      { ref: 'RTGS-NPR-98421', date: 'Yesterday 6:30 PM', amount: 48500, method: 'ConnectIPS Real-Time', status: 'Cleared' },
+                      { ref: 'ACH-NPR-98104', date: '2 days ago', amount: 112000, method: 'Nabil NCHL Direct', status: 'Cleared' },
+                      { ref: 'RTGS-NPR-97782', date: '3 days ago', amount: 34200, method: 'ConnectIPS Real-Time', status: 'Cleared' }
+                    ].map(tx => (
+                      <tr key={tx.ref} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
+                        <td style={{ padding: '0.75rem 0.5rem', fontWeight: 700, color: '#f8fafc', fontFamily: 'monospace' }}>{tx.ref}</td>
+                        <td style={{ padding: '0.75rem 0.5rem', color: 'var(--text-secondary)' }}>{tx.date}</td>
+                        <td style={{ padding: '0.75rem 0.5rem', color: '#10b981', fontWeight: 700 }}>Rs. {tx.amount.toLocaleString()}</td>
+                        <td style={{ padding: '0.75rem 0.5rem', color: 'var(--text-secondary)' }}>{tx.method}</td>
+                        <td style={{ padding: '0.75rem 0.5rem' }}>
+                          <span style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10b981', padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700 }}>
+                            {tx.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}

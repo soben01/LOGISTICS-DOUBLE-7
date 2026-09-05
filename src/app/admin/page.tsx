@@ -555,9 +555,9 @@ export default function AdminControlPanel() {
       )}
 
       {/* Main Admin Workspace Shell */}
-      <div style={{ display: 'flex', flex: 1 }}>
-        {/* Left Navigation Sidebar */}
-        <aside style={{
+      <div className="admin-layout-shell" style={{ display: 'flex', flex: 1 }}>
+        {/* Left Navigation Sidebar (Desktop >= 1025px) */}
+        <aside className="admin-sidebar" style={{
           width: '280px',
           backgroundColor: '#0a0f1d',
           borderRight: '1px solid rgba(255, 255, 255, 0.08)',
@@ -948,20 +948,68 @@ export default function AdminControlPanel() {
           </div>
         </aside>
 
+        {/* Mobile / Tablet Horizontal Navigation Bar (Visible on screens <= 1024px) */}
+        <nav className="admin-mobile-nav" aria-label="Admin Mobile Navigation">
+          <div className="mobile-scroll-x" style={{ alignItems: 'center' }}>
+            {[
+              { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+              { id: 'users', label: `Users (${usersList.length})`, icon: Users },
+              { id: 'shipments', label: `Shipments (${shipments.length})`, icon: Boxes },
+              { id: 'cod', label: 'COD Ledger', icon: Banknote },
+              { id: 'email', label: 'Email & CF', icon: Mail },
+              { id: 'settings', label: 'Settings', icon: SettingsIcon },
+              { id: 'roles', label: 'Roles Matrix', icon: ShieldCheck },
+              { id: 'edge', label: 'Edge Diagnostics', icon: Activity },
+              { id: 'workflow', label: 'Architecture', icon: Layers },
+              { id: 'audit', label: `Security (${auditLogs.length})`, icon: History },
+            ].map(tab => {
+              const Icon = tab.icon;
+              const isActive = activeSection === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveSection(tab.id as AdminSection)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.45rem',
+                    padding: '0.5rem 0.9rem',
+                    borderRadius: '8px',
+                    border: '1px solid',
+                    borderColor: isActive ? 'rgba(239, 68, 68, 0.55)' : 'rgba(255, 255, 255, 0.1)',
+                    backgroundColor: isActive ? 'rgba(239, 68, 68, 0.18)' : 'rgba(255, 255, 255, 0.03)',
+                    color: isActive ? '#ffffff' : 'var(--text-secondary)',
+                    fontWeight: isActive ? 700 : 500,
+                    fontSize: '0.82rem',
+                    whiteSpace: 'nowrap',
+                    cursor: 'pointer',
+                    flexShrink: 0
+                  }}
+                >
+                  <Icon size={14} color={isActive ? '#ef4444' : 'currentColor'} />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+
         {/* Main Content Area */}
-        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflowX: 'hidden' }}>
+        <main className="admin-main-area" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflowX: 'hidden' }}>
           {/* Top Control Bar */}
           <header style={{
-            height: '70px',
+            minHeight: '64px',
             backgroundColor: '#0a0f1d',
             borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '0 2rem',
+            padding: '0.75rem 1.25rem',
             position: 'sticky',
             top: 0,
-            zIndex: 50
+            zIndex: 50,
+            gap: '0.75rem',
+            flexWrap: 'wrap'
           }}>
             {/* Breadcrumb & Live State */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -2771,11 +2819,13 @@ export default function AdminControlPanel() {
         }}>
           <form onSubmit={handleCreateUser} style={{
             width: '100%',
-            maxWidth: '480px',
+            maxWidth: '520px',
+            maxHeight: '88vh',
+            overflowY: 'auto',
             backgroundColor: '#0a0f1d',
             borderRadius: '12px',
             border: '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '1.75rem'
+            padding: '1.5rem'
           }}>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>
               Provision New Account
@@ -2783,7 +2833,7 @@ export default function AdminControlPanel() {
             <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
               Create an administrator or verified merchant account with immediate credentials.
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>Full Name *</label>
                 <input

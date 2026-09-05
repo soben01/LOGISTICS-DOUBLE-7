@@ -513,10 +513,13 @@ export default function Navbar() {
         <div style={{
           backgroundColor: 'var(--bg-card)',
           borderBottom: '1px solid var(--border-medium)',
-          padding: '1.5rem',
+          padding: '1.25rem 1rem',
+          maxHeight: 'calc(100vh - 110px)',
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
           display: 'flex',
           flexDirection: 'column',
-          gap: '1.25rem'
+          gap: '1.1rem'
         }}>
           {currentUser ? (
             <div style={{

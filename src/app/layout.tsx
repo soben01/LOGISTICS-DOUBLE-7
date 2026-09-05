@@ -1,7 +1,16 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import '../styles/globals.css';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
+import MobileBottomNav from '../components/layout/MobileBottomNav';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: 'cover',
+  themeColor: '#060911',
+};
 
 export const metadata: Metadata = {
   title: 'DOUBLE 7 LOGISTICS | Next-Gen Global Supply Chain & Air Cargo Network',
@@ -17,7 +26,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
@@ -26,10 +34,9 @@ export default function RootLayout({
         <main style={{ minHeight: '80vh' }}>
           {children}
         </main>
-          <span style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff', whiteSpace: 'nowrap' }}>
-                DOUBLE <span style={{ color: 'var(--brand-orange)' }}>7</span>
-              </span>
+        <div className="mobile-bottom-nav-spacer" />
         <Footer />
+        <MobileBottomNav />
       </body>
     </html>
   );

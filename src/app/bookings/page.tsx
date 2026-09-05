@@ -309,7 +309,7 @@ export default function AllBookingsPage() {
             </div>
           </div>
 
-          <div style={{ overflowX: 'auto' }}>
+          <div className="table-responsive">
             <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
               <thead>
                 <tr style={{ background: 'rgba(15, 23, 42, 0.6)', textAlign: 'left', borderBottom: '1px solid var(--border-subtle)' }}>

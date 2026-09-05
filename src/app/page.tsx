@@ -76,7 +76,7 @@ export default function HomePage() {
         }} />
 
         <div className="container" style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: '3.5rem', alignItems: 'center' }} className="hero-grid">
+          <div className="hero-grid">
             {/* Left Col: Headings & Quick Tracker */}
             <div>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }} className="badge badge-orange">

@@ -53,6 +53,12 @@
   --transition-fast: 0.15s ease;
   --transition-normal: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   --transition-slow: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Mobile Safe Area Insets (iPhone Notches & Android Gestures) */
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sat: env(safe-area-inset-top, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
 }
 
 * {
@@ -1146,6 +1152,273 @@ a {
 
 .route-step.active .route-step-line {
   background: rgba(255, 255, 255, 0.1);
+}
+
+/* =========================================================
+   COMPREHENSIVE MOBILE-FRIENDLY & RESPONSIVE DESIGN SYSTEM
+   Optimized for smartphones (iOS/Android), tablets, and safe areas.
+   ========================================================= */
+
+/* 1. iOS Auto-Zoom Guard & Mobile Input Ergonomics */
+@media (max-width: 768px) {
+  input, select, textarea,
+  .input-field, .select-field, .textarea-field {
+    font-size: 16px !important; /* Prevents iOS Safari from zooming into form fields on focus */
+    min-height: 44px; /* Standard Apple HIG touch target height */
+  }
+  .btn {
+    min-height: 44px;
+  }
+}
+
+/* 2. Responsive Hero & Grid Utilities */
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 3.5rem;
+  align-items: center;
+}
+
+@media (max-width: 992px) {
+  .hero-grid {
+    grid-template-columns: 1fr !important;
+    gap: 2.25rem !important;
+  }
+}
+
+/* 3. Mobile Helper Classes */
+@media (max-width: 768px) {
+  .mobile-stack {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  .mobile-flex-col {
+    flex-direction: column !important;
+  }
+  .mobile-w-full {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+  }
+  .mobile-hide {
+    display: none !important;
+  }
+  .mobile-p-sm {
+    padding: 1rem !important;
+  }
+  .mobile-p-md {
+    padding: 1.25rem !important;
+  }
+  .mobile-text-center {
+    text-align: center !important;
+  }
+  .mobile-gap-sm {
+    gap: 0.5rem !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .desktop-hide {
+    display: none !important;
+  }
+}
+
+/* 4. Table Responsive Container with Momentum Scrolling */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius-md);
+  position: relative;
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 5px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+/* 5. Mobile Horizontal Pill Scroller (No ugly scrollbars, smooth swipe) */
+.mobile-scroll-x {
+  display: flex;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+}
+
+.mobile-scroll-x::-webkit-scrollbar {
+  display: none;
+}
+
+/* 6. Mobile Bottom Navigation Bar & Safe Spacers */
+.mobile-bottom-nav-spacer {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-nav-spacer {
+    display: block;
+    height: calc(64px + var(--sab));
+    width: 100%;
+  }
+}
+
+.mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(62px + var(--sab));
+    padding-bottom: var(--sab);
+    background: rgba(7, 11, 22, 0.96);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.65);
+    z-index: 999;
+    align-items: center;
+    justify-content: space-around;
+  }
+
+  .mobile-bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 0;
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color var(--transition-fast), transform var(--transition-fast);
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+  }
+
+  .mobile-bottom-nav-item.active {
+    color: var(--brand-orange);
+    font-weight: 700;
+  }
+
+  .mobile-bottom-nav-item:active {
+    transform: scale(0.92);
+  }
+
+  .mobile-bottom-nav-center-btn {
+    position: relative;
+    top: -12px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ff6600 0%, #ea580c 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(255, 102, 0, 0.55), 0 0 0 4px #070b16;
+    transition: transform var(--transition-fast);
+  }
+
+  .mobile-bottom-nav-center-btn:active {
+    transform: scale(0.9);
+  }
+}
+
+/* 7. Super Admin Adaptive Responsive Shell */
+.admin-layout-shell {
+  display: flex;
+  flex: 1;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.admin-sidebar {
+  width: 280px;
+  background-color: #0a0f1d;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.admin-mobile-nav {
+  display: none;
+}
+
+.admin-main-area {
+  flex: 1;
+  padding: 2rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .admin-layout-shell {
+    flex-direction: column !important;
+  }
+  .admin-sidebar {
+    display: none !important;
+  }
+  .admin-mobile-nav {
+    display: block !important;
+    position: sticky;
+    top: 50px;
+    z-index: 85;
+    background: rgba(10, 15, 29, 0.97);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 0.65rem 1rem;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  }
+  .admin-main-area {
+    padding: 1.25rem 0.85rem !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+  }
+}
+
+/* 8. Mobile Dialogs & Sheets (Responsive Popups) */
+@media (max-width: 640px) {
+  .modal-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+  .modal-dialog {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 88vh !important;
+    border-radius: 20px 20px 0 0 !important;
+    padding: 1.5rem 1.25rem !important;
+    padding-bottom: max(1.5rem, calc(var(--sab) + 1.25rem)) !important;
+    animation: slideUpMobileSheet 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+  @keyframes slideUpMobileSheet {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
 }
 
 /* =========================================================
