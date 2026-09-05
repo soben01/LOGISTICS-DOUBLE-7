@@ -571,12 +571,13 @@ async function dispatchEmailDirect(
     }
   }
 
-  // 4. MailChannels Relay fallback
+  // 4. MailChannels Relay fallback (with 2.5s timeout)
   if (!dispatched) {
     try {
       const mailRes = await fetch('https://api.mailchannels.net/tx/v1/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(2500),
         body: JSON.stringify({
           personalizations: [{ to: [{ email: cleanEmail, name: role }] }],
           from: { email: fromEmail, name: 'Double 7 Logistics Command' },
