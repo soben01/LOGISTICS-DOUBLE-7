@@ -2,32 +2,25 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import {
-  Plane,
-  Package,
   Search,
   Menu,
   X,
-  Radio,
-  ArrowRight,
-  ShieldCheck,
-  Globe2,
-  Cpu,
-  User as UserIcon,
   LogOut,
-  Lock,
-  Building,
+  User as UserIcon,
   Truck,
-  Boxes
+  ShieldCheck,
+  Building,
+  Cpu
 } from 'lucide-react';
 import { getCurrentUser, logoutUser, User } from '../../lib/auth';
 
 export default function Navbar() {
-  const [quickTrackId, setQuickTrackId] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const checkUser = () => {
@@ -46,217 +39,82 @@ export default function Navbar() {
   const handleLogout = () => {
     logoutUser();
     setCurrentUser(null);
+    setMobileMenuOpen(false);
     router.push('/');
   };
 
-  const handleQuickTrack = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!quickTrackId.trim()) return;
-    router.push(`/track?id=${encodeURIComponent(quickTrackId.trim())}`);
-    setQuickTrackId('');
-    setMobileMenuOpen(false);
-  };
+  const navLinks = [
+    { href: '/track', label: 'Track' },
+    { href: currentUser ? '/book' : '/login?redirect=/book', label: 'Book Cargo' },
+    { href: '/rates', label: 'Rates' },
+    { href: '/support', label: 'Support' },
+    { href: '/about', label: 'About' },
+  ];
 
   return (
     <header style={{
       position: 'sticky',
       top: 0,
       zIndex: 100,
-      backgroundColor: 'rgba(7, 10, 18, 0.92)',
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
+      backgroundColor: 'rgba(7, 10, 18, 0.95)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
       borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-      width: '100%'
+      width: '100%',
     }}>
-      {/* Top Telemetry Ticker Bar */}
-      <div style={{
-        backgroundColor: 'rgba(13, 20, 36, 0.98)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-        fontSize: '0.75rem',
-        padding: '0.4rem 0',
-        color: 'var(--text-secondary)',
-        width: '100%'
-      }}>
-        <div className="container" style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: '1rem',
-          flexWrap: 'nowrap'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1rem',
-            overflow: 'hidden',
-            whiteSpace: 'nowrap',
-            textOverflow: 'ellipsis',
-            minWidth: 0
-          }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#10b981', fontWeight: 700, flexShrink: 0 }}>
-              <span className="pulse-dot pulse-dot-green" style={{ width: 6, height: 6 }}></span>
-              DOMESTIC NEPAL: 100% ACTIVE
-            </span>
-            <span style={{ color: 'var(--border-medium)', flexShrink: 0 }}>|</span>
-            <span className="ticker-hide-sm" style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
-              Hubs: <strong style={{ color: '#f8fafc' }}>KTM &bull; Pokhara &bull; Birgunj &bull; Biratnagar &bull; Chitwan &bull; Butwal</strong>
-            </span>
-            <span style={{ color: 'var(--border-medium)', flexShrink: 0 }} className="ticker-hide-md">|</span>
-            <span className="ticker-hide-md" style={{ whiteSpace: 'nowrap', color: 'var(--brand-amber)', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-              <Globe2 size={12} /> International Cross-Border: <strong style={{ color: '#ffffff', background: 'rgba(245, 158, 11, 0.2)', padding: '0.1rem 0.4rem', borderRadius: '4px', border: '1px solid rgba(245, 158, 11, 0.4)' }}>Coming Soon</strong>
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexShrink: 0, whiteSpace: 'nowrap' }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', color: 'var(--brand-orange)', fontWeight: 600, fontSize: '0.72rem' }} className="ticker-hide-sm">
-              <Radio size={12} className="animate-pulse" /> 24/7 Dispatch Control
-            </span>
-
-            {/* Direct Portal Links in Top Bar */}
-            {currentUser ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
-                <Link
-                  href={currentUser.role === 'admin' ? '/admin' : '/merchant'}
-                  title={`Go to ${currentUser.role === 'admin' ? 'Super Admin Tower' : 'Merchant Portal'}`}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: currentUser.role === 'admin' ? '1px solid rgba(255, 102, 0, 0.45)' : '1px solid rgba(6, 182, 212, 0.45)',
-                    padding: '0.25rem 0.65rem',
-                    borderRadius: '8px',
-                    textDecoration: 'none',
-                    textAlign: 'left',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  <div style={{
-                    width: '22px',
-                    height: '22px',
-                    borderRadius: '50%',
-                    background: currentUser.role === 'admin' ? 'linear-gradient(135deg, #ff6600 0%, #b45309 100%)' : 'linear-gradient(135deg, #06b6d4 0%, #0d9488 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 800,
-                    fontSize: '0.7rem',
-                    color: '#ffffff',
-                    flexShrink: 0
-                  }}>
-                    {currentUser.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', lineHeight: 1.1 }}>
-                      <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#ffffff' }}>
-                        {currentUser.name}
-                      </span>
-                      <span className={currentUser.role === 'admin' ? 'badge badge-orange' : 'badge badge-cyan'} style={{ fontSize: '0.56rem', padding: '0.04rem 0.3rem' }}>
-                        {currentUser.role === 'admin' ? 'ADMIN' : 'MERCHANT'}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: '0.62rem', color: currentUser.role === 'admin' ? 'var(--brand-orange)' : 'var(--brand-cyan)', marginTop: '1px' }}>
-                      {currentUser.role === 'admin' ? 'Admin Portal →' : 'Merchant Portal →'}
-                    </div>
-                  </div>
-                </Link>
-
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="btn btn-outline btn-sm"
-                  title="Sign Out"
-                  style={{ padding: '0.25rem 0.45rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, height: '26px' }}
-                >
-                  <LogOut size={12} />
-                </button>
-              </div>
-            ) : (
-              <Link
-                href="/login"
-                className="ticker-hide-sm"
-                style={{
-                  fontSize: '0.7rem',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  color: 'var(--text-secondary)',
-                  padding: '0.2rem 0.65rem',
-                  borderRadius: '4px',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  fontWeight: 700,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.35rem',
-                  whiteSpace: 'nowrap',
-                  textDecoration: 'none'
-                }}
-              >
-                <Lock size={12} />
-                <span>Portal Login</span>
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Main Navbar Row */}
       <div className="container" style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        height: '4.75rem',
-        gap: '1.25rem',
-        flexWrap: 'nowrap'
+        height: '4.25rem',
+        gap: '1.5rem',
       }}>
-        {/* Brand Logo - Strictly Non-Wrapping & Fixed */}
+        {/* Brand Logo */}
         <Link href="/" style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '0.75rem',
+          gap: '0.65rem',
           textDecoration: 'none',
           flexShrink: 0,
-          whiteSpace: 'nowrap'
         }}>
           <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '10px',
-            background: 'linear-gradient(135deg, #ff6600 0%, #b33900 100%)',
+            width: '36px',
+            height: '36px',
+            borderRadius: '9px',
+            background: 'linear-gradient(135deg, #ff6600 0%, #d9480f 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 4px 16px rgba(255, 102, 0, 0.4)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            flexShrink: 0
+            boxShadow: '0 2px 10px rgba(255, 102, 0, 0.35)',
           }}>
             <span style={{
-              fontSize: '1.25rem',
+              fontSize: '1.15rem',
               fontWeight: 900,
               fontFamily: 'var(--font-mono)',
               color: '#ffffff',
-              letterSpacing: '-1px'
             }}>7</span>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0, whiteSpace: 'nowrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', whiteSpace: 'nowrap' }}>
-              <span style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff', whiteSpace: 'nowrap' }}>
-                DOUBLE <span style={{ color: 'var(--brand-orange)' }}>7</span>
-              </span>
-              <span style={{
-                fontSize: '0.65rem',
-                fontWeight: 700,
-                background: 'rgba(6, 182, 212, 0.12)',
-                border: '1px solid rgba(6, 182, 212, 0.3)',
-                padding: '0.15rem 0.45rem',
-                borderRadius: '4px',
-                letterSpacing: '0.08em',
-                color: 'var(--brand-cyan)',
-                whiteSpace: 'nowrap'
-              }}>LOGISTICS</span>
-            </div>
-            <div className="nav-tagline" style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>
-              Nepal Nationwide &bull; International Coming Soon
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <span style={{
+              fontSize: '1.18rem',
+              fontWeight: 800,
+              letterSpacing: '-0.02em',
+              color: '#ffffff',
+            }}>
+              DOUBLE <span style={{ color: 'var(--brand-orange)' }}>7</span>
+            </span>
+            <span style={{
+              fontSize: '0.65rem',
+              fontWeight: 700,
+              background: 'rgba(255, 255, 255, 0.08)',
+              color: 'var(--text-secondary)',
+              padding: '0.15rem 0.4rem',
+              borderRadius: '4px',
+              letterSpacing: '0.06em',
+            }}>
+              LOGISTICS
+            </span>
           </div>
         </Link>
 
@@ -264,227 +122,123 @@ export default function Navbar() {
         <nav className="nav-desktop-links" style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '1.5rem',
-          whiteSpace: 'nowrap',
-          flexShrink: 0
+          gap: '1.75rem',
         }}>
-          {/* Authenticated Internal Operations: Dashboard & My/All Bookings (Only visible when logged in) */}
+          {navLinks.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                style={{
+                  fontSize: '0.9rem',
+                  fontWeight: isActive ? 700 : 500,
+                  color: isActive ? '#ffffff' : 'var(--text-secondary)',
+                  textDecoration: 'none',
+                  transition: 'color var(--transition-fast)',
+                }}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+
+          {/* If authenticated, link to Bookings */}
           {currentUser && (
-            <>
-              {/* Priority 1: Dashboard */}
-              <Link
-                href="/dashboard"
-                style={{
-                  fontSize: '0.88rem',
-                  fontWeight: 700,
-                  color: '#ffffff',
-                  background: 'rgba(6, 182, 212, 0.12)',
-                  border: '1px solid rgba(6, 182, 212, 0.35)',
-                  padding: '0.25rem 0.65rem',
-                  borderRadius: '6px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.35rem',
-                  whiteSpace: 'nowrap',
-                  transition: 'all var(--transition-fast)'
-                }}
-              >
-                <Cpu size={14} color="var(--brand-cyan)" />
-                <span>Dashboard</span>
-              </Link>
-
-              {/* Priority 2: Bookings Registry (My Bookings for merchant, All Bookings for admin) */}
-              <Link
-                href="/bookings"
-                style={{
-                  fontSize: '0.88rem',
-                  fontWeight: 700,
-                  color: '#ffffff',
-                  background: 'rgba(255, 102, 0, 0.12)',
-                  border: '1px solid rgba(255, 102, 0, 0.35)',
-                  padding: '0.25rem 0.65rem',
-                  borderRadius: '6px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.35rem',
-                  whiteSpace: 'nowrap',
-                  transition: 'all var(--transition-fast)'
-                }}
-              >
-                <Boxes size={14} color="var(--brand-orange)" />
-                <span>{currentUser.role === 'admin' ? 'All Bookings' : 'My Bookings'}</span>
-              </Link>
-
-              {/* Priority 3: Dedicated Admin or Merchant Console */}
-              {currentUser.role === 'admin' ? (
-                <Link
-                  href="/admin"
-                  style={{
-                    fontSize: '0.88rem',
-                    fontWeight: 700,
-                    color: '#ffffff',
-                    background: 'rgba(255, 102, 0, 0.18)',
-                    border: '1px solid rgba(255, 102, 0, 0.5)',
-                    padding: '0.25rem 0.65rem',
-                    borderRadius: '6px',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.35rem',
-                    whiteSpace: 'nowrap',
-                    transition: 'all var(--transition-fast)'
-                  }}
-                >
-                  <ShieldCheck size={14} color="var(--brand-orange)" />
-                  <span>Admin Tools</span>
-                </Link>
-              ) : (
-                <Link
-                  href="/merchant"
-                  style={{
-                    fontSize: '0.88rem',
-                    fontWeight: 700,
-                    color: '#ffffff',
-                    background: 'rgba(6, 182, 212, 0.18)',
-                    border: '1px solid rgba(6, 182, 212, 0.5)',
-                    padding: '0.25rem 0.65rem',
-                    borderRadius: '6px',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.35rem',
-                    whiteSpace: 'nowrap',
-                    transition: 'all var(--transition-fast)'
-                  }}
-                >
-                  <Building size={14} color="var(--brand-cyan)" />
-                  <span>Merchant Tools</span>
-                </Link>
-              )}
-            </>
+            <Link
+              href="/bookings"
+              style={{
+                fontSize: '0.9rem',
+                fontWeight: pathname === '/bookings' ? 700 : 500,
+                color: pathname === '/bookings' ? '#ffffff' : 'var(--text-secondary)',
+                textDecoration: 'none',
+              }}
+            >
+              Bookings
+            </Link>
           )}
-
-          {/* Priority 3: Book Cargo */}
-          <Link
-            href={currentUser ? "/book" : "/login?redirect=/book"}
-            style={{
-              fontSize: '0.9rem',
-              fontWeight: 600,
-              color: 'var(--text-primary)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <Truck size={14} color="var(--text-muted)" />
-            <span>Book Cargo</span>
-          </Link>
-
-          {/* Priority 4: Tracking Center */}
-          <Link
-            href="/track"
-            style={{
-              fontSize: '0.9rem',
-              fontWeight: 600,
-              color: 'var(--text-secondary)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <Search size={14} color="var(--text-muted)" />
-            <span>Tracking Center</span>
-          </Link>
-
-          {/* Priority 5: Rates & Tariffs */}
-          <Link href="/rates" style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-            Rates &amp; Tariffs
-          </Link>
-
-          {/* Priority 6: Support */}
-          <Link href="/support" style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-            Support
-          </Link>
-
-          {/* Priority 7: About & Founder */}
-          <Link href="/about" style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-            About &amp; Founder
-          </Link>
         </nav>
 
-        {/* Right Action Bar: Quick Track + Auth + CTA */}
+        {/* Right Actions */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
           gap: '0.75rem',
           flexShrink: 0,
-          whiteSpace: 'nowrap'
         }}>
-          {/* Quick Track Input - Collapses cleanly on smaller viewports */}
-          <form onSubmit={handleQuickTrack} className="nav-search-desktop" style={{
-            position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-            flexShrink: 0
-          }}>
-            <input
-              type="text"
-              placeholder="Track AWB # (e.g. CP002994035NP)"
-              value={quickTrackId}
-              onChange={(e) => setQuickTrackId(e.target.value)}
-              style={{
-                background: 'rgba(18, 27, 48, 0.85)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                borderRadius: '8px',
-                padding: '0.55rem 2.25rem 0.55rem 0.85rem',
-                fontSize: '0.82rem',
-                color: '#ffffff',
-                width: '190px',
-                outline: 'none',
-                fontFamily: 'var(--font-mono)'
-              }}
-            />
-            <button
-              type="submit"
-              aria-label="Search Tracking ID"
-              style={{
-                position: 'absolute',
-                right: '8px',
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--brand-orange)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <Search size={15} />
-            </button>
-          </form>
+          {currentUser ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Link
+                href={currentUser.role === 'admin' ? '/admin' : '/merchant'}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  padding: '0.35rem 0.75rem',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  color: '#ffffff',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                }}
+              >
+                {currentUser.role === 'admin' ? (
+                  <ShieldCheck size={15} color="var(--brand-orange)" />
+                ) : (
+                  <Building size={15} color="var(--brand-cyan)" />
+                )}
+                <span>{currentUser.name.split(' ')[0]}</span>
+                <span className={currentUser.role === 'admin' ? 'badge badge-orange' : 'badge badge-cyan'} style={{ fontSize: '0.6rem', padding: '0.05rem 0.35rem' }}>
+                  {currentUser.role === 'admin' ? 'Admin' : 'Merchant'}
+                </span>
+              </Link>
 
-          {/* Main Navbar Right Actions */}
-          <div className="nav-desktop-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexShrink: 0 }}>
-            {!currentUser && (
+              <button
+                type="button"
+                onClick={handleLogout}
+                title="Sign Out"
+                className="btn btn-outline btn-sm"
+                style={{
+                  padding: '0.35rem 0.55rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '34px',
+                }}
+              >
+                <LogOut size={14} />
+              </button>
+            </div>
+          ) : (
+            <div className="nav-desktop-auth" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <Link
                 href="/login"
-                className="btn btn-secondary btn-sm"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0, whiteSpace: 'nowrap' }}
+                style={{
+                  fontSize: '0.88rem',
+                  fontWeight: 600,
+                  color: 'var(--text-secondary)',
+                  textDecoration: 'none',
+                  padding: '0.4rem 0.75rem',
+                }}
               >
-                <UserIcon size={14} />
-                <span>Login / Sign In</span>
+                Log In
               </Link>
-            )}
 
-            <Link
-              href={currentUser ? "/book" : "/login?redirect=/book"}
-              className="btn btn-primary btn-sm"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0, whiteSpace: 'nowrap' }}
-            >
-              <span>{currentUser ? "+ Book Cargo" : "Ship Now"}</span>
-              <ArrowRight size={14} />
-            </Link>
-          </div>
+              <Link
+                href="/login?redirect=/book"
+                className="btn btn-primary btn-sm"
+                style={{
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  padding: '0.45rem 1rem',
+                }}
+              >
+                <span>Ship Now</span>
+              </Link>
+            </div>
+          )}
 
           {/* Mobile Menu Toggle Button */}
           <button
@@ -495,13 +249,12 @@ export default function Navbar() {
               background: 'rgba(255, 255, 255, 0.06)',
               border: '1px solid rgba(255, 255, 255, 0.12)',
               borderRadius: '8px',
-              padding: '0.55rem',
+              padding: '0.5rem',
               color: '#ffffff',
               cursor: 'pointer',
               display: 'none',
               alignItems: 'center',
               justifyContent: 'center',
-              flexShrink: 0
             }}
           >
             {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -509,202 +262,127 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile / Tablet Drawer Menu */}
+      {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div style={{
           backgroundColor: 'var(--bg-card)',
           borderBottom: '1px solid var(--border-medium)',
-          padding: '1.25rem 1rem',
-          maxHeight: 'calc(100vh - 110px)',
-          overflowY: 'auto',
-          WebkitOverflowScrolling: 'touch',
+          padding: '1.25rem 1.25rem 1.5rem 1.25rem',
           display: 'flex',
           flexDirection: 'column',
-          gap: '1.1rem'
+          gap: '1rem',
         }}>
           {currentUser ? (
             <div style={{
-              padding: '0.85rem 1rem',
+              padding: '0.85rem',
               background: 'var(--bg-surface)',
               borderRadius: '8px',
               display: 'flex',
               justifyContent: 'space-between',
-              alignItems: 'center'
+              alignItems: 'center',
             }}>
               <div>
-                <div style={{ fontWeight: 700, color: '#ffffff' }}>{currentUser.name}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{currentUser.email} &bull; {currentUser.company}</div>
-                <div style={{ fontSize: '0.72rem', color: currentUser.role === 'admin' ? 'var(--brand-orange)' : 'var(--brand-cyan)', marginTop: '0.2rem' }}>
-                  Role: {currentUser.subRole || (currentUser.role === 'admin' ? 'Super Admin' : 'Merchant Consignor')}
-                </div>
+                <div style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.95rem' }}>{currentUser.name}</div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{currentUser.email}</div>
               </div>
               <Link
                 href={currentUser.role === 'admin' ? '/admin' : '/merchant'}
                 onClick={() => setMobileMenuOpen(false)}
                 className="btn btn-primary btn-sm"
               >
-                {currentUser.role === 'admin' ? 'Admin Portal →' : 'Merchant Portal →'}
+                Portal →
               </Link>
             </div>
           ) : (
-            <Link
-              href="/login"
-              onClick={() => setMobileMenuOpen(false)}
-              className="btn btn-secondary btn-sm"
-              style={{ justifyContent: 'center', gap: '0.4rem' }}
-            >
-              <UserIcon size={14} /> Sign In / Register
-            </Link>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="btn btn-secondary btn-sm"
+                style={{ flex: 1, justifyContent: 'center' }}
+              >
+                Log In
+              </Link>
+              <Link
+                href="/login?redirect=/book"
+                onClick={() => setMobileMenuOpen(false)}
+                className="btn btn-primary btn-sm"
+                style={{ flex: 1, justifyContent: 'center' }}
+              >
+                Ship Now
+              </Link>
+            </div>
           )}
 
-          <form onSubmit={handleQuickTrack} style={{ display: 'flex', gap: '0.5rem' }}>
-            <input
-              type="text"
-              placeholder="Track AWB # (e.g. CP002994035NP)"
-              value={quickTrackId}
-              onChange={(e) => setQuickTrackId(e.target.value)}
-              className="input-field"
-              style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}
-            />
-            <button type="submit" className="btn btn-primary btn-sm">
-              Track
-            </button>
-          </form>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '0.8rem' }}>
+            {navLinks.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  padding: '0.45rem 0',
+                  color: pathname === item.href ? 'var(--brand-orange)' : 'var(--text-primary)',
+                  fontWeight: 600,
+                  fontSize: '0.95rem',
+                  textDecoration: 'none',
+                }}
+              >
+                {item.label}
+              </Link>
+            ))}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', paddingTop: '0.25rem' }}>
             {currentUser && (
               <>
-                {/* Priority 1: Dashboard */}
-                <Link
-                  href="/dashboard"
-                  onClick={() => setMobileMenuOpen(false)}
-                  style={{ padding: '0.6rem 0', color: 'var(--brand-cyan)', fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}
-                >
-                  <Cpu size={16} /> Operations Dashboard
-                </Link>
-
-                {/* Priority 2: All Bookings / My Bookings */}
                 <Link
                   href="/bookings"
                   onClick={() => setMobileMenuOpen(false)}
-                  style={{ padding: '0.6rem 0', color: 'var(--brand-orange)', fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}
+                  style={{ padding: '0.45rem 0', color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.95rem' }}
                 >
-                  <Boxes size={16} /> {currentUser.role === 'admin' ? 'All Bookings (Registry)' : 'My Bookings (Registry)'}
+                  Bookings Registry
                 </Link>
-
-                {/* Priority 3: Admin Tools or Merchant Tools */}
-                {currentUser.role === 'admin' ? (
-                  <Link
-                    href="/admin"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{ padding: '0.6rem 0', color: 'var(--brand-orange)', fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}
-                  >
-                    <ShieldCheck size={16} /> Admin Tools &amp; Control Tower
-                  </Link>
-                ) : (
-                  <Link
-                    href="/merchant"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{ padding: '0.6rem 0', color: 'var(--brand-cyan)', fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}
-                  >
-                    <Building size={16} /> Merchant Tools &amp; Staff Hub
-                  </Link>
-                )}
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{ padding: '0.45rem 0', color: 'var(--brand-cyan)', fontWeight: 600, fontSize: '0.95rem' }}
+                >
+                  Operations Dashboard
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--brand-red)',
+                    padding: '0.45rem 0',
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                >
+                  <LogOut size={16} /> Sign Out
+                </button>
               </>
             )}
-
-            {/* Priority 3: Book Cargo */}
-            <Link
-              href={currentUser ? "/book" : "/login?redirect=/book"}
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ padding: '0.6rem 0', color: 'var(--text-primary)', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}
-            >
-              <Truck size={16} /> Book Cargo
-            </Link>
-
-            {/* Priority 4: Tracking Center */}
-            <Link
-              href="/track"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ padding: '0.6rem 0', color: 'var(--text-primary)', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}
-            >
-              <Search size={16} /> Tracking Center
-            </Link>
-
-            {/* Priority 5: Rates & Tariffs */}
-            <Link
-              href="/rates"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ padding: '0.6rem 0', color: 'var(--text-primary)', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.05)' }}
-            >
-              Rates &amp; Tariffs
-            </Link>
-
-            {/* Priority 6: Support */}
-            <Link
-              href="/support"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ padding: '0.6rem 0', color: 'var(--text-primary)', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.05)' }}
-            >
-              Customer Support
-            </Link>
-
-            {/* Priority 7: About */}
-            <Link
-              href="/about"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ padding: '0.6rem 0', color: 'var(--text-primary)', fontWeight: 600 }}
-            >
-              About Double 7 &amp; Founder
-            </Link>
           </div>
         </div>
       )}
 
-
-
-      {/* Breakpoint Style Rules */}
       <style jsx global>{`
-        /* Hide search on widths under 1280px to prevent crowding */
-        @media (max-width: 1280px) {
-          .nav-search-desktop {
-            display: none !important;
-          }
-          .ticker-hide-md {
-            display: none !important;
-          }
-        }
-
-        /* Responsive tablet breakpoint: when window is < 1080px or zoomed in, switch to drawer */
-        @media (max-width: 1080px) {
+        @media (max-width: 900px) {
           .nav-desktop-links {
+            display: none !important;
+          }
+          .nav-desktop-auth {
             display: none !important;
           }
           .nav-mobile-toggle {
             display: flex !important;
-          }
-          .nav-user-details {
-            display: none !important;
-          }
-        }
-
-        /* Mobile ticker hide */
-        @media (max-width: 700px) {
-          .ticker-hide-sm {
-            display: none !important;
-          }
-        }
-
-        /* Mobile navbar cleanups: hide redundant desktop action buttons so header is spacious */
-        @media (max-width: 768px) {
-          .nav-desktop-actions {
-            display: none !important;
-          }
-          .nav-tagline {
-            display: none !important;
-          }
-          .ticker-hide-sm {
-            display: none !important;
           }
         }
       `}</style>

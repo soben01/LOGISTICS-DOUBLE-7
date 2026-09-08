@@ -1,17 +1,13 @@
 import React from 'react';
 import Link from 'next/link';
 import {
-  Plane,
-  Ship,
   Truck,
-  ShieldCheck,
-  Globe,
+  Boxes,
+  Banknote,
+  Search,
   Mail,
   MapPin,
-  Phone,
-  ExternalLink,
-  Cpu,
-  Boxes
+  Phone
 } from 'lucide-react';
 
 function GithubIcon({ size = 16 }: { size?: number }) {
@@ -28,184 +24,149 @@ export default function Footer() {
     <footer style={{
       backgroundColor: 'var(--bg-surface)',
       borderTop: '1px solid var(--border-subtle)',
-      padding: '4.5rem 0 2rem 0',
-      marginTop: '6rem',
-      position: 'relative'
+      padding: '3.5rem 0 2rem 0',
+      marginTop: '4rem',
     }}>
       <div className="container">
-        <div className="grid grid-cols-4 gap-8" style={{ marginBottom: '3.5rem' }}>
+        <div className="grid grid-cols-4 gap-8" style={{ marginBottom: '2.5rem' }}>
           {/* Col 1: Brand & Founder */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '8px',
-                background: 'linear-gradient(135deg, #ff6600 0%, #b33900 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(255, 102, 0, 0.4)'
-              }}>
-                <span style={{ fontSize: '1.1rem', fontWeight: 900, fontFamily: 'var(--font-mono)', color: '#fff' }}>7</span>
-              </div>
-              <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#ffffff' }}>
-                DOUBLE <span style={{ color: 'var(--brand-orange)' }}>7</span> LOGISTICS
-              </span>
-            </div>
-
-            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-              Next-generation international air express, smart fulfillment, and multi-modal container freight network built to handle high-velocity global trade and peak-surge volumes with surgical precision.
-            </p>
-
-            {/* Founder Badge */}
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '10px',
-              padding: '0.85rem 1rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem'
-            }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <div style={{
                 width: '32px',
                 height: '32px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, #ff6600 0%, #d9480f 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#ffffff',
-                fontWeight: 700,
-                fontSize: '0.85rem'
               }}>
-                S
+                <span style={{ fontSize: '1rem', fontWeight: 900, fontFamily: 'var(--font-mono)', color: '#fff' }}>7</span>
               </div>
-              <div>
-                <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#ffffff' }}>
-                  Founded by Soben
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--brand-cyan)' }}>
-                  Lead Architect &middot; @soben01
-                </div>
-              </div>
+              <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ffffff' }}>
+                DOUBLE <span style={{ color: 'var(--brand-orange)' }}>7</span>
+              </span>
+            </div>
+
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+              Next-generation domestic logistics, express linehaul, and automated Cash on Delivery across all 7 provinces of Nepal.
+            </p>
+
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.6rem',
+              fontSize: '0.8rem',
+              color: 'var(--text-muted)',
+            }}>
+              <span>Built by Soben</span>
               <a
-                href="https://github.com/soben01/DOUBLE-7"
+                href="https://github.com/soben01/LOGISTICS-DOUBLE-7"
                 target="_blank"
                 rel="noreferrer"
-                style={{ marginLeft: 'auto', color: 'var(--text-secondary)' }}
+                style={{ color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center' }}
                 aria-label="GitHub Repository"
               >
-                <GithubIcon size={16} />
+                <GithubIcon size={14} />
               </a>
             </div>
           </div>
 
-          {/* Col 2: Core Services */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <h4 style={{ color: '#ffffff', fontSize: '0.95rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-              Logistics Services
+          {/* Col 2: Services */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <h4 style={{ color: '#ffffff', fontSize: '0.85rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+              Services
             </h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
-              <Link href="/track" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Plane size={15} color="var(--brand-orange)" /> Double 7 Super Express
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem' }}>
+              <Link href="/track" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
+                Track Consignment
               </Link>
-              <Link href="/rates" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Ship size={15} color="var(--brand-cyan)" /> Ocean Container FCL / LCL
+              <Link href="/book" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
+                Book Express Delivery
               </Link>
-              <Link href="/book" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Boxes size={15} color="var(--brand-amber)" /> Smart Warehousing & Robotic Hubs
+              <Link href="/rates" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
+                Rates &amp; Tariffs
               </Link>
-              <Link href="/rates" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Truck size={15} color="var(--brand-emerald)" /> Cross-Border Fast-Track Customs
-              </Link>
-              <Link href="/book" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <ShieldCheck size={15} color="#a855f7" /> High-Value & Cold Chain Cargo
+              <Link href="/merchant" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
+                Merchant COD Portal
               </Link>
             </div>
           </div>
 
-          {/* Col 3: Key Hubs & Infrastructure */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <h4 style={{ color: '#ffffff', fontSize: '0.95rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-              Global Gateways
+          {/* Col 3: Key Hubs */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <h4 style={{ color: '#ffffff', fontSize: '0.85rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+              Hub Network
             </h4>
-            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.55rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span className="pulse-dot pulse-dot-green" style={{ width: 6, height: 6 }}></span>
-                <span><strong>Shenzhen (SZX)</strong> Mega-Fulfillment Park</span>
-              </li>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span className="pulse-dot pulse-dot-green" style={{ width: 6, height: 6 }}></span>
-                <span><strong>Hong Kong (HKG)</strong> Super Terminal 1</span>
-              </li>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span className="pulse-dot pulse-dot-green" style={{ width: 6, height: 6 }}></span>
-                <span><strong>Singapore (SIN)</strong> Changi Sky Hub</span>
-              </li>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span className="pulse-dot pulse-dot-green" style={{ width: 6, height: 6 }}></span>
-                <span><strong>Frankfurt (FRA)</strong> CargoCity South</span>
-              </li>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span className="pulse-dot pulse-dot-green" style={{ width: 6, height: 6 }}></span>
-                <span><strong>Los Angeles (LAX)</strong> Transpacific Center</span>
-              </li>
-            </ul>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+              <div>Kathmandu Central Dispatch</div>
+              <div>Pokhara Regional Hub</div>
+              <div>Birgunj Linehaul Terminal</div>
+              <div>Biratnagar Eastern Gateway</div>
+              <div>Chitwan &amp; Butwal Hubs</div>
+            </div>
           </div>
 
-          {/* Col 4: Operations & Contact */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <h4 style={{ color: '#ffffff', fontSize: '0.95rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-              24/7 Operations Command
+          {/* Col 4: Contact */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <h4 style={{ color: '#ffffff', fontSize: '0.85rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+              Contact
             </h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                <Phone size={15} color="var(--brand-orange)" />
-                <span>Global Priority Hotline: <strong>+1 (800) 555-D7</strong></span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Mail size={14} color="var(--brand-orange)" />
+                <span>dispatch@sobinupreti.com.np</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                <Mail size={15} color="var(--brand-cyan)" />
-                <span>dispatch@double7logistics.com</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <MapPin size={14} color="var(--brand-cyan)" />
+                <span>Kathmandu, Nepal</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                <MapPin size={15} color="var(--brand-amber)" />
-                <span>Global HQ: Double 7 SkyTower, Gateway 7</span>
-              </div>
-              
-              <Link href="/operations" className="btn btn-secondary btn-sm" style={{ marginTop: '0.5rem', width: 'fit-content' }}>
-                <Cpu size={14} /> Open Control Tower
+              <Link
+                href="/support"
+                style={{ color: 'var(--brand-orange)', textDecoration: 'none', fontWeight: 600, marginTop: '0.25rem' }}
+              >
+                Help &amp; Support &rarr;
               </Link>
             </div>
           </div>
         </div>
 
-        {/* Bottom Compliance & Copyright */}
+        {/* Bottom Bar */}
         <div style={{
-          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-          paddingTop: '2rem',
+          borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+          paddingTop: '1.5rem',
           display: 'flex',
           flexWrap: 'wrap',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: '1rem',
-          fontSize: '0.8rem',
-          color: 'var(--text-muted)'
+          fontSize: '0.78rem',
+          color: 'var(--text-muted)',
         }}>
           <div>
-            &copy; 2026 DOUBLE 7 LOGISTICS LTD. All rights reserved. Architected & built by <strong style={{ color: '#f8fafc' }}>Soben</strong>.
+            &copy; 2026 Double 7 Logistics. All rights reserved.
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <span>IATA Certified Cargo Agent</span>
-            <span>AEO-F Security Accredit</span>
-            <span>ISO 9001:2015</span>
-            <Link href="/support" style={{ color: 'var(--text-secondary)' }}>Privacy Policy</Link>
-            <Link href="/support" style={{ color: 'var(--text-secondary)' }}>Terms of Carriage</Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+            <Link href="/support" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Privacy Policy</Link>
+            <Link href="/support" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Terms of Carriage</Link>
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @media (max-width: 768px) {
+          .grid-cols-4 {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 2rem !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .grid-cols-4 {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </footer>
   );
 }
