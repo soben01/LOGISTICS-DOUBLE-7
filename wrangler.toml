@@ -11,9 +11,13 @@ routes = [
 ]
 
 [vars]
-EMAIL_PROVIDER = "mailchannels"
+EMAIL_PROVIDER = "resend"
 EMAIL_FROM = "dispatch@sobinupreti.com.np"
 DAILY_SUMMARY_EMAIL = "upreti.soben@gmail.com"
+RESEND_API_KEY = ""
+BREVO_API_KEY = ""
+SENDGRID_API_KEY = ""
+EMAIL_WEBHOOK_URL = ""
 CF_ACCOUNT_ID = "913e732298e2383df6ec533afd380eea"
 CF_REFRESH_TOKEN = "cfort_ozggj6Wxjl_77VWPwu8lV43yUN4_p5WHxBfOMskU5hk.Pzmas1QCyUf-FBJ-ahEKdYWqaW8MBkNPRm7iEmFSPI8"
 CF_API_TOKEN = "cfoat_VI8mx2vhgAugc-lTovTxq8tJRkTisS8MUB9H5g9EdzM.fce2UNVhP41Roa91NJub4c2OHcK8b0PW0LBFfUtCkT0"
