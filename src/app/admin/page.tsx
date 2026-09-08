@@ -47,6 +47,7 @@ import {
   DollarSign,
   AlertTriangle,
   History,
+  Sparkles,
   SlidersHorizontal
 } from 'lucide-react';
 import {
@@ -251,15 +252,15 @@ export default function AdminControlPanel() {
       ]);
 
       if (addrRes.status === 'fulfilled') {
-        const data = await addrRes.value.json();
+        const data = (await addrRes.value.json()) as any;
         if (data?.addresses) setCfAddresses(data.addresses);
       }
       if (gwRes.status === 'fulfilled') {
-        const gwData = await gwRes.value.json();
+        const gwData = (await gwRes.value.json()) as any;
         setEmailGateway(gwData);
       }
       if (outboxRes.status === 'fulfilled') {
-        const outData = await outboxRes.value.json();
+        const outData = (await outboxRes.value.json()) as any;
         if (outData?.outbox) setOutboxEmails(outData.outbox);
       }
     } catch {
@@ -364,7 +365,7 @@ export default function AdminControlPanel() {
     // Fetch live D1 & Edge diagnostics
     fetch('/api/db-status')
       .then(res => res.json())
-      .then(data => setEdgeStatus(data))
+      .then((data: any) => setEdgeStatus(data))
       .catch(() => {});
   }, [router]);
 
