@@ -153,20 +153,6 @@ export default function Footer() {
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        @media (max-width: 768px) {
-          .grid-cols-4 {
-            grid-template-columns: 1fr 1fr !important;
-            gap: 2rem !important;
-          }
-        }
-        @media (max-width: 480px) {
-          .grid-cols-4 {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
     </footer>
   );
 }
