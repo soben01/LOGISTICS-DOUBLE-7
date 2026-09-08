@@ -14,75 +14,10 @@ export interface User {
   password?: string;
 }
 
-const USERS_STORAGE_KEY = 'double7_users_v1';
-const CURRENT_USER_KEY = 'double7_current_user_v1';
+const USERS_STORAGE_KEY = 'double7_users_prod_v1';
+const CURRENT_USER_KEY = 'double7_current_user_prod_v1';
 
 const DEFAULT_USERS: User[] = [
-  {
-    id: 'usr-admin-anil',
-    name: 'Anil',
-    email: 'anil@double7.com.np',
-    company: 'Double 7 Logistics Command HQ',
-    phone: '+977 1 4411000',
-    role: 'admin',
-    subRole: 'Command HQ / Operations Admin',
-    status: 'active',
-    codBalanceNpr: 0,
-    totalShipments: 0,
-    createdAt: '2026-01-01',
-  },
-  {
-    id: 'usr-admin-anil-com',
-    name: 'Anil',
-    email: 'anil@double7.com',
-    company: 'Double 7 Logistics Command HQ',
-    phone: '+977 1 4411000',
-    role: 'admin',
-    subRole: 'Command HQ / Operations Admin',
-    status: 'active',
-    codBalanceNpr: 0,
-    totalShipments: 0,
-    createdAt: '2026-01-01',
-  },
-  {
-    id: 'usr-admin-1',
-    name: 'Soben',
-    email: 'soben@double7.com',
-    company: 'Double 7 Logistics Command HQ',
-    phone: '+977 1 4411000',
-    role: 'admin',
-    subRole: 'Command HQ / Super Admin',
-    status: 'active',
-    codBalanceNpr: 0,
-    totalShipments: 0,
-    createdAt: '2026-01-01',
-  },
-  {
-    id: 'usr-admin-soben-11',
-    name: 'Soben',
-    email: 'soben@double11.com',
-    company: 'Double 7 Logistics Command HQ',
-    phone: '+977 1 4411000',
-    role: 'admin',
-    subRole: 'Command HQ / Super Admin',
-    status: 'active',
-    codBalanceNpr: 0,
-    totalShipments: 0,
-    createdAt: '2026-01-01',
-  },
-  {
-    id: 'usr-admin-artistry',
-    name: 'Soben (Artistry)',
-    email: 'artistrygigs@gmail.com',
-    company: 'Double 7 Logistics Command HQ',
-    phone: '+977 98000 00000',
-    role: 'admin',
-    subRole: 'Command HQ / Executive Lead',
-    status: 'active',
-    codBalanceNpr: 0,
-    totalShipments: 0,
-    createdAt: '2026-01-01',
-  },
   {
     id: 'usr-admin-upreti',
     name: 'Soben Upreti',
@@ -94,33 +29,33 @@ const DEFAULT_USERS: User[] = [
     status: 'active',
     codBalanceNpr: 0,
     totalShipments: 0,
-    createdAt: '2026-01-01',
+    createdAt: '2026-09-08',
   },
   {
-    id: 'usr-merch-1',
-    name: 'Sobin Upreti',
-    email: 'sobin@merchant.com',
-    company: 'Himalayan Commerce Pvt Ltd',
-    phone: '+977 98412 88990',
-    role: 'merchant',
-    subRole: 'Merchant Consignor / Shipper',
+    id: 'usr-admin-anil',
+    name: 'Anil',
+    email: 'anil@double7.com.np',
+    company: 'Double 7 Logistics Command HQ',
+    phone: '+977 1 4411000',
+    role: 'admin',
+    subRole: 'Command HQ / Operations Admin',
     status: 'active',
-    codBalanceNpr: 45200,
-    totalShipments: 18,
-    createdAt: '2026-01-15',
+    codBalanceNpr: 0,
+    totalShipments: 0,
+    createdAt: '2026-09-08',
   },
   {
-    id: 'usr-merch-default',
-    name: 'Nepal Merchant',
-    email: 'merchant@double7.com.np',
-    company: 'Everest Retail & Cargo Hub',
-    phone: '+977 98000 12345',
-    role: 'merchant',
-    subRole: 'Merchant Consignor / Shipper',
+    id: 'usr-admin-dispatch',
+    name: 'Dispatch Command',
+    email: 'dispatch@sobinupreti.com.np',
+    company: 'Double 7 Logistics Command HQ',
+    phone: '+977 1 4411000',
+    role: 'admin',
+    subRole: 'Command HQ / Automated Dispatch Center',
     status: 'active',
-    codBalanceNpr: 32400,
-    totalShipments: 12,
-    createdAt: '2026-02-01',
+    codBalanceNpr: 0,
+    totalShipments: 0,
+    createdAt: '2026-09-08',
   },
 ];
 
@@ -128,9 +63,11 @@ export function getUsers(): User[] {
   if (typeof window === 'undefined') return DEFAULT_USERS;
   try {
     // Purge legacy storage versions
+    localStorage.removeItem('double7_users_v1');
     localStorage.removeItem('double11_users_v2');
+    localStorage.removeItem('double11_users_v3');
     localStorage.removeItem('double11_users');
-    const raw = localStorage.getItem(USERS_STORAGE_KEY) || localStorage.getItem('double11_users_v3');
+    const raw = localStorage.getItem(USERS_STORAGE_KEY);
     if (!raw) {
       localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(DEFAULT_USERS));
       return DEFAULT_USERS;
@@ -156,9 +93,10 @@ export function getUsers(): User[] {
 export function getCurrentUser(): User | null {
   if (typeof window === 'undefined') return null;
   try {
+    localStorage.removeItem('double7_current_user_v1');
     localStorage.removeItem('double11_current_user_v2');
     localStorage.removeItem('double11_current_user');
-    const raw = localStorage.getItem(CURRENT_USER_KEY) || localStorage.getItem('double11_current_user_v3');
+    const raw = localStorage.getItem(CURRENT_USER_KEY);
     if (!raw) return null;
     return JSON.parse(raw);
   } catch {
@@ -176,8 +114,6 @@ export function loginUser(email: string, password?: string, subRole?: string): {
   let user = users.find(u => {
     const uEmail = u.email.toLowerCase();
     return uEmail === normalizedEmail ||
-      (normalizedEmail === 'soben@double11.com' && uEmail === 'soben@double7.com') ||
-      (normalizedEmail === 'soben@double7.com' && uEmail === 'soben@double11.com') ||
       (normalizedEmail === 'anil@double7.com' && uEmail === 'anil@double7.com.np') ||
       (normalizedEmail === 'anil@double7.com.np' && uEmail === 'anil@double7.com');
   });
@@ -192,13 +128,13 @@ export function loginUser(email: string, password?: string, subRole?: string): {
     }
   }
 
-  // 2. Corporate auto-provision for Double 7 team (@double7.com.np, @double7.com, @double11.com, @sobinupreti.com.np)
+  // 2. Corporate auto-provision for Double 7 team (@double7.com.np, @double7.com, @sobinupreti.com.np)
   if (!user) {
     const isCorporateAdmin =
       normalizedEmail.endsWith('@double7.com.np') ||
       normalizedEmail.endsWith('@double7.com') ||
-      normalizedEmail.endsWith('@double11.com') ||
-      normalizedEmail.endsWith('@sobinupreti.com.np');
+      normalizedEmail.endsWith('@sobinupreti.com.np') ||
+      normalizedEmail === 'upreti.soben@gmail.com';
 
     const isMerchantDomain =
       normalizedEmail.endsWith('@merchant.np') ||
@@ -381,10 +317,8 @@ export function isSuperAdmin(user: User | null | undefined): boolean {
     subRole.includes('super admin') ||
     subRole.includes('executive') ||
     email === 'soben@double7.com' ||
-    email === 'soben@double11.com' ||
     email === 'anil@double7.com' ||
     email === 'anil@double7.com.np' ||
-    email === 'artistrygigs@gmail.com' ||
     email === 'upreti.soben@gmail.com' ||
     !user.subRole
   );
@@ -552,7 +486,6 @@ export function findUserByEmail(email: string): User | undefined {
   if (
     normalized.endsWith('@double7.com.np') ||
     normalized.endsWith('@double7.com') ||
-    normalized.endsWith('@double11.com') ||
     normalized.endsWith('@sobinupreti.com.np')
   ) {
     const rawName = normalized.split('@')[0].replace(/[._-]/g, ' ');
@@ -661,12 +594,12 @@ export interface SubUser {
   lastLoginAt?: string;
 }
 
-const SUB_USERS_STORAGE_KEY = 'double7_sub_users_v1';
+const SUB_USERS_STORAGE_KEY = 'double7_sub_users_prod_v1';
 
 const DEFAULT_SUB_USERS: SubUser[] = [
   {
     id: 'sub-usr-1',
-    parentId: 'usr-admin-1',
+    parentId: 'usr-admin-upreti',
     name: 'Pradeep KC',
     email: 'pradeep.ops@double7.com',
     password: 'password123',
@@ -675,12 +608,12 @@ const DEFAULT_SUB_USERS: SubUser[] = [
     phone: '+977 98111 22334',
     permissions: ['Linehaul Dispatching', 'Hub Sort Telemetry', 'Carrier SLA Routing'],
     status: 'active',
-    createdAt: '2026-02-15',
-    lastLoginAt: 'Today 09:30 NPT',
+    createdAt: '2026-09-08',
+    lastLoginAt: 'Launch Ready',
   },
   {
     id: 'sub-usr-2',
-    parentId: 'usr-admin-1',
+    parentId: 'usr-admin-upreti',
     name: 'Bikram Rayamajhi',
     email: 'bikram.audit@double7.com',
     password: 'password123',
@@ -689,36 +622,8 @@ const DEFAULT_SUB_USERS: SubUser[] = [
     phone: '+977 98222 33445',
     permissions: ['Audit Trail Inspection', 'KYC & Merchant Risk', 'Dispute Resolution'],
     status: 'active',
-    createdAt: '2026-02-20',
-    lastLoginAt: 'Yesterday 14:15 NPT',
-  },
-  {
-    id: 'sub-usr-3',
-    parentId: 'usr-merch-default',
-    name: 'Ramesh Sharma',
-    email: 'ramesh.warehouse@merchant.np',
-    password: 'password123',
-    role: 'merchant',
-    subRole: 'Warehouse Dispatcher',
-    phone: '+977 98412 34567',
-    permissions: ['Print Thermal Waybills', 'Barcode Scan Sorting', 'Manifest Creation'],
-    status: 'active',
-    createdAt: '2026-03-01',
-    lastLoginAt: 'Today 11:00 NPT',
-  },
-  {
-    id: 'sub-usr-4',
-    parentId: 'usr-merch-default',
-    name: 'Sunita Thapa',
-    email: 'sunita.finance@merchant.np',
-    password: 'password123',
-    role: 'merchant',
-    subRole: 'Finance & COD Accountant',
-    phone: '+977 98510 98765',
-    permissions: ['COD Remittance Ledger', 'Bank Account Settlement', 'Financial Statements'],
-    status: 'active',
-    createdAt: '2026-03-10',
-    lastLoginAt: 'Today 16:45 NPT',
+    createdAt: '2026-09-08',
+    lastLoginAt: 'Launch Ready',
   },
 ];
 
@@ -730,7 +635,9 @@ export function getSubUsers(filterRole?: 'merchant' | 'admin', parentId?: string
     return list;
   }
   try {
-    const raw = localStorage.getItem(SUB_USERS_STORAGE_KEY) || localStorage.getItem('double11_sub_users_v2');
+    localStorage.removeItem('double7_sub_users_v1');
+    localStorage.removeItem('double11_sub_users_v2');
+    const raw = localStorage.getItem(SUB_USERS_STORAGE_KEY);
     let list: SubUser[] = raw ? JSON.parse(raw) : DEFAULT_SUB_USERS;
     if (!raw) {
       localStorage.setItem(SUB_USERS_STORAGE_KEY, JSON.stringify(DEFAULT_SUB_USERS));

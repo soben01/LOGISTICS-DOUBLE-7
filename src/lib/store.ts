@@ -71,15 +71,17 @@ export interface Shipment {
 
 export const INITIAL_SHIPMENTS: Shipment[] = [];
 
-const STORAGE_KEY = 'double7_shipments_v1';
+const STORAGE_KEY = 'double7_shipments_prod_v1';
 
 export function getShipments(): Shipment[] {
   if (typeof window === 'undefined') return INITIAL_SHIPMENTS;
   try {
     // Purge legacy storage versions
+    localStorage.removeItem('double7_shipments_v1');
     localStorage.removeItem('double11_shipments_nepal_v1');
     localStorage.removeItem('double11_shipments_v2');
-    const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('double11_shipments_v3');
+    localStorage.removeItem('double11_shipments_v3');
+    const saved = localStorage.getItem(STORAGE_KEY);
     if (!saved) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_SHIPMENTS));
       return INITIAL_SHIPMENTS;
@@ -386,17 +388,15 @@ export function addCustomCheckpoint(
   return true;
 }
 
-const WAITLIST_STORAGE_KEY = 'double7_intl_waitlist_v1';
-const DEFAULT_WAITLIST = [
-  'apex.export@nepaltrading.com',
-  'himalayan.cashmere@crafts.np',
-  'tea.organic@ilamestate.com'
-];
+const WAITLIST_STORAGE_KEY = 'double7_intl_waitlist_prod_v1';
+const DEFAULT_WAITLIST: string[] = [];
 
 export function getWaitlistSubscribers(): string[] {
   if (typeof window === 'undefined') return DEFAULT_WAITLIST;
   try {
-    const raw = localStorage.getItem(WAITLIST_STORAGE_KEY) || localStorage.getItem('double11_intl_waitlist_v1');
+    localStorage.removeItem('double7_intl_waitlist_v1');
+    localStorage.removeItem('double11_intl_waitlist_v1');
+    const raw = localStorage.getItem(WAITLIST_STORAGE_KEY);
     if (!raw) {
       localStorage.setItem(WAITLIST_STORAGE_KEY, JSON.stringify(DEFAULT_WAITLIST));
       return DEFAULT_WAITLIST;

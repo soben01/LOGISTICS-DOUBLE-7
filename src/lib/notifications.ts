@@ -12,31 +12,19 @@ export interface EmailNotificationSubscription {
   status: 'active' | 'paused';
 }
 
-const STORAGE_KEY = 'double7_gmail_subscriptions_v1';
+const STORAGE_KEY = 'double7_gmail_subscriptions_prod_v1';
 
 const DEFAULT_SUBSCRIPTIONS: EmailNotificationSubscription[] = [
   {
     id: 'sub-soben',
-    email: 'soben@double7.com',
+    email: 'upreti.soben@gmail.com',
     frequency: '24h',
     role: 'admin',
     includeDispatches: true,
     includeCodReport: true,
     includeExceptions: true,
-    subscribedAt: 'Sep 01, 2026',
-    lastSentAt: 'Sep 02, 2026 - 08:00 NPT',
-    status: 'active',
-  },
-  {
-    id: 'sub-pradeep',
-    email: 'pradeep@himalayantech.np',
-    frequency: '24h',
-    role: 'merchant',
-    includeDispatches: true,
-    includeCodReport: true,
-    includeExceptions: true,
-    subscribedAt: 'Sep 02, 2026',
-    lastSentAt: 'Sep 02, 2026 - 08:00 NPT',
+    subscribedAt: 'Sep 08, 2026',
+    lastSentAt: 'Sep 08, 2026 - 18:00 NPT',
     status: 'active',
   },
 ];
@@ -44,7 +32,9 @@ const DEFAULT_SUBSCRIPTIONS: EmailNotificationSubscription[] = [
 export function getEmailSubscriptions(): EmailNotificationSubscription[] {
   if (typeof window === 'undefined') return DEFAULT_SUBSCRIPTIONS;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('double11_gmail_subscriptions_v1');
+    localStorage.removeItem('double7_gmail_subscriptions_v1');
+    localStorage.removeItem('double11_gmail_subscriptions_v1');
+    const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_SUBSCRIPTIONS));
       return DEFAULT_SUBSCRIPTIONS;
