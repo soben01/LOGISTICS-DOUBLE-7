@@ -167,20 +167,29 @@ export default function Navbar() {
           flexShrink: 0,
         }}>
           {currentUser ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div
+              className="nav-account-capsule"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                borderRadius: '30px',
+                padding: '3px 4px 3px 10px',
+                gap: '0.45rem',
+              }}
+            >
+              {/* Profile Link (Desktop) */}
               <Link
                 href={currentUser.role === 'admin' ? '/admin' : '/merchant'}
+                className="nav-user-desktop"
+                title={currentUser.role === 'admin' ? 'Open Admin Portal' : 'Open Merchant Portal'}
                 style={{
-                  display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  padding: '0.35rem 0.75rem',
-                  borderRadius: '8px',
+                  gap: '0.45rem',
                   textDecoration: 'none',
                   color: '#ffffff',
-                  fontSize: '0.85rem',
+                  fontSize: '0.84rem',
                   fontWeight: 600,
                 }}
               >
@@ -190,25 +199,67 @@ export default function Navbar() {
                   <Building size={15} color="var(--brand-cyan)" />
                 )}
                 <span>{currentUser.name.split(' ')[0]}</span>
-                <span className={currentUser.role === 'admin' ? 'badge badge-orange' : 'badge badge-cyan'} style={{ fontSize: '0.6rem', padding: '0.05rem 0.35rem' }}>
+                <span
+                  className={currentUser.role === 'admin' ? 'badge badge-orange' : 'badge badge-cyan'}
+                  style={{ fontSize: '0.6rem', padding: '0.08rem 0.4rem' }}
+                >
                   {currentUser.role === 'admin' ? 'Admin' : 'Merchant'}
                 </span>
               </Link>
 
+              {/* Profile Link (Mobile Compact) */}
+              <Link
+                href={currentUser.role === 'admin' ? '/admin' : '/merchant'}
+                className="nav-user-mobile"
+                title={currentUser.role === 'admin' ? 'Open Admin Portal' : 'Open Merchant Portal'}
+                style={{
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  textDecoration: 'none',
+                  color: '#ffffff',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                }}
+              >
+                {currentUser.role === 'admin' ? (
+                  <ShieldCheck size={14} color="var(--brand-orange)" />
+                ) : (
+                  <Building size={14} color="var(--brand-cyan)" />
+                )}
+                <span>{currentUser.role === 'admin' ? 'Admin' : currentUser.name.split(' ')[0]}</span>
+              </Link>
+
+              {/* Subtle Divider */}
+              <div
+                style={{
+                  width: '1px',
+                  height: '16px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                }}
+              />
+
+              {/* Sign Out Icon cleanly placed on the RIGHT SIDE of profile link / account section */}
               <button
                 type="button"
                 onClick={handleLogout}
-                title="Sign Out"
-                className="btn btn-outline btn-sm"
+                title="Sign Out (Log Out)"
                 style={{
-                  padding: '0.35rem 0.55rem',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  height: '34px',
+                  width: '26px',
+                  height: '26px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: 'rgba(239, 68, 68, 0.12)',
+                  color: '#f87171',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  flexShrink: 0,
+                  padding: 0,
                 }}
               >
-                <LogOut size={14} />
+                <LogOut size={13} />
               </button>
             </div>
           ) : (
@@ -265,6 +316,8 @@ export default function Navbar() {
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div style={{
+          animation: 'slideDownDrawer 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+          boxShadow: '0 12px 36px rgba(0, 0, 0, 0.6)',
           backgroundColor: 'var(--bg-card)',
           borderBottom: '1px solid var(--border-medium)',
           padding: '1.25rem 1.25rem 1.5rem 1.25rem',
@@ -351,21 +404,25 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={handleLogout}
+                  className="btn btn-outline"
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.4rem',
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--brand-red)',
-                    padding: '0.45rem 0',
-                    fontSize: '0.9rem',
-                    fontWeight: 600,
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    width: '100%',
+                    color: '#ef4444',
+                    borderColor: 'rgba(239, 68, 68, 0.35)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    padding: '0.75rem 1rem',
+                    fontSize: '0.92rem',
+                    fontWeight: 700,
+                    borderRadius: '8px',
                     cursor: 'pointer',
-                    textAlign: 'left',
+                    marginTop: '0.5rem',
                   }}
                 >
-                  <LogOut size={16} /> Sign Out
+                  <LogOut size={16} /> Sign Out of {currentUser.name}
                 </button>
               </>
             )}
@@ -374,6 +431,21 @@ export default function Navbar() {
       )}
 
       <style jsx global>{`
+        .nav-account-capsule {
+          display: inline-flex;
+          align-items: center;
+          transition: all 0.2s ease;
+        }
+        .nav-account-capsule:hover {
+          border-color: rgba(255, 255, 255, 0.22) !important;
+          background: rgba(255, 255, 255, 0.08) !important;
+        }
+        .nav-user-desktop {
+          display: flex;
+        }
+        .nav-user-mobile {
+          display: none;
+        }
         @media (max-width: 900px) {
           .nav-desktop-links {
             display: none !important;
@@ -381,8 +453,18 @@ export default function Navbar() {
           .nav-desktop-auth {
             display: none !important;
           }
+          .nav-user-desktop {
+            display: none !important;
+          }
+          .nav-user-mobile {
+            display: flex !important;
+          }
           .nav-mobile-toggle {
             display: flex !important;
+          }
+          .nav-account-capsule {
+            padding: 2px 3px 2px 7px !important;
+            gap: 0.35rem !important;
           }
         }
       `}</style>

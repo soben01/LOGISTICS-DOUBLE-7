@@ -23,10 +23,11 @@ import {
   Layers,
   Search,
   ExternalLink,
-  Lock
+  Lock,
+  LogOut
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, User } from '../../lib/auth';
+import { getCurrentUser, logoutUser, User } from '../../lib/auth';
 import {
   getAllCombinedBookings,
   fetchD1Status,
@@ -41,6 +42,11 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState<string>('');
   const router = useRouter();
+
+  const handleLogout = () => {
+    logoutUser();
+    router.push('/login');
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -159,6 +165,24 @@ export default function DashboardPage() {
               <Boxes size={14} />
               <span>All Bookings Registry &rarr;</span>
             </Link>
+
+            {currentUser && (
+              <button
+                onClick={handleLogout}
+                className="btn btn-outline btn-sm"
+                style={{
+                  color: '#f87171',
+                  borderColor: 'rgba(239, 68, 68, 0.35)',
+                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+                title="Sign Out (Log Out)"
+              >
+                <LogOut size={14} />
+                <span>Sign Out</span>
+              </button>
+            )}
           </div>
         </div>
 

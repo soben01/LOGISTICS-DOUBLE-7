@@ -16,10 +16,12 @@ import {
   Sparkles,
   KeyRound,
   Truck,
-  LogIn
+  LogIn,
+  LogOut
 } from 'lucide-react';
 import {
   getCurrentUser,
+  logoutUser,
   loginUser,
   signupUser,
   findUserByEmail,
@@ -54,14 +56,24 @@ function LoginContent() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // 1. Auto-redirect already authenticated users based on role
+  // 1. Session state detection (allows explicit logout or continuing to portal)
+  const [activeSessionUser, setActiveSessionUser] = useState<User | null>(null);
+
   useEffect(() => {
     const user = getCurrentUser();
     if (user) {
-      const destination = resolveMatchedRedirect(user, redirectPath);
-      router.push(destination);
+      setActiveSessionUser(user);
     }
-  }, [redirectPath, router]);
+  }, []);
+
+  const handleSwitchAccount = () => {
+    logoutUser();
+    setActiveSessionUser(null);
+    setEmail('');
+    setPassword('');
+    setErrorMsg('');
+    setSuccessMsg('✓ Successfully logged out. You can now log in to another account.');
+  };
 
   // 2. Real-time role detection as user enters their email
   useEffect(() => {

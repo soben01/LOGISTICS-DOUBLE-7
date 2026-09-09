@@ -584,6 +584,30 @@ a {
 }
 
 /* Radar Scan Keyframe */
+/* Fluid Fade In Keyframe */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile Drawer Slide Down */
+@keyframes slideDownDrawer {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes radar-sweep {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -689,8 +713,9 @@ a {
 /* Hero Background Glow */
 .hero-ambient-glow {
   position: absolute;
-  width: 650px;
-  height: 650px;
+  width: min(650px, 92vw);
+  height: min(650px, 92vw);
+  contain: paint;
   background: radial-gradient(circle, rgba(255, 102, 0, 0.16) 0%, rgba(6, 182, 212, 0.06) 50%, transparent 70%);
   top: -150px;
   left: 50%;
@@ -1408,7 +1433,7 @@ a {
   .admin-mobile-nav {
     display: block !important;
     position: sticky;
-    top: 50px;
+    top: 70px;
     z-index: 85;
     background: rgba(10, 15, 29, 0.97);
     backdrop-filter: blur(20px);
@@ -1417,6 +1442,11 @@ a {
     padding: 0.65rem 1rem;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
   }
+@media (max-width: 768px) {
+  .admin-mobile-nav {
+    top: 64px !important;
+  }
+}
   .admin-main-area {
     padding: 1.25rem 0.85rem !important;
     width: 100% !important;

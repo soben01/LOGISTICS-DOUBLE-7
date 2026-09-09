@@ -48,7 +48,8 @@ import {
   AlertTriangle,
   History,
   Sparkles,
-  SlidersHorizontal
+  SlidersHorizontal,
+  LogOut
 } from 'lucide-react';
 import {
   getShipments,
@@ -63,6 +64,7 @@ import {
 import {
   getUsers,
   getCurrentUser,
+  logoutUser,
   updateMerchantStatus,
   recordMerchantRemittance,
   deleteMerchant,
@@ -138,6 +140,11 @@ const INITIAL_AUDIT_LOGS: AuditEntry[] = [
 
 export default function AdminControlPanel() {
   const router = useRouter();
+
+  const handleAdminLogout = () => {
+    logoutUser();
+    router.push('/login');
+  };
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [activeSection, setActiveSection] = useState<AdminSection>('overview');
   const [actionNotice, setActionNotice] = useState('');
@@ -658,6 +665,30 @@ export default function AdminControlPanel() {
             <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '0.2rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {currentUser?.email || 'soben@double7.com'}
             </div>
+            <button
+              onClick={handleAdminLogout}
+              style={{
+                marginTop: '0.65rem',
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.4rem',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
+                color: '#f87171',
+                padding: '0.35rem 0.6rem',
+                borderRadius: '6px',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              title="Sign Out (Log Out)"
+            >
+              <LogOut size={13} />
+              <span>Sign Out Admin</span>
+            </button>
           </div>
 
           {/* Navigation Links */}
@@ -1143,6 +1174,29 @@ export default function AdminControlPanel() {
               >
                 <Mail size={15} />
                 24h Summary
+              </button>
+
+              {/* Admin Sign Out */}
+              <button
+                onClick={handleAdminLogout}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  padding: '0.45rem 0.85rem',
+                  borderRadius: '8px',
+                  backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                  border: '1px solid rgba(239, 68, 68, 0.35)',
+                  color: '#f87171',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+                title="Sign Out (Log Out)"
+              >
+                <LogOut size={14} />
+                <span>Sign Out</span>
               </button>
             </div>
           </header>

@@ -258,16 +258,22 @@ export default function MerchantPortal() {
             <button
               onClick={handleLogout}
               style={{
-                padding: '0.6rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                padding: '0.6rem 0.85rem',
                 borderRadius: '8px',
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                border: '1px solid rgba(239, 68, 68, 0.2)',
+                backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
                 color: '#ef4444',
+                fontWeight: 700,
+                fontSize: '0.85rem',
                 cursor: 'pointer'
               }}
-              title="Sign Out"
+              title="Sign Out (Log Out)"
             >
               <LogOut size={16} />
+              <span>Sign Out</span>
             </button>
           </div>
         </div>
