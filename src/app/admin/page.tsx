@@ -1838,7 +1838,7 @@ export default function AdminControlPanel() {
 
                 {settingsSavedNotice && (
                   <div style={{ padding: '0.75rem 1rem', borderRadius: '8px', backgroundColor: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10b981', color: '#10b981', fontSize: '0.85rem', fontWeight: 700 }}>
-                    &check; Global settings successfully saved and deployed to Cloudflare KV Edge!
+                    ✓ Global settings successfully saved and deployed to Cloudflare KV Edge!
                   </div>
                 )}
 

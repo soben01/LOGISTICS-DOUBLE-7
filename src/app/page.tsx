@@ -352,15 +352,15 @@ export default function HomePage() {
                     Tonight&apos;s Linehaul Highway Departures
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.8rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.35rem' }}>
                       <span style={{ color: '#f8fafc', fontWeight: 600 }}>KTM &rarr; Pokhara Express</span>
                       <span style={{ color: '#34d399', fontWeight: 700 }}>Departs 19:30 NPT &bull; On Time</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.35rem' }}>
                       <span style={{ color: '#f8fafc', fontWeight: 600 }}>KTM &rarr; Biratnagar Linehaul</span>
                       <span style={{ color: '#34d399', fontWeight: 700 }}>Departs 20:00 NPT &bull; Ready</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.35rem' }}>
                       <span style={{ color: '#f8fafc', fontWeight: 600 }}>KTM &rarr; Butwal / Bhairahawa</span>
                       <span style={{ color: '#38bdf8', fontWeight: 700 }}>Departs 20:30 NPT &bull; Loading</span>
                     </div>
@@ -497,7 +497,7 @@ export default function HomePage() {
                   <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.35rem', textTransform: 'uppercase' }}>
                     Service Tier &amp; Speed
                   </label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 130px), 1fr))', gap: '0.75rem' }}>
                     <button
                       type="button"
                       onClick={() => setServiceSpeed('express')}

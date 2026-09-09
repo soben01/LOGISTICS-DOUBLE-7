@@ -130,7 +130,7 @@ export default function DashboardPage() {
           marginBottom: '2.5rem'
         }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem', marginBottom: '0.4rem' }}>
               <span className="badge badge-orange" style={{ fontSize: '0.72rem' }}>
                 <Cpu size={13} /> Real-Time Operations Telemetry
               </span>
@@ -250,7 +250,7 @@ export default function DashboardPage() {
               {slaRate}%
             </span>
             <div style={{ fontSize: '0.72rem', color: 'var(--brand-emerald)', fontWeight: 600 }}>
-              &check; 24H Intercity &amp; 3H Valley Express
+              ✓ 24H Intercity &amp; 3H Valley Express
             </div>
           </div>
 
@@ -340,7 +340,7 @@ export default function DashboardPage() {
                 <span>Highway Corridors &amp; Transit Status</span>
               </h3>
               <span style={{ fontSize: '0.72rem', color: 'var(--brand-emerald)', fontWeight: 700 }}>
-                &check; HIGHWAYS CLEAR
+                ✓ HIGHWAYS CLEAR
               </span>
             </div>
 

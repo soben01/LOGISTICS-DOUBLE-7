@@ -1771,3 +1771,18 @@ html, body {
     justifyContent: space-between;
   }
 }
+
+/* Smooth mobile horizontal scrolling without clipping */
+.mobile-scroll-x {
+  display: flex !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.mobile-scroll-x::-webkit-scrollbar {
+  display: none !important;
+}
+.mobile-scroll-x > * {
+  flex-shrink: 0 !important;
+}

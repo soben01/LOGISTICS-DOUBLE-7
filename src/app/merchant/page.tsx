@@ -183,7 +183,7 @@ export default function MerchantPortal() {
               <Building size={26} />
             </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem' }}>
                 <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#f8fafc', letterSpacing: '-0.02em', margin: 0 }}>
                   {currentUser.company || 'Nepal Merchant Partner'}
                 </h1>
@@ -413,6 +413,7 @@ export default function MerchantPortal() {
                   backgroundColor: isActive ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
                   color: isActive ? '#3b82f6' : 'var(--text-secondary)',
                   whiteSpace: 'nowrap',
+                  flexShrink: 0,
                   transition: 'all 0.15s ease'
                 }}
               >
@@ -458,13 +459,13 @@ export default function MerchantPortal() {
                 <Search size={16} color="var(--text-muted)" />
                 <input
                   type="text"
-                  placeholder="Search orders by Tracking ID, recipient, or destination city..."
+                  placeholder="Search Tracking ID, recipient, or city..."
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                   style={{ backgroundColor: 'transparent', border: 'none', color: '#fff', width: '100%', fontSize: '0.875rem', outline: 'none' }}
                 />
               </div>
-              <div style={{ display: 'flex', gap: '0.4rem', overflowX: 'auto' }}>
+              <div className="mobile-scroll-x" style={{ display: 'flex', gap: '0.4rem', overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', paddingBottom: '2px' }}>
                 {['ALL', 'In Transit', 'Out for Delivery', 'Delivered', 'Pending Pickup', 'Exception'].map(st => (
                   <button
                     key={st}
@@ -477,7 +478,9 @@ export default function MerchantPortal() {
                       fontSize: '0.78rem',
                       fontWeight: statusFilter === st ? 700 : 500,
                       backgroundColor: statusFilter === st ? '#3b82f6' : 'rgba(255, 255, 255, 0.05)',
-                      color: statusFilter === st ? '#fff' : 'var(--text-secondary)'
+                      color: statusFilter === st ? '#fff' : 'var(--text-secondary)',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0
                     }}
                   >
                     {st}

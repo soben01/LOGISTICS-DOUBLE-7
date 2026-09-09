@@ -275,7 +275,7 @@ export default function PrintableLabel({ shipment, onClose }: PrintableLabelProp
         }}>
           <div>
             <div style={{ fontWeight: 800, color: '#000' }}>
-              &check; DOUBLE 7 LOGISTICS OFFICIAL DOMESTIC DISPATCH
+              ✓ DOUBLE 7 LOGISTICS OFFICIAL DOMESTIC DISPATCH
             </div>
             <div style={{ color: '#555', fontSize: '0.7rem' }}>
               Electronic Waybill pre-authorized. Direct signature required upon delivery.
