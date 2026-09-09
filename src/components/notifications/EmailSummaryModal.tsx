@@ -19,10 +19,31 @@ import {
 import { subscribeTo24hSummary, EmailNotificationSubscription } from '../../lib/notifications';
 import { getShipments } from '../../lib/store';
 
+export interface MerchantRecentShipment {
+  id: string;
+  recipientCity?: string;
+  recipientName?: string;
+  status?: string;
+  codAmountNpr?: number;
+  slaEta?: string;
+}
+
+export interface MerchantSummaryData {
+  companyName: string;
+  merchantName: string;
+  merchantEmail: string;
+  shipmentsCount: number;
+  inTransitCount: number;
+  deliveredCount: number;
+  codBalanceNpr: number;
+  recentShipments?: MerchantRecentShipment[];
+}
+
 interface EmailSummaryModalProps {
   initialEmail?: string;
   role?: 'merchant' | 'admin' | 'consignee';
   associatedTrackingId?: string;
+  merchantData?: MerchantSummaryData;
   onClose: () => void;
 }
 
@@ -30,9 +51,10 @@ export default function EmailSummaryModal({
   initialEmail = '',
   role = 'merchant',
   associatedTrackingId,
+  merchantData,
   onClose,
 }: EmailSummaryModalProps) {
-  const [email, setEmail] = useState(initialEmail);
+  const [email, setEmail] = useState(merchantData?.merchantEmail || initialEmail);
   const [frequency, setFrequency] = useState<'24h' | 'instant'>('24h');
   const [includeDispatches, setIncludeDispatches] = useState(true);
   const [includeCodReport, setIncludeCodReport] = useState(true);
@@ -82,8 +104,13 @@ export default function EmailSummaryModal({
             role,
             trackingId: associatedTrackingId,
             type: '24h_summary',
+            merchantData: merchantData || undefined,
+            name: merchantData?.merchantName || email.split('@')[0],
+            company: merchantData?.companyName || 'Verified Merchant Partner',
             subject: associatedTrackingId
               ? `[Double 7] Waybill & Dispatch Notice: ${associatedTrackingId}`
+              : merchantData
+              ? `[Double 7] ${merchantData.companyName} • 24-Hour Dashboard & Operations Summary Activated`
               : `[Double 7] 24-Hour Operations & COD Summary Activated • Daily Reset 6:00 PM (${email.trim()})`,
           }),
         });
@@ -130,13 +157,16 @@ export default function EmailSummaryModal({
           role,
           trackingId: associatedTrackingId,
           type: sendType,
-          name: email.split('@')[0],
-          company: 'Nepal Merchant Commerce Pvt Ltd',
+          name: merchantData?.merchantName || email.split('@')[0],
+          company: merchantData?.companyName || 'Nepal Merchant Commerce Pvt Ltd',
           password: '•••••••• (Your Chosen Secure Password)',
+          merchantData: merchantData || undefined,
           subject: sendType === 'merchant_welcome'
             ? `🎉 Welcome to Double 7 Logistics • Merchant Account Activated & Login Credentials`
             : associatedTrackingId
             ? `[Double 7] Consignment Tracking Summary: ${associatedTrackingId}`
+            : merchantData
+            ? `[Double 7] ${merchantData.companyName} • 24-Hour Dashboard Summary & COD Remittance Report`
             : `[Double 7] 24-Hour Operations & COD Summary Report • Daily Reset: 6:00 PM NPT`,
         }),
       });
@@ -573,9 +603,11 @@ export default function EmailSummaryModal({
 
                 {/* Salutation */}
                 <div style={{ marginBottom: '1rem' }}>
-                  <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Hello <strong>{email || 'merchant@store.np'}</strong>,</div>
+                  <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
+                    Hello <strong>{merchantData?.merchantName || email.split('@')[0] || 'Merchant Partner'}</strong> {merchantData ? `(${merchantData.companyName})` : ''},
+                  </div>
                   <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ffffff', marginTop: '2px' }}>
-                    Full 24-Hour Operations &amp; COD Summary Report
+                    {merchantData ? `${merchantData.companyName} • 24-Hour Dashboard & Operations Summary` : 'Full 24-Hour Operations & COD Summary Report'}
                   </div>
                 </div>
 
@@ -599,18 +631,44 @@ export default function EmailSummaryModal({
                 {/* Metrics Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.65rem', marginBottom: '1.25rem' }}>
                   <div style={{ background: '#16223e', borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#ff8533' }}>{activeCount}</div>
-                    <div style={{ fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase' }}>Active In-Transit</div>
+                    <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#ff8533' }}>
+                      {merchantData ? merchantData.inTransitCount : activeCount}
+                    </div>
+                    <div style={{ fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase' }}>
+                      {merchantData ? 'My In-Transit' : 'Active In-Transit'}
+                    </div>
                   </div>
                   <div style={{ background: '#16223e', borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
                     <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#34d399' }}>6:00 PM</div>
                     <div style={{ fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase' }}>Daily Reset Cutoff</div>
                   </div>
                   <div style={{ background: '#16223e', borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#22d3ee' }}>Rs. 45,200</div>
-                    <div style={{ fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase' }}>COD Remitted (NPR)</div>
+                    <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#22d3ee' }}>
+                      {merchantData ? `Rs. ${merchantData.codBalanceNpr.toLocaleString()}` : 'Rs. 45,200'}
+                    </div>
+                    <div style={{ fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase' }}>
+                      {merchantData ? 'My COD Balance' : 'COD Remitted (NPR)'}
+                    </div>
                   </div>
                 </div>
+
+                {/* If merchant has recent shipments, show them in preview */}
+                {merchantData?.recentShipments && merchantData.recentShipments.length > 0 && (
+                  <div style={{ background: '#10192e', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '12px', marginBottom: '1.25rem' }}>
+                    <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#ff8533', textTransform: 'uppercase', marginBottom: '8px' }}>
+                      📦 Your Recent Waybill Manifest (In Email)
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {merchantData.recentShipments.slice(0, 4).map((s) => (
+                        <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '4px' }}>
+                          <span style={{ fontFamily: 'monospace', color: '#22d3ee', fontWeight: 700 }}>{s.id}</span>
+                          <span style={{ color: '#cbd5e1' }}>{s.recipientCity} ({s.recipientName})</span>
+                          <span style={{ color: '#34d399', fontWeight: 700 }}>Rs. {(s.codAmountNpr || 0).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Action CTA */}
                 <div style={{ textAlign: 'center', marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '1rem' }}>

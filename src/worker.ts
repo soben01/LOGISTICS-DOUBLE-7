@@ -179,10 +179,100 @@ async function listCloudflareEmailAddresses(
   }
 }
 
-function build24hSummaryHtml(params: { email: string; liveCount: number; trackingId?: string }): string {
-  const { email, liveCount, trackingId } = params;
+interface MerchantRecentShipment {
+  id: string;
+  recipientCity?: string;
+  recipientName?: string;
+  status?: string;
+  codAmountNpr?: number;
+  slaEta?: string;
+}
+
+interface MerchantSummaryData {
+  companyName?: string;
+  merchantName?: string;
+  merchantEmail?: string;
+  shipmentsCount?: number;
+  inTransitCount?: number;
+  deliveredCount?: number;
+  codBalanceNpr?: number;
+  recentShipments?: MerchantRecentShipment[];
+}
+
+function build24hSummaryHtml(params: {
+  email: string;
+  liveCount: number;
+  trackingId?: string;
+  role?: string;
+  merchantData?: MerchantSummaryData;
+}): string {
+  const { email, liveCount, trackingId, role, merchantData } = params;
   const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+  const isMerchant = role === 'merchant' || !!merchantData;
+  const companyName = merchantData?.companyName || (isMerchant ? 'Verified Merchant Partner' : 'Enterprise Logistics Network');
+  const merchantName = merchantData?.merchantName || email.split('@')[0];
+  
+  // Custom metrics for merchant or global fallback
+  const activeParcelsCount = merchantData?.inTransitCount !== undefined ? merchantData.inTransitCount : liveCount;
+  const deliveredParcelsCount = merchantData?.deliveredCount !== undefined ? merchantData.deliveredCount : 0;
+  const codPoolFormatted = merchantData?.codBalanceNpr !== undefined 
+    ? `Rs. ${merchantData.codBalanceNpr.toLocaleString()} NPR`
+    : 'Rs. 485,200 NPR (Cleared)';
+
+  // Build Recent Shipments rows if merchant data exists
+  let shipmentsTableHtml = '';
+  if (merchantData?.recentShipments && merchantData.recentShipments.length > 0) {
+    const rows = merchantData.recentShipments.map(s => {
+      const statusColor = s.status === 'Delivered' ? '#34d399' : s.status === 'In Transit' ? '#38bdf8' : '#ff8533';
+      return `
+        <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+          <td style="padding:8px 6px;font-family:monospace;font-weight:700;color:#22d3ee;">
+            <a href="https://sobinupreti.com.np/track?id=${s.id}" style="color:#22d3ee;text-decoration:none;">${s.id}</a>
+          </td>
+          <td style="padding:8px 6px;color:#e2e8f0;">${s.recipientCity || 'Kathmandu'}</td>
+          <td style="padding:8px 6px;color:#94a3b8;">${s.recipientName || 'Customer'}</td>
+          <td style="padding:8px 6px;">
+            <span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;background:${statusColor}22;color:${statusColor};border:1px solid ${statusColor}44;">
+              ${s.status || 'Active'}
+            </span>
+          </td>
+          <td align="right" style="padding:8px 6px;font-weight:700;color:#f8fafc;">
+            ${s.codAmountNpr ? `Rs. ${s.codAmountNpr.toLocaleString()}` : 'Prepaid'}
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    shipmentsTableHtml = `
+      <!-- Merchant Consignment Manifest -->
+      <div style="background:#10192e;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:16px 18px;margin-bottom:22px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="font-size:12px;font-weight:700;color:#ff8533;text-transform:uppercase;letter-spacing:0.5px;">
+            📦 Your Live Consignments Manifest
+          </div>
+          <div style="font-size:11px;color:#94a3b8;">
+            Showing recent ${merchantData.recentShipments.length} waybills
+          </div>
+        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" style="font-size:12px;text-align:left;border-collapse:collapse;">
+          <thead>
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.12);color:#94a3b8;font-size:11px;text-transform:uppercase;">
+              <th style="padding:6px;">Waybill #</th>
+              <th style="padding:6px;">City</th>
+              <th style="padding:6px;">Recipient</th>
+              <th style="padding:6px;">Status</th>
+              <th align="right" style="padding:6px;">COD (NPR)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
 
   return `<!DOCTYPE html>
 <html>
@@ -204,10 +294,12 @@ function build24hSummaryHtml(params: { email: string; liveCount: number; trackin
                 <tr>
                   <td>
                     <div style="font-size:22px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">DOUBLE 7 LOGISTICS</div>
-                    <div style="font-size:11px;color:rgba(255,255,255,0.9);letter-spacing:1px;text-transform:uppercase;margin-top:2px;">National Express & Regional Fleet Command</div>
+                    <div style="font-size:11px;color:rgba(255,255,255,0.9);letter-spacing:1px;text-transform:uppercase;margin-top:2px;">National Express & Merchant Freight Hub</div>
                   </td>
                   <td align="right">
-                    <span style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.3);color:#ffffff;font-size:10px;font-weight:700;padding:5px 12px;border-radius:20px;">24H SUMMARY &bull; RESET 6 PM</span>
+                    <span style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.3);color:#ffffff;font-size:10px;font-weight:700;padding:5px 12px;border-radius:20px;">
+                      ${isMerchant ? 'MERCHANT DASHBOARD' : '24H SUMMARY'} &bull; RESET 6 PM
+                    </span>
                   </td>
                 </tr>
               </table>
@@ -217,9 +309,13 @@ function build24hSummaryHtml(params: { email: string; liveCount: number; trackin
           <!-- Body -->
           <tr>
             <td style="padding:28px 30px;">
-              <div style="font-size:15px;color:#94a3b8;margin-bottom:6px;">Hello <strong>${email}</strong>,</div>
+              <div style="font-size:15px;color:#94a3b8;margin-bottom:6px;">Hello <strong>${merchantName}</strong> (${companyName}),</div>
               <div style="font-size:19px;font-weight:700;color:#ffffff;margin-bottom:18px;">
-                ${trackingId ? `Consignment Tracking Digest: ${trackingId}` : 'Full 24-Hour Logistics & Operations Dashboard Summary'}
+                ${trackingId 
+                  ? `Consignment Tracking Digest: ${trackingId}` 
+                  : isMerchant 
+                  ? `${companyName} &bull; 24-Hour Merchant Dashboard & Operations Summary` 
+                  : 'Full 24-Hour Logistics & Operations Dashboard Summary'}
               </div>
 
               <!-- 24-Hour Dashboard Updates & Daily 6 PM Reset Banner -->
@@ -237,9 +333,13 @@ function build24hSummaryHtml(params: { email: string; liveCount: number; trackin
               <!-- Full Details Dashboard Table -->
               <div style="background:#10192e;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:18px;margin-bottom:22px;">
                 <div style="font-size:12px;font-weight:700;color:#38bdf8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">
-                  Live 24-Hour Network Telemetry
+                  ${isMerchant ? 'Your Live Merchant Telemetry' : 'Live 24-Hour Network Telemetry'}
                 </div>
                 <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="padding:6px 0;font-size:13px;color:#94a3b8;">Merchant Company:</td>
+                    <td align="right" style="padding:6px 0;font-size:13px;color:#ffffff;font-weight:600;">${companyName}</td>
+                  </tr>
                   <tr>
                     <td style="padding:6px 0;font-size:13px;color:#94a3b8;">Report Generated:</td>
                     <td align="right" style="padding:6px 0;font-size:13px;color:#ffffff;font-weight:600;">${dateStr} &bull; ${timeStr} NPT</td>
@@ -249,12 +349,18 @@ function build24hSummaryHtml(params: { email: string; liveCount: number; trackin
                     <td align="right" style="padding:6px 0;font-size:13px;color:#ff8533;font-weight:700;">Every Day at 6:00 PM (18:00 NPT)</td>
                   </tr>
                   <tr>
-                    <td style="padding:6px 0;font-size:13px;color:#94a3b8;">Network Active Consignments:</td>
-                    <td align="right" style="padding:6px 0;font-size:13px;color:#ff8533;font-weight:700;">${liveCount} Parcels In-Transit</td>
+                    <td style="padding:6px 0;font-size:13px;color:#94a3b8;">${isMerchant ? 'Your In-Transit Consignments' : 'Network Active Consignments'}:</td>
+                    <td align="right" style="padding:6px 0;font-size:13px;color:#ff8533;font-weight:700;">${activeParcelsCount} Parcels In-Transit</td>
                   </tr>
+                  ${isMerchant ? `
                   <tr>
-                    <td style="padding:6px 0;font-size:13px;color:#94a3b8;">Reconciled COD Remittance Pool:</td>
-                    <td align="right" style="padding:6px 0;font-size:13px;color:#34d399;font-weight:700;">Rs. 485,200 NPR (Cleared)</td>
+                    <td style="padding:6px 0;font-size:13px;color:#94a3b8;">Your Delivered Consignments:</td>
+                    <td align="right" style="padding:6px 0;font-size:13px;color:#38bdf8;font-weight:700;">${deliveredParcelsCount} Completed</td>
+                  </tr>
+                  ` : ''}
+                  <tr>
+                    <td style="padding:6px 0;font-size:13px;color:#94a3b8;">${isMerchant ? 'Your Reconciled COD Balance' : 'Reconciled COD Remittance Pool'}:</td>
+                    <td align="right" style="padding:6px 0;font-size:13px;color:#34d399;font-weight:700;">${codPoolFormatted}</td>
                   </tr>
                   <tr>
                     <td style="padding:6px 0;font-size:13px;color:#94a3b8;">Highway Linehaul SLA:</td>
@@ -273,12 +379,15 @@ function build24hSummaryHtml(params: { email: string; liveCount: number; trackin
                 </table>
               </div>
 
+              <!-- Dynamic Merchant Consignments Manifest if available -->
+              ${shipmentsTableHtml}
+
               <!-- 3 Key Metric Blocks -->
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
                 <tr>
                   <td width="32%" style="background:#16223e;border-radius:8px;padding:14px 10px;text-align:center;">
-                    <div style="font-size:22px;font-weight:800;color:#ff8533;">${liveCount}</div>
-                    <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;margin-top:2px;">Dispatches</div>
+                    <div style="font-size:22px;font-weight:800;color:#ff8533;">${activeParcelsCount}</div>
+                    <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;margin-top:2px;">${isMerchant ? 'My In-Transit' : 'Dispatches'}</div>
                   </td>
                   <td width="2%"></td>
                   <td width="32%" style="background:#16223e;border-radius:8px;padding:14px 10px;text-align:center;">
@@ -297,11 +406,11 @@ function build24hSummaryHtml(params: { email: string; liveCount: number; trackin
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
                 <tr>
                   <td align="center">
-                    <a href="https://sobinupreti.com.np${trackingId ? `/track?id=${trackingId}` : '/dashboard'}" style="display:inline-block;background:linear-gradient(135deg,#ff6600 0%,#ea580c 100%);color:#ffffff;font-weight:700;font-size:14px;padding:13px 28px;text-decoration:none;border-radius:8px;box-shadow:0 4px 16px rgba(255,102,0,0.4);margin-right:8px;">
-                      ${trackingId ? 'Track Consignment Waybill' : 'Open Operations Dashboard'}
+                    <a href="https://sobinupreti.com.np${isMerchant ? '/merchant' : (trackingId ? `/track?id=${trackingId}` : '/dashboard')}" style="display:inline-block;background:linear-gradient(135deg,#ff6600 0%,#ea580c 100%);color:#ffffff;font-weight:700;font-size:14px;padding:13px 28px;text-decoration:none;border-radius:8px;box-shadow:0 4px 16px rgba(255,102,0,0.4);margin-right:8px;">
+                      ${isMerchant ? 'Open Merchant Command Portal' : (trackingId ? 'Track Consignment Waybill' : 'Open Operations Dashboard')}
                     </a>
                     <a href="https://sobinupreti.com.np/login" style="display:inline-block;background:#16223e;border:1px solid rgba(255,255,255,0.15);color:#cbd5e1;font-weight:600;font-size:14px;padding:13px 22px;text-decoration:none;border-radius:8px;">
-                      Merchant Portal Login
+                      Account Login
                     </a>
                   </td>
                 </tr>
@@ -1374,6 +1483,7 @@ export default {
         let password = '';
         let merchantId = `usr-merch-${Date.now()}`;
 
+        let merchantData: any = undefined;
         if (request.method === 'POST') {
           const body = (await request.json()) as any;
           recipientEmail = body.email || (env as any).DAILY_SUMMARY_EMAIL || '';
@@ -1384,6 +1494,7 @@ export default {
           name = body.name || '';
           company = body.company || company;
           password = body.password || '';
+          merchantData = body.merchantData;
           if (body.merchantId) merchantId = body.merchantId;
         } else {
           recipientEmail = url.searchParams.get('email') || (env as any).DAILY_SUMMARY_EMAIL || '';
@@ -1434,6 +1545,8 @@ export default {
             email: cleanEmail,
             liveCount,
             trackingId,
+            role,
+            merchantData,
           });
           if (!finalSubject) {
             const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });

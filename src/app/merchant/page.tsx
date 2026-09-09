@@ -75,13 +75,25 @@ export default function MerchantPortal() {
     setCurrentUser(user);
 
     const allShipments = getShipments();
-    const merchantShipments = allShipments.filter(
-      s =>
-        s.sender.company.toLowerCase().includes(user.company.toLowerCase()) ||
-        s.sender.name.toLowerCase().includes(user.name.toLowerCase()) ||
-        user.role === 'admin'
-    );
-    setShipments(merchantShipments.length > 0 ? merchantShipments : allShipments.slice(0, 6));
+    const userCompany = (user.company || '').trim().toLowerCase();
+    const userName = (user.name || '').trim().toLowerCase();
+    const userEmail = (user.email || '').trim().toLowerCase();
+
+    const merchantShipments = allShipments.filter(s => {
+      if (user.role === 'admin') return true;
+      const senderCompany = (s.sender?.company || '').trim().toLowerCase();
+      const senderName = (s.sender?.name || '').trim().toLowerCase();
+      const senderEmail = ((s.sender as any)?.email || '').trim().toLowerCase();
+
+      const matchCompany = !!(userCompany && senderCompany && (senderCompany.includes(userCompany) || userCompany.includes(senderCompany)));
+      const matchName = !!(userName && senderName && (senderName.includes(userName) || userName.includes(senderName)));
+      const matchEmail = !!(userEmail && senderEmail && userEmail === senderEmail);
+
+      return matchCompany || matchName || matchEmail;
+    });
+
+    // STRICT MERCHANT DATA: Exclusively show merchant's own consignments (no leak of other merchants' mock shipments)
+    setShipments(merchantShipments);
   }, [router]);
 
   const handleLogout = () => {
@@ -116,7 +128,10 @@ export default function MerchantPortal() {
     return matchesSearch && matchesStatus;
   });
 
-  const totalCodReconciled = currentUser.codBalanceNpr || 45200;
+  const ownDeliveredCodSum = shipments
+    .filter(s => s.status === 'Delivered')
+    .reduce((sum, s) => sum + (s.codAmount || s.cargo?.declaredValueNpr || 0), 0);
+  const totalCodReconciled = currentUser.codBalanceNpr !== undefined ? currentUser.codBalanceNpr : ownDeliveredCodSum;
   const inTransitCount = shipments.filter(s => s.status === 'In Transit').length;
   const deliveredCount = shipments.filter(s => s.status === 'Delivered').length;
 
@@ -471,13 +486,51 @@ export default function MerchantPortal() {
               </div>
             </div>
 
-            {/* Consignments Table */}
-            <div className="table-responsive" style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.02)',
-              borderRadius: '12px',
-              border: '1px solid rgba(255, 255, 255, 0.08)'
-            }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+            {/* Empty State when merchant has 0 shipments matching filter */}
+            {filteredShipments.length === 0 ? (
+              <div style={{
+                textAlign: 'center',
+                padding: '3.5rem 1.5rem',
+                backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                borderRadius: '12px',
+                border: '1px solid rgba(255, 255, 255, 0.08)'
+              }}>
+                <Boxes size={44} style={{ margin: '0 auto 1rem auto', color: 'var(--brand-orange)', opacity: 0.6 }} />
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#f8fafc', marginBottom: '0.4rem' }}>
+                  {shipments.length === 0 ? 'Your Merchant Dispatch Hub is Ready' : 'No Matching Consignments Found'}
+                </h3>
+                <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', maxWidth: '440px', margin: '0 auto 1.5rem auto', lineHeight: '1.6' }}>
+                  {shipments.length === 0
+                    ? `Welcome ${currentUser.company || currentUser.name}! You haven't booked any shipments yet. Create your first parcel consignment or upload a manifest to start generating live waybills.`
+                    : 'No consignments match your current search query or status filter. Try clearing filters.'}
+                </p>
+                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <Link
+                    href="/book"
+                    className="btn btn-primary btn-sm"
+                  >
+                    <Plus size={15} />
+                    <span>Book First Consignment</span>
+                  </Link>
+                  {shipments.length > 0 && (
+                    <button
+                      onClick={() => { setSearchTerm(''); setStatusFilter('ALL'); }}
+                      className="btn btn-secondary btn-sm"
+                    >
+                      Clear Filters
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Desktop & Tablet Table View (hidden on very small phones) */}
+                <div className="table-responsive hidden-mobile-cards" style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.08)'
+                }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                 <thead>
                   <tr style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: 'var(--text-secondary)', fontSize: '0.75rem', textTransform: 'uppercase' }}>
                     <th style={{ padding: '0.85rem 1rem' }}>Tracking ID</th>
@@ -560,8 +613,82 @@ export default function MerchantPortal() {
                 </tbody>
               </table>
             </div>
-          </div>
+
+            {/* Dedicated Phone UI Consignment Cards Feed (Tailored for mobile screens) */}
+            <div className="visible-mobile-cards" style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              {filteredShipments.map(s => (
+                <div
+                  key={s.id}
+                  style={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.09)',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.65rem'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <span style={{ fontWeight: 800, color: '#3b82f6', fontFamily: 'monospace', fontSize: '0.9rem' }}>
+                        {s.id}
+                      </span>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginLeft: '6px' }}>
+                        {s.serviceType || s.service || 'Express'}
+                      </span>
+                    </div>
+                    <span style={{
+                      padding: '0.2rem 0.55rem',
+                      borderRadius: '6px',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      backgroundColor: s.status === 'Delivered' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(59, 130, 246, 0.15)',
+                      color: s.status === 'Delivered' ? '#10b981' : '#3b82f6'
+                    }}>
+                      {s.status}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.8rem', background: 'rgba(0,0,0,0.2)', padding: '0.65rem 0.75rem', borderRadius: '8px' }}>
+                    <div>
+                      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Destination</div>
+                      <div style={{ fontWeight: 700, color: '#f8fafc' }}>{s.destination?.city || 'Kathmandu'}</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{s.recipient?.name || 'Customer'}</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>COD Remittance</div>
+                      <div style={{ fontWeight: 800, color: (s.codAmount || s.cargo?.declaredValueNpr) ? '#10b981' : 'var(--text-muted)', fontSize: '0.95rem' }}>
+                        {(s.codAmount || s.cargo?.declaredValueNpr) ? `Rs. ${(s.codAmount || s.cargo?.declaredValueNpr)!.toLocaleString()}` : 'Prepaid'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.25rem' }}>
+                    <button
+                      onClick={() => setPrintingShipment(s)}
+                      className="btn btn-secondary btn-sm"
+                      style={{ fontSize: '0.75rem', padding: '0.4rem 0.7rem' }}
+                    >
+                      <Printer size={13} />
+                      <span>Print Label</span>
+                    </button>
+                    <Link
+                      href={`/track?id=${s.id}`}
+                      className="btn btn-outline btn-sm"
+                      style={{ fontSize: '0.75rem', padding: '0.4rem 0.7rem' }}
+                    >
+                      <ExternalLink size={13} />
+                      <span>Track</span>
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
+      </div>
+    )}
 
         {/* ========================================================================= */}
         {/* TAB 2: COD SETTLEMENTS & BANK LEDGER */}
@@ -796,6 +923,23 @@ export default function MerchantPortal() {
         <EmailSummaryModal
           onClose={() => setShowEmailModal(false)}
           role="merchant"
+          merchantData={{
+            companyName: currentUser.company || currentUser.name || 'Merchant Partner',
+            merchantName: currentUser.name,
+            merchantEmail: currentUser.email,
+            shipmentsCount: shipments.length,
+            inTransitCount,
+            deliveredCount,
+            codBalanceNpr: totalCodReconciled,
+            recentShipments: shipments.slice(0, 6).map(s => ({
+              id: s.id,
+              recipientCity: s.destination?.city || 'Kathmandu',
+              recipientName: s.recipient?.name || 'Customer',
+              status: s.status,
+              codAmountNpr: s.codAmount || s.cargo?.declaredValueNpr || 0,
+              slaEta: (s as any).slaEta || 'Within 24h'
+            }))
+          }}
         />
       )}
     </div>

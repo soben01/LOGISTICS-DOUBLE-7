@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
+  LayoutDashboard,
   Home,
   Search,
   Plus,
@@ -112,14 +113,14 @@ export default function MobileBottomNav() {
           <Plus size={24} strokeWidth={2.8} />
         </Link>
 
-        {/* 4. Bookings */}
+        {/* 4. Phone UI Dashboard Hub */}
         <Link
-          href="/bookings"
-          className={`mobile-bottom-nav-item ${isBookingsActive ? 'active' : ''}`}
-          aria-label="All Bookings Registry"
+          href={currentUser ? (currentUser.role === 'merchant' ? '/merchant' : '/admin') : '/dashboard'}
+          className={`mobile-bottom-nav-item ${pathname === '/dashboard' ? 'active' : ''}`}
+          aria-label="Live Dashboard"
         >
-          <Boxes size={20} strokeWidth={isBookingsActive ? 2.5 : 1.8} />
-          <span>Bookings</span>
+          <LayoutDashboard size={20} strokeWidth={pathname === '/dashboard' ? 2.5 : 1.8} />
+          <span>Dashboard</span>
         </Link>
 
         {/* 5. Portal / User */}
