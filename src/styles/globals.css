@@ -1629,3 +1629,95 @@ html, body {
   }
 }
 
+
+/* =========================================================
+   MULTI-DEVICE FLUID RESPONSIVE SYSTEM (MOBILE, TABLET, DESKTOP)
+   ========================================================= */
+.admin-top-header {
+  min-height: 64px;
+  background-color: #0a0f1d;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.admin-quick-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.admin-mobile-nav {
+  position: relative;
+}
+
+.admin-mobile-nav .mobile-scroll-x {
+  padding-right: 2.25rem !important;
+}
+
+.admin-mobile-nav::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  background: linear-gradient(to right, transparent, rgba(10, 15, 29, 0.95));
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .admin-top-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 0.75rem 0.85rem !important;
+    gap: 0.65rem !important;
+  }
+  .admin-quick-actions {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.4rem !important;
+  }
+  .admin-quick-actions > * {
+    flex: 1 1 calc(50% - 0.25rem) !important;
+    min-width: 120px !important;
+    justify-content: center !important;
+    font-size: 0.75rem !important;
+    padding: 0.4rem 0.6rem !important;
+  }
+  .hero-tracking-form {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  .hero-tracking-form input,
+  .hero-tracking-form button {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+  .booking-card {
+    padding: 1.25rem 1rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-quick-actions > * {
+    flex: 1 1 100% !important;
+    min-width: 100% !important;
+  }
+  .container, .container-narrow, .container-fluid {
+    width: 100% !important;
+    padding: 0 0.85rem !important;
+  }
+  .card, .glass-panel {
+    padding: 1.15rem 0.9rem !important;
+  }
+}

@@ -173,6 +173,73 @@ function LoginContent() {
 
         {/* Main Form Glass Panel */}
         <div className="glass-panel auth-card" style={{ maxWidth: '520px', width: '100%', margin: '0 auto' }}>
+          {/* Active Session Detected Banner with Direct Escape / Logout */}
+          {activeSessionUser && (
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.14)',
+              borderRadius: '12px',
+              padding: '1.25rem',
+              marginBottom: '1.75rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.85rem',
+              animation: 'fadeIn 0.25s ease',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.6px' }}>
+                    Currently Signed In
+                  </div>
+                  <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ffffff', marginTop: '0.15rem' }}>
+                    {activeSessionUser.name} &bull; <span style={{ color: activeSessionUser.role === 'admin' ? 'var(--brand-orange)' : 'var(--brand-cyan)', textTransform: 'uppercase', fontSize: '0.85rem' }}>{activeSessionUser.role}</span>
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                    {activeSessionUser.email}
+                  </div>
+                </div>
+                <span className={activeSessionUser.role === 'admin' ? 'badge badge-orange' : 'badge badge-cyan'} style={{ fontSize: '0.72rem' }}>
+                  Active Session
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap', width: '100%', marginTop: '0.25rem' }}>
+                <button
+                  type="button"
+                  onClick={handleSwitchAccount}
+                  className="btn btn-outline"
+                  style={{
+                    flex: '1 1 140px',
+                    color: '#f87171',
+                    borderColor: 'rgba(239, 68, 68, 0.4)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    justifyContent: 'center',
+                    padding: '0.65rem 1rem',
+                    fontWeight: 700,
+                    fontSize: '0.88rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <LogOut size={16} />
+                  <span>Log Out</span>
+                </button>
+
+                <Link
+                  href={resolveMatchedRedirect(activeSessionUser, redirectPath)}
+                  className="btn btn-primary"
+                  style={{
+                    flex: '1 1 160px',
+                    justifyContent: 'center',
+                    padding: '0.65rem 1rem',
+                    fontWeight: 700,
+                    fontSize: '0.88rem'
+                  }}
+                >
+                  <span>Go to Portal &rarr;</span>
+                </Link>
+              </div>
+            </div>
+          )}
           {/* Sub-tabs: Login vs Register */}
           <div className="tab-list" style={{ marginBottom: '1.75rem' }}>
             <button

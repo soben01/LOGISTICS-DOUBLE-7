@@ -101,7 +101,7 @@ export default function HomePage() {
                 maxWidth: '620px',
                 marginBottom: '1.5rem',
               }}>
-                <form onSubmit={handleTrackSubmit} style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <form onSubmit={handleTrackSubmit} className="hero-tracking-form" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   <input
                     type="text"
                     className="input-field"

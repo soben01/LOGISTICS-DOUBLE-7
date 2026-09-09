@@ -1063,7 +1063,7 @@ export default function AdminControlPanel() {
         {/* Main Content Area */}
         <main className="admin-main-area" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflowX: 'hidden' }}>
           {/* Top Control Bar */}
-          <header style={{
+          <header className="admin-top-header" style={{
             minHeight: '64px',
             backgroundColor: '#0a0f1d',
             borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
@@ -1104,7 +1104,7 @@ export default function AdminControlPanel() {
             </div>
 
             {/* Quick Actions */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div className="admin-quick-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
               {/* Impersonation Selector */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', backgroundColor: 'rgba(255, 255, 255, 0.04)', padding: '0.35rem 0.65rem', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
                 <Eye size={14} color="#f59e0b" />
