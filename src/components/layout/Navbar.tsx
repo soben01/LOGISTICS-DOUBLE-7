@@ -96,23 +96,18 @@ export default function Navbar() {
           textDecoration: 'none',
           flexShrink: 0,
         }}>
-          <div style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '9px',
-            background: 'linear-gradient(135deg, #ff6600 0%, #d9480f 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 2px 10px rgba(255, 102, 0, 0.35)',
-          }}>
-            <span style={{
-              fontSize: '1.15rem',
-              fontWeight: 900,
-              fontFamily: 'var(--font-mono)',
-              color: '#ffffff',
-            }}>7</span>
-          </div>
+          <img
+            src="/images/logo.png"
+            alt="Double 7"
+            style={{
+              width: '38px',
+              height: '38px',
+              borderRadius: '9px',
+              objectFit: 'cover',
+              boxShadow: '0 2px 10px rgba(255, 102, 0, 0.35)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+            }}
+          />
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <span style={{

@@ -17,6 +17,10 @@ export const metadata: Metadata = {
   title: 'DOUBLE 7 LOGISTICS | Next-Gen Global Supply Chain & Air Cargo Network',
   description: 'Enterprise international air express, smart robotic warehousing, and ocean container logistics powered by high-velocity dispatch and real-time telemetry. Founded by Soben.',
   keywords: ['Double 7 Logistics', 'Air Cargo', 'Express Shipping', 'Cross-Border Supply Chain', 'Robotic Fulfillment', 'Global Freight'],
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
 };
 
 export default function RootLayout({

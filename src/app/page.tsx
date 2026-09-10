@@ -305,27 +305,6 @@ export default function HomePage() {
                   </button>
                 </div>
               </div>
-
-              {/* Action Buttons */}
-              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                <Link
-                  href={currentUser ? "/book" : "/login?redirect=/book"}
-                  className="btn btn-primary"
-                  style={{ padding: '0.85rem 1.75rem', fontSize: '0.95rem' }}
-                >
-                  <Boxes size={18} />
-                  <span>Book Consignment</span>
-                </Link>
-
-                <Link
-                  href={currentUser ? (currentUser.role === 'admin' ? '/admin' : '/merchant') : '/login?portal=merchant'}
-                  className="btn btn-secondary"
-                  style={{ padding: '0.85rem 1.75rem', fontSize: '0.95rem' }}
-                >
-                  <LayoutDashboard size={18} />
-                  <span>{currentUser ? 'Open My Dashboard' : 'Merchant Portal Login'}</span>
-                </Link>
-              </div>
             </div>
 
             {/* Right Col: Live Corridor & Daily Reset Status Card */}

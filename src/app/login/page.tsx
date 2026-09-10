@@ -175,6 +175,20 @@ function LoginContent() {
       <div className="container-narrow">
         {/* Page Header */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
+            <img
+              src="/images/logo.png"
+              alt="Double 7 Logistics"
+              style={{
+                width: '68px',
+                height: '68px',
+                borderRadius: '16px',
+                objectFit: 'cover',
+                boxShadow: '0 8px 24px rgba(255, 102, 0, 0.25)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+              }}
+            />
+          </div>
           <div className="badge badge-orange" style={{ marginBottom: '0.75rem' }}>
             <Sparkles size={13} /> DOUBLE 7 AUTHENTICATION
           </div>

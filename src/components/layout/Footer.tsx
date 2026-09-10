@@ -31,20 +31,21 @@ export default function Footer() {
         <div className="grid grid-cols-4 gap-8" style={{ marginBottom: '2.5rem' }}>
           {/* Col 1: Brand & Founder */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                background: 'linear-gradient(135deg, #ff6600 0%, #d9480f 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                <span style={{ fontSize: '1rem', fontWeight: 900, fontFamily: 'var(--font-mono)', color: '#fff' }}>7</span>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              <img
+                src="/images/logo.png"
+                alt="Double 7"
+                style={{
+                  width: '34px',
+                  height: '34px',
+                  borderRadius: '8px',
+                  objectFit: 'cover',
+                  boxShadow: '0 2px 8px rgba(255, 102, 0, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                }}
+              />
               <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ffffff' }}>
-                DOUBLE <span style={{ color: 'var(--brand-orange)' }}>7</span>
+                DOUBLE <span style={{ color: 'var(--brand-orange)' }}>7</span> <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)' }}>LOGISTICS</span>
               </span>
             </div>
 
