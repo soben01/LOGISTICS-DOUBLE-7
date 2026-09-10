@@ -14,7 +14,9 @@ import {
   Building,
   Cpu,
   Settings as SettingsIcon,
-  ChevronDown
+  ChevronDown,
+  MapPin,
+  Boxes
 } from 'lucide-react';
 import { getCurrentUser, logoutUser, User } from '../../lib/auth';
 
@@ -62,6 +64,9 @@ export default function Navbar() {
     ...(currentUser ? [
       { href: '/dashboard', label: 'Dashboard' },
       { href: '/bookings', label: 'Bookings' },
+      ...(currentUser.role === 'admin' || currentUser.role === 'branch' ? [
+        { href: '/manifest', label: 'Manifest' }
+      ] : []),
     ] : []),
     { href: '/track', label: 'Track' },
     { href: currentUser ? '/book' : '/login?redirect=/book', label: 'Book Cargo' },
@@ -206,15 +211,17 @@ export default function Navbar() {
                 >
                   {currentUser.role === 'admin' ? (
                     <ShieldCheck size={15} color="var(--brand-orange)" />
+                  ) : currentUser.role === 'branch' ? (
+                    <MapPin size={15} color="#c084fc" />
                   ) : (
                     <Building size={15} color="var(--brand-cyan)" />
                   )}
                   <span>{currentUser.name.split(' ')[0]}</span>
                   <span
-                    className={currentUser.role === 'admin' ? 'badge badge-orange' : 'badge badge-cyan'}
+                    className={currentUser.role === 'admin' ? 'badge badge-orange' : (currentUser.role === 'branch' ? 'badge badge-purple' : 'badge badge-cyan')}
                     style={{ fontSize: '0.6rem', padding: '0.08rem 0.4rem' }}
                   >
-                    {currentUser.role === 'admin' ? 'Admin' : 'Merchant'}
+                    {currentUser.role === 'admin' ? 'Admin' : (currentUser.role === 'branch' ? 'Branch' : 'Merchant')}
                   </span>
                   <ChevronDown
                     size={13}
@@ -247,10 +254,12 @@ export default function Navbar() {
                 >
                   {currentUser.role === 'admin' ? (
                     <ShieldCheck size={14} color="var(--brand-orange)" />
+                  ) : currentUser.role === 'branch' ? (
+                    <MapPin size={14} color="#c084fc" />
                   ) : (
                     <Building size={14} color="var(--brand-cyan)" />
                   )}
-                  <span>{currentUser.role === 'admin' ? 'Admin' : currentUser.name.split(' ')[0]}</span>
+                  <span>{currentUser.role === 'admin' ? 'Admin' : (currentUser.role === 'branch' ? 'Branch' : currentUser.name.split(' ')[0])}</span>
                   <ChevronDown
                     size={12}
                     style={{
@@ -328,8 +337,8 @@ export default function Navbar() {
                       <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#ffffff' }}>
                         {currentUser.name}
                       </span>
-                      <span className={currentUser.role === 'admin' ? 'badge badge-orange' : 'badge badge-cyan'} style={{ fontSize: '0.62rem', padding: '0.1rem 0.4rem' }}>
-                        {currentUser.role === 'admin' ? 'Admin' : 'Merchant'}
+                      <span className={currentUser.role === 'admin' ? 'badge badge-orange' : (currentUser.role === 'branch' ? 'badge badge-purple' : 'badge badge-cyan')} style={{ fontSize: '0.62rem', padding: '0.1rem 0.4rem' }}>
+                        {currentUser.role === 'admin' ? 'Admin' : (currentUser.role === 'branch' ? 'Branch Hub' : 'Merchant')}
                       </span>
                     </div>
                     <div style={{ fontSize: '0.73rem', color: 'var(--text-secondary)', marginTop: '0.2rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -337,57 +346,178 @@ export default function Navbar() {
                     </div>
                   </div>
 
-                  {/* 1. Admin or Merchant Tools */}
-                  <Link
-                    href={currentUser.role === 'admin' ? '/admin' : '/merchant'}
-                    onClick={() => setAccountDropdownOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.65rem',
-                      padding: '0.6rem 0.75rem',
-                      borderRadius: '8px',
-                      color: '#ffffff',
-                      textDecoration: 'none',
-                      fontSize: '0.86rem',
-                      fontWeight: 600,
-                      backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                      transition: 'background var(--transition-fast)',
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)')}
-                  >
-                    {currentUser.role === 'admin' ? (
-                      <ShieldCheck size={16} color="var(--brand-orange)" />
-                    ) : (
-                      <Building size={16} color="var(--brand-cyan)" />
-                    )}
-                    <span>{currentUser.role === 'admin' ? 'Admin Tools' : 'Merchant Tools'}</span>
-                  </Link>
+                  {/* Branch Role Specific Options */}
+                  {currentUser.role === 'branch' && (
+                    <>
+                      <Link
+                        href="/manifest"
+                        onClick={() => setAccountDropdownOpen(false)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.65rem',
+                          padding: '0.6rem 0.75rem',
+                          borderRadius: '8px',
+                          color: '#ffffff',
+                          textDecoration: 'none',
+                          fontSize: '0.86rem',
+                          fontWeight: 600,
+                          backgroundColor: 'rgba(168, 85, 247, 0.08)',
+                          border: '1px solid rgba(168, 85, 247, 0.25)',
+                          transition: 'background var(--transition-fast)',
+                        }}
+                      >
+                        <Boxes size={16} color="#c084fc" />
+                        <span>Branch Manifest Hub</span>
+                      </Link>
 
-                  {/* 2. Settings */}
-                  <Link
-                    href={currentUser.role === 'admin' ? '/admin?section=settings' : '/merchant?tab=profile_api'}
-                    onClick={() => setAccountDropdownOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.65rem',
-                      padding: '0.6rem 0.75rem',
-                      borderRadius: '8px',
-                      color: '#cbd5e1',
-                      textDecoration: 'none',
-                      fontSize: '0.86rem',
-                      fontWeight: 600,
-                      backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                      transition: 'background var(--transition-fast)',
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)')}
-                  >
-                    <SettingsIcon size={16} color="#94a3b8" />
-                    <span>Settings</span>
-                  </Link>
+                      <Link
+                        href="/bookings"
+                        onClick={() => setAccountDropdownOpen(false)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.65rem',
+                          padding: '0.6rem 0.75rem',
+                          borderRadius: '8px',
+                          color: '#cbd5e1',
+                          textDecoration: 'none',
+                          fontSize: '0.86rem',
+                          fontWeight: 600,
+                          backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                          transition: 'background var(--transition-fast)',
+                        }}
+                      >
+                        <Truck size={16} color="var(--brand-cyan)" />
+                        <span>Consignment Registry</span>
+                      </Link>
+                    </>
+                  )}
+
+                  {/* Admin Role Specific Options */}
+                  {currentUser.role === 'admin' && (
+                    <>
+                      <Link
+                        href="/admin"
+                        onClick={() => setAccountDropdownOpen(false)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.65rem',
+                          padding: '0.6rem 0.75rem',
+                          borderRadius: '8px',
+                          color: '#ffffff',
+                          textDecoration: 'none',
+                          fontSize: '0.86rem',
+                          fontWeight: 600,
+                          backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                          transition: 'background var(--transition-fast)',
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)')}
+                      >
+                        <ShieldCheck size={16} color="var(--brand-orange)" />
+                        <span>Admin Tools</span>
+                      </Link>
+
+                      <Link
+                        href="/manifest"
+                        onClick={() => setAccountDropdownOpen(false)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.65rem',
+                          padding: '0.6rem 0.75rem',
+                          borderRadius: '8px',
+                          color: '#cbd5e1',
+                          textDecoration: 'none',
+                          fontSize: '0.86rem',
+                          fontWeight: 600,
+                          backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                          transition: 'background var(--transition-fast)',
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)')}
+                      >
+                        <Boxes size={16} color="#c084fc" />
+                        <span>Branch Manifests</span>
+                      </Link>
+
+                      <Link
+                        href="/admin?section=settings"
+                        onClick={() => setAccountDropdownOpen(false)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.65rem',
+                          padding: '0.6rem 0.75rem',
+                          borderRadius: '8px',
+                          color: '#cbd5e1',
+                          textDecoration: 'none',
+                          fontSize: '0.86rem',
+                          fontWeight: 600,
+                          backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                          transition: 'background var(--transition-fast)',
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)')}
+                      >
+                        <SettingsIcon size={16} color="#94a3b8" />
+                        <span>Settings</span>
+                      </Link>
+                    </>
+                  )}
+
+                  {/* Merchant Role Specific Options */}
+                  {currentUser.role === 'merchant' && (
+                    <>
+                      <Link
+                        href="/merchant"
+                        onClick={() => setAccountDropdownOpen(false)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.65rem',
+                          padding: '0.6rem 0.75rem',
+                          borderRadius: '8px',
+                          color: '#ffffff',
+                          textDecoration: 'none',
+                          fontSize: '0.86rem',
+                          fontWeight: 600,
+                          backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                          transition: 'background var(--transition-fast)',
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)')}
+                      >
+                        <Building size={16} color="var(--brand-cyan)" />
+                        <span>Merchant Tools</span>
+                      </Link>
+
+                      <Link
+                        href="/merchant?tab=profile_api"
+                        onClick={() => setAccountDropdownOpen(false)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.65rem',
+                          padding: '0.6rem 0.75rem',
+                          borderRadius: '8px',
+                          color: '#cbd5e1',
+                          textDecoration: 'none',
+                          fontSize: '0.86rem',
+                          fontWeight: 600,
+                          backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                          transition: 'background var(--transition-fast)',
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)')}
+                      >
+                        <SettingsIcon size={16} color="#94a3b8" />
+                        <span>Settings</span>
+                      </Link>
+                    </>
+                  )}
 
                   {/* Subtle Divider */}
                   <div style={{ height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.08)', margin: '0.2rem 0' }} />

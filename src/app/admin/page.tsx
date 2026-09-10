@@ -86,6 +86,7 @@ import EmailSummaryModal from '../../components/notifications/EmailSummaryModal'
 import AccountStructureAndCodWorkflow from '../../components/workflow/AccountStructureAndCodWorkflow';
 import AdminToolsSuite from '../../components/admin/AdminToolsSuite';
 import TrackingWorkflowEditor from '../../components/admin/TrackingWorkflowEditor';
+import BranchManifestManager from '../../components/manifest/BranchManifestManager';
 
 type AdminSection =
   | 'overview'
@@ -98,6 +99,7 @@ type AdminSection =
   | 'email'
   | 'workflow'
   | 'tracking_workflow'
+  | 'manifest'
   | 'audit';
 
 interface AuditEntry {
@@ -191,7 +193,7 @@ export default function AdminControlPanel() {
   const [pwdModalUser, setPwdModalUser] = useState<User | null>(null);
   const [newPasswordVal, setNewPasswordVal] = useState('');
   const [roleModalUser, setRoleModalUser] = useState<User | null>(null);
-  const [newRoleVal, setNewRoleVal] = useState<'merchant' | 'admin'>('merchant');
+  const [newRoleVal, setNewRoleVal] = useState<'merchant' | 'admin' | 'branch'>('merchant');
   const [newSubRoleVal, setNewSubRoleVal] = useState('');
   const [balanceModalUser, setBalanceModalUser] = useState<User | null>(null);
   const [newBalanceVal, setNewBalanceVal] = useState<number>(0);
@@ -380,7 +382,7 @@ export default function AdminControlPanel() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const secParam = params.get('section');
-      if (secParam && ['overview', 'shipments', 'cod', 'users', 'roles', 'settings', 'edge', 'email', 'workflow', 'tracking_workflow', 'audit'].includes(secParam)) {
+      if (secParam && ['overview', 'shipments', 'cod', 'users', 'roles', 'settings', 'edge', 'email', 'workflow', 'tracking_workflow', 'manifest', 'audit'].includes(secParam)) {
         setActiveSection(secParam as AdminSection);
       }
     }
@@ -974,6 +976,40 @@ export default function AdminControlPanel() {
                 </button>
 
                 <button
+                  onClick={() => setActiveSection('manifest')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
+                    fontWeight: activeSection === 'manifest' ? 700 : 500,
+                    backgroundColor: activeSection === 'manifest' ? 'rgba(168, 85, 247, 0.18)' : 'transparent',
+                    color: activeSection === 'manifest' ? '#fff' : 'var(--text-secondary)',
+                    textAlign: 'left'
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <Boxes size={18} color={activeSection === 'manifest' ? '#c084fc' : 'currentColor'} />
+                    Branch Manifest Hub
+                  </span>
+                  <span style={{
+                    fontSize: '0.65rem',
+                    padding: '0.1rem 0.45rem',
+                    borderRadius: '4px',
+                    backgroundColor: 'rgba(168, 85, 247, 0.2)',
+                    color: '#c084fc',
+                    fontWeight: 800
+                  }}>
+                    Branch
+                  </span>
+                </button>
+
+                <button
                   onClick={() => setActiveSection('workflow')}
                   style={{
                     display: 'flex',
@@ -1069,6 +1105,7 @@ export default function AdminControlPanel() {
               { id: 'email', label: 'Email & CF', icon: Mail },
               { id: 'settings', label: 'Settings', icon: SettingsIcon },
               { id: 'tracking_workflow', label: 'Workflow', icon: SlidersHorizontal },
+              { id: 'manifest', label: 'Branch Manifest', icon: Boxes },
               { id: 'roles', label: 'Roles Matrix', icon: ShieldCheck },
               { id: 'edge', label: 'Edge Diagnostics', icon: Activity },
               { id: 'workflow', label: 'Architecture', icon: Layers },
@@ -2432,6 +2469,13 @@ export default function AdminControlPanel() {
             {/* ========================================================================= */}
             {activeSection === 'tracking_workflow' && (
               <TrackingWorkflowEditor isSuperAdmin={currentUser?.role === 'admin'} />
+            )}
+
+            {/* ========================================================================= */}
+            {/* SECTION 8B: BRANCH MANIFEST & LINEHAUL DISPATCH MANAGEMENT */}
+            {/* ========================================================================= */}
+            {activeSection === 'manifest' && (
+              <BranchManifestManager user={currentUser} />
             )}
 
             {/* ========================================================================= */}

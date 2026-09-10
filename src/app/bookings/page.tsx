@@ -34,6 +34,12 @@ import {
   Shipment
 } from '../../lib/store';
 import PrintableLabel from '../../components/shipping/PrintableLabel';
+import {
+  getTrackingWorkflow,
+  getNextWorkflowStage,
+  calculateWorkflowProgress,
+  WorkflowStage
+} from '../../lib/workflow';
 
 export default function AllBookingsPage() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -213,6 +219,14 @@ export default function AllBookingsPage() {
     switch (status) {
       case 'Label Generated':
         return <span className="badge badge-purple">Label Generated</span>;
+      case 'Shipment Dispatched':
+        return <span className="badge badge-orange" style={{ background: 'rgba(255, 102, 0, 0.22)', borderColor: 'var(--brand-orange)', color: '#ffedd5' }}>Shipment Dispatched</span>;
+      case 'Origin Hub Inwarded':
+        return <span className="badge badge-cyan">Hub Inwarded</span>;
+      case 'Courier Assigned':
+        return <span className="badge badge-subtle" style={{ color: '#93c5fd', borderColor: '#3b82f6' }}>Courier Assigned</span>;
+      case 'Regional Sort Complete':
+        return <span className="badge badge-cyan">Sort Complete</span>;
       case 'Delivered':
         return <span className="badge badge-emerald">Delivered</span>;
       case 'Out for Delivery':
@@ -335,6 +349,7 @@ export default function AllBookingsPage() {
             {[
               { id: 'ALL', label: 'All Bookings', count: shipments.length },
               { id: 'LABEL GENERATED', label: 'Label Generated', count: shipments.filter(s => s.status === 'Label Generated').length },
+              { id: 'SHIPMENT DISPATCHED', label: 'Shipment Dispatched', count: shipments.filter(s => s.status === 'Shipment Dispatched').length },
               { id: 'IN TRANSIT', label: 'In Transit', count: shipments.filter(s => s.status === 'In Transit').length },
               { id: 'OUT FOR DELIVERY', label: 'Out for Delivery', count: shipments.filter(s => s.status === 'Out for Delivery').length },
               { id: 'DELIVERED', label: 'Delivered', count: shipments.filter(s => s.status === 'Delivered').length },
@@ -724,9 +739,81 @@ export default function AllBookingsPage() {
               <h3 style={{ marginBottom: '0.5rem', color: '#ffffff' }}>
                 Update Booking Status: {editingShipment.id}
               </h3>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
                 Consignee: {editingShipment.recipient.name} ({editingShipment.destination.city})
               </p>
+
+              {/* Step-by-Step Workflow Guidance */}
+              {(() => {
+                const workflow = getTrackingWorkflow();
+                const prog = calculateWorkflowProgress(editingShipment.status, workflow);
+                const next = getNextWorkflowStage(editingShipment.status, workflow);
+
+                return (
+                  <div style={{
+                    marginBottom: '1.25rem',
+                    padding: '0.85rem 1rem',
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '10px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700 }}>
+                        Workflow Step {prog.currentStageIndex + 1} of {prog.activeStages.length}
+                      </span>
+                      <span className="badge badge-purple" style={{ fontSize: '0.72rem' }}>
+                        Current: {prog.currentStage?.label || editingShipment.status}
+                      </span>
+                    </div>
+
+                    {next ? (
+                      <div style={{
+                        marginTop: '0.6rem',
+                        padding: '0.65rem 0.85rem',
+                        background: 'rgba(168, 85, 247, 0.12)',
+                        border: '1px solid rgba(168, 85, 247, 0.35)',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '0.75rem',
+                        flexWrap: 'wrap'
+                      }}>
+                        <div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Next Sequential Stage:</div>
+                          <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#c084fc' }}>
+                            #{next.order} {next.label}
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNewStatus(next.key as any);
+                            setNewNote(`Step-by-step workflow progression to ${next.label}`);
+                            if (!newLocation) setNewLocation(editingShipment.destination.city);
+                          }}
+                          className="btn btn-sm"
+                          style={{
+                            background: '#a855f7',
+                            borderColor: '#9333ea',
+                            color: '#ffffff',
+                            fontWeight: 700,
+                            padding: '0.35rem 0.75rem',
+                            fontSize: '0.78rem'
+                          }}
+                        >
+                          ⏩ Set Next Stage
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '0.8rem', color: '#34d399', marginTop: '0.4rem', fontWeight: 600 }}>
+                        ✓ Final Terminal Milestone Reached (Delivered).
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {updateSuccess && (
                 <div style={{
@@ -744,18 +831,17 @@ export default function AllBookingsPage() {
 
               <form onSubmit={handleSaveStatus} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div className="input-group" style={{ margin: 0 }}>
-                  <label className="input-label">New Status *</label>
+                  <label className="input-label">Select Workflow Stage *</label>
                   <select
                     value={newStatus}
                     onChange={(e) => setNewStatus(e.target.value as Shipment['status'])}
                     className="select-field"
                   >
-                    <option value="Pending Pickup">Pending Pickup</option>
-                    <option value="Label Generated">Label Generated</option>
-                    <option value="In Transit">In Transit</option>
-                    <option value="Out for Delivery">Out for Delivery</option>
-                    <option value="Delivered">Delivered</option>
-                    <option value="Customs Cleared">Customs Cleared</option>
+                    {getTrackingWorkflow().map(stg => (
+                      <option key={stg.id} value={stg.key}>
+                        #{stg.order} {stg.label} ({stg.key})
+                      </option>
+                    ))}
                   </select>
                 </div>
 

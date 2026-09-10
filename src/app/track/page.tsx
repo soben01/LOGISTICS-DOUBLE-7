@@ -173,8 +173,14 @@ function TrackContent() {
         return 'badge-emerald';
       case 'Out for Delivery':
         return 'badge-amber';
+      case 'Shipment Dispatched':
+        return 'badge-orange';
       case 'In Transit':
         return 'badge-orange';
+      case 'Label Generated':
+        return 'badge-purple';
+      case 'Origin Hub Inwarded':
+        return 'badge-cyan';
       case 'Customs Cleared':
         return 'badge-cyan';
       default:

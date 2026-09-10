@@ -1,7 +1,7 @@
 export interface Checkpoint {
   id: string;
   timestamp: string;
-  status: 'Order Placed' | 'Label Generated' | 'Picked Up' | 'Hub Received' | 'Export Cleared' | 'In Flight' | 'At Sea' | 'In Transit' | 'Import Cleared' | 'Customs Cleared' | 'Out for Delivery' | 'Delivered' | 'Delayed';
+  status: 'Order Placed' | 'Label Generated' | 'Courier Assigned' | 'Origin Hub Inwarded' | 'Shipment Dispatched' | 'Picked Up' | 'Hub Received' | 'Export Cleared' | 'In Flight' | 'At Sea' | 'In Transit' | 'Import Cleared' | 'Customs Cleared' | 'Regional Sort Complete' | 'Out for Delivery' | 'Delivered' | 'Delayed';
   location: string;
   description: string;
   isCompleted: boolean;
@@ -12,7 +12,7 @@ export interface Shipment {
   service: string;
   serviceCode: 'EXP' | 'CARGO' | 'RUSH' | 'INTL' | 'AIR' | 'SEA' | 'FUL';
   isInternational?: boolean;
-  status: 'In Transit' | 'Out for Delivery' | 'Customs Cleared' | 'Delivered' | 'Pending Pickup' | 'Exception' | 'Label Generated';
+  status: 'In Transit' | 'Out for Delivery' | 'Customs Cleared' | 'Delivered' | 'Pending Pickup' | 'Exception' | 'Label Generated' | 'Shipment Dispatched' | 'Origin Hub Inwarded' | 'Courier Assigned' | 'Regional Sort Complete' | 'Order Placed';
   origin: {
     city: string;
     province?: string;
@@ -676,6 +676,14 @@ export function updateShipmentStatus(
   let checkpointStatus: Checkpoint['status'] = 'Hub Received';
   if (newStatus === 'Label Generated') {
     checkpointStatus = 'Label Generated';
+  } else if (newStatus === 'Shipment Dispatched') {
+    checkpointStatus = 'Shipment Dispatched';
+  } else if (newStatus === 'Origin Hub Inwarded') {
+    checkpointStatus = 'Origin Hub Inwarded';
+  } else if (newStatus === 'Courier Assigned') {
+    checkpointStatus = 'Courier Assigned';
+  } else if (newStatus === 'Regional Sort Complete') {
+    checkpointStatus = 'Regional Sort Complete';
   } else if (newStatus === 'Out for Delivery') {
     checkpointStatus = 'Out for Delivery';
   } else if (newStatus === 'Delivered') {
@@ -687,6 +695,7 @@ export function updateShipmentStatus(
     };
   } else if (newStatus === 'Customs Cleared') checkpointStatus = 'Import Cleared';
   else if (newStatus === 'In Transit') checkpointStatus = 'In Transit';
+  else if (newStatus === 'Order Placed') checkpointStatus = 'Order Placed';
 
   const newCheckpoint: Checkpoint = {
     id: `cp-${Date.now()}`,

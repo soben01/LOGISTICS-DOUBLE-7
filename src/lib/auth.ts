@@ -4,7 +4,8 @@ export interface User {
   email: string;
   company: string;
   phone: string;
-  role: 'merchant' | 'admin';
+  role: 'merchant' | 'admin' | 'branch';
+  branchCode?: string;
   subRole?: string;
   permissions?: string[];
   status: 'active' | 'suspended';
@@ -42,6 +43,48 @@ const DEFAULT_USERS: User[] = [
     status: 'active',
     codBalanceNpr: 0,
     totalShipments: 0,
+    createdAt: '2026-09-08',
+  },
+  {
+    id: 'usr-branch-ktm',
+    name: 'Kathmandu Central Hub',
+    email: 'branch.ktm@double7.com.np',
+    company: 'Double 7 Logistics - Kathmandu Mega-Hub (KTM-01)',
+    phone: '+977 1 4411222',
+    role: 'branch',
+    branchCode: 'KTM-01',
+    subRole: 'Kathmandu Hub Branch Controller',
+    status: 'active',
+    codBalanceNpr: 0,
+    totalShipments: 42,
+    createdAt: '2026-09-08',
+  },
+  {
+    id: 'usr-branch-pkr',
+    name: 'Pokhara Gateway Branch',
+    email: 'branch.pkr@double7.com.np',
+    company: 'Double 7 Logistics - Pokhara Regional Sort Hub (Gandaki)',
+    phone: '+977 61 520000',
+    role: 'branch',
+    branchCode: 'PKR-01',
+    subRole: 'Pokhara Branch Controller',
+    status: 'active',
+    codBalanceNpr: 0,
+    totalShipments: 24,
+    createdAt: '2026-09-08',
+  },
+  {
+    id: 'usr-branch-brt',
+    name: 'Biratnagar Eastern Branch',
+    email: 'branch.brt@double7.com.np',
+    company: 'Double 7 Logistics - Biratnagar Hub (Koshi Eastern Corridor)',
+    phone: '+977 21 440000',
+    role: 'branch',
+    branchCode: 'BRT-01',
+    subRole: 'Biratnagar Hub Branch Controller',
+    status: 'active',
+    codBalanceNpr: 0,
+    totalShipments: 18,
     createdAt: '2026-09-08',
   },
   {
@@ -205,12 +248,23 @@ export function loginUser(email: string, password?: string, subRole?: string): {
   return { success: true, user };
 }
 
-export function loginAsDemo(role: 'merchant' | 'admin'): User {
+export function loginAsDemo(role: 'merchant' | 'admin' | 'branch', branchCode?: string): User {
   const users = getUsers();
-  let targetUser = users.find(u => u.role === role);
-  if (!targetUser) {
-    targetUser = role === 'admin' ? DEFAULT_USERS[0] : (DEFAULT_USERS.find(u => u.role === 'merchant') || DEFAULT_USERS[0]);
+  let targetUser: User | undefined;
+  if (role === 'branch') {
+    targetUser = branchCode
+      ? users.find(u => u.role === 'branch' && u.branchCode === branchCode)
+      : (users.find(u => u.role === 'branch') || DEFAULT_USERS.find(u => u.role === 'branch'));
+  } else if (role === 'admin') {
+    targetUser = users.find(u => u.role === 'admin') || DEFAULT_USERS[0];
+  } else {
+    targetUser = users.find(u => u.role === 'merchant') || DEFAULT_USERS.find(u => u.role === 'merchant');
   }
+
+  if (!targetUser) {
+    targetUser = DEFAULT_USERS[0];
+  }
+
   if (typeof window !== 'undefined') {
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(targetUser));
     window.dispatchEvent(new Event('auth-change'));
@@ -350,7 +404,7 @@ export function isSuperAdmin(user: User | null | undefined): boolean {
   );
 }
 
-export function updateUserRole(id: string, role: 'merchant' | 'admin', subRole?: string, permissions?: string[]): boolean {
+export function updateUserRole(id: string, role: 'merchant' | 'admin' | 'branch', subRole?: string, permissions?: string[]): boolean {
   const users = getUsers();
   const index = users.findIndex(u => u.id === id);
   if (index === -1) return false;
@@ -508,6 +562,26 @@ export function findUserByEmail(email: string): User | undefined {
     };
   }
 
+  // Detect Branch hub accounts
+  if (normalized.includes('branch.') || normalized.includes('.branch') || normalized.startsWith('branch@') || normalized.includes('hub.')) {
+    const rawName = normalized.split('@')[0].replace(/[._-]/g, ' ');
+    const name = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+    return {
+      id: `usr-branch-${Date.now()}`,
+      name: `${name} Hub`,
+      email: normalized,
+      company: `Double 7 Logistics - ${name} Branch Hub`,
+      phone: '+977 1 4411000',
+      role: 'branch',
+      branchCode: name.substring(0, 3).toUpperCase(),
+      subRole: `${name} Branch Controller`,
+      status: 'active',
+      codBalanceNpr: 0,
+      totalShipments: 15,
+      createdAt: '2026-01-01',
+    };
+  }
+
   // Detect corporate Double 7 domain
   if (
     normalized.endsWith('@double7.com.np') ||
@@ -551,15 +625,24 @@ export function findUserByEmail(email: string): User | undefined {
 }
 
 export interface PortalConfig {
-  role: 'admin' | 'merchant';
-  portalPath: '/admin' | '/merchant';
+  role: 'admin' | 'merchant' | 'branch';
+  portalPath: '/admin' | '/merchant' | '/manifest';
   portalName: string;
   badgeLabel: string;
   description: string;
 }
 
-export function getMatchingPortal(userOrRole: User | 'merchant' | 'admin'): PortalConfig {
+export function getMatchingPortal(userOrRole: User | 'merchant' | 'admin' | 'branch'): PortalConfig {
   const role = typeof userOrRole === 'string' ? userOrRole : userOrRole.role;
+  if (role === 'branch') {
+    return {
+      role: 'branch',
+      portalPath: '/manifest',
+      portalName: 'Branch Manifest & Dispatch',
+      badgeLabel: 'BRANCH HUB',
+      description: 'Branch booking manifest generation, print handover & linehaul dispatch approval',
+    };
+  }
   if (role === 'admin') {
     return {
       role: 'admin',
@@ -579,14 +662,18 @@ export function getMatchingPortal(userOrRole: User | 'merchant' | 'admin'): Port
 }
 
 export function resolveMatchedRedirect(user: User, redirectParam?: string | null): string {
-  // Landing page after login is /dashboard by default
+  // Landing page after login
   if (!redirectParam || redirectParam.startsWith('/login') || redirectParam === '/') {
-    return '/dashboard';
+    return user.role === 'branch' ? '/manifest' : '/dashboard';
   }
 
   // Must be relative root path
   if (!redirectParam.startsWith('/')) {
-    return '/dashboard';
+    return user.role === 'branch' ? '/manifest' : '/dashboard';
+  }
+
+  if (user.role === 'branch') {
+    return redirectParam;
   }
 
   if (user.role === 'admin') {
@@ -596,7 +683,7 @@ export function resolveMatchedRedirect(user: User, redirectParam?: string | null
     }
     return redirectParam;
   } else {
-    // Merchants cannot access /admin
+    // Merchants cannot access /admin or /manifest
     if (redirectParam.startsWith('/admin')) {
       return '/dashboard';
     }

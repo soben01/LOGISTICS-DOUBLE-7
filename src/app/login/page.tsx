@@ -17,7 +17,8 @@ import {
   KeyRound,
   Truck,
   LogIn,
-  LogOut
+  LogOut,
+  MapPin
 } from 'lucide-react';
 import {
   getCurrentUser,
@@ -107,12 +108,12 @@ function LoginContent() {
     }
   };
 
-  const handleQuickDemoLogin = (role: 'merchant' | 'admin') => {
+  const handleQuickDemoLogin = (role: 'merchant' | 'admin' | 'branch', branchCode?: string) => {
     setErrorMsg('');
-    const demoUser = loginAsDemo(role);
+    const demoUser = loginAsDemo(role, branchCode);
     const destination = resolveMatchedRedirect(demoUser, redirectPath);
     setSuccessMsg(
-      `✓ Logged in as Demo ${role.toUpperCase()} (${demoUser.name} - ${demoUser.company})! Redirecting...`
+      `✓ Logged in as Demo ${role.toUpperCase()} (${demoUser.name} - ${demoUser.company})! Redirecting to ${destination}...`
     );
     setTimeout(() => {
       router.push(destination);
@@ -322,8 +323,8 @@ function LoginContent() {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.78rem', color: '#ffffff', background: 'rgba(255,255,255,0.08)', padding: '0.25rem 0.6rem', borderRadius: '6px' }}>
                 <span>Routes to:</span>
-                <strong style={{ color: detectedUser.role === 'admin' ? 'var(--brand-orange)' : 'var(--brand-cyan)' }}>
-                  {detectedUser.role === 'admin' ? '/admin' : '/merchant'}
+                <strong style={{ color: detectedUser.role === 'admin' ? 'var(--brand-orange)' : (detectedUser.role === 'branch' ? '#a855f7' : 'var(--brand-cyan)') }}>
+                  {detectedUser.role === 'admin' ? '/admin' : (detectedUser.role === 'branch' ? '/manifest' : '/merchant')}
                 </strong>
                 <ArrowRight size={12} />
               </div>
@@ -417,7 +418,41 @@ function LoginContent() {
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px', fontWeight: 700, marginBottom: '0.75rem' }}>
                   ⚡ 1-Click Instant Demo Access
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => handleQuickDemoLogin('branch', 'KTM-01')}
+                    className="btn btn-secondary btn-sm"
+                    style={{
+                      justifyContent: 'center',
+                      background: 'rgba(168, 85, 247, 0.08)',
+                      borderColor: 'rgba(168, 85, 247, 0.3)',
+                      color: '#c084fc',
+                      fontSize: '0.76rem',
+                      padding: '0.5rem 0.4rem'
+                    }}
+                  >
+                    <MapPin size={13} />
+                    <span>KTM Hub Branch</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleQuickDemoLogin('branch', 'PKR-01')}
+                    className="btn btn-secondary btn-sm"
+                    style={{
+                      justifyContent: 'center',
+                      background: 'rgba(59, 130, 246, 0.08)',
+                      borderColor: 'rgba(59, 130, 246, 0.3)',
+                      color: '#60a5fa',
+                      fontSize: '0.76rem',
+                      padding: '0.5rem 0.4rem'
+                    }}
+                  >
+                    <MapPin size={13} />
+                    <span>Pokhara Branch</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => handleQuickDemoLogin('merchant')}
@@ -427,12 +462,12 @@ function LoginContent() {
                       background: 'rgba(6, 182, 212, 0.08)',
                       borderColor: 'rgba(6, 182, 212, 0.3)',
                       color: 'var(--brand-cyan)',
-                      fontSize: '0.78rem',
-                      padding: '0.55rem 0.5rem'
+                      fontSize: '0.76rem',
+                      padding: '0.5rem 0.4rem'
                     }}
                   >
-                    <Building size={14} />
-                    <span>Demo Merchant</span>
+                    <Building size={13} />
+                    <span>Merchant</span>
                   </button>
 
                   <button
@@ -444,16 +479,16 @@ function LoginContent() {
                       background: 'rgba(255, 102, 0, 0.08)',
                       borderColor: 'rgba(255, 102, 0, 0.3)',
                       color: 'var(--brand-orange)',
-                      fontSize: '0.78rem',
-                      padding: '0.55rem 0.5rem'
+                      fontSize: '0.76rem',
+                      padding: '0.5rem 0.4rem'
                     }}
                   >
-                    <ShieldCheck size={14} />
-                    <span>Demo Admin</span>
+                    <ShieldCheck size={13} />
+                    <span>Admin HQ</span>
                   </button>
                 </div>
                 <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                  Instant access to merchant COD ledger or command HQ telemetry console.
+                  Instant access to Branch dispatch manifests, Merchant COD ledger, or Command HQ.
                 </div>
               </div>
             </form>

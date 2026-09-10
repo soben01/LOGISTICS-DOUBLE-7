@@ -83,9 +83,9 @@ export const DEFAULT_WORKFLOW_STAGES: WorkflowStage[] = [
   },
   {
     id: 'wf-5',
-    key: 'In Transit',
-    label: 'Linehaul Dispatch',
-    description: 'Consignment en route via highway express vehicle or air corridor toward destination gateway.',
+    key: 'Shipment Dispatched',
+    label: 'Shipment Dispatched',
+    description: 'Consignment approved on branch manifest & linehaul vehicle dispatched on scheduled trunk route.',
     category: 'transit',
     color: 'orange',
     icon: 'Truck',
@@ -250,8 +250,10 @@ export function calculateWorkflowProgress(status: string, workflow?: WorkflowSta
       s.key.toLowerCase() === normalizedStatus ||
       s.label.toLowerCase() === normalizedStatus ||
       (normalizedStatus.includes('deliver') && s.category === 'completed') ||
-      (normalizedStatus.includes('transit') && s.key.toLowerCase().includes('transit')) ||
+      (normalizedStatus.includes('dispatch') && (s.key.toLowerCase().includes('dispatch') || s.label.toLowerCase().includes('dispatch'))) ||
+      (normalizedStatus.includes('transit') && (s.key.toLowerCase().includes('transit') || s.key.toLowerCase().includes('dispatch'))) ||
       (normalizedStatus.includes('pickup') && s.key.toLowerCase().includes('pickup')) ||
+      (normalizedStatus.includes('inward') && s.label.toLowerCase().includes('inward')) ||
       (normalizedStatus.includes('label') && s.key.toLowerCase().includes('label'))
     ) {
       foundIndex = i;
@@ -263,7 +265,9 @@ export function calculateWorkflowProgress(status: string, workflow?: WorkflowSta
   if (foundIndex === -1) {
     if (normalizedStatus.includes('deliver')) foundIndex = activeStages.length - 1;
     else if (normalizedStatus.includes('out')) foundIndex = Math.max(0, activeStages.length - 2);
-    else if (normalizedStatus.includes('transit')) foundIndex = Math.min(4, activeStages.length - 1);
+    else if (normalizedStatus.includes('dispatch') || normalizedStatus.includes('transit')) foundIndex = Math.min(4, activeStages.length - 1);
+    else if (normalizedStatus.includes('inward') || normalizedStatus.includes('hub')) foundIndex = Math.min(3, activeStages.length - 1);
+    else if (normalizedStatus.includes('pickup') || normalizedStatus.includes('courier')) foundIndex = Math.min(2, activeStages.length - 1);
     else if (normalizedStatus.includes('label')) foundIndex = Math.min(1, activeStages.length - 1);
     else foundIndex = 0;
   }
@@ -281,3 +285,36 @@ export function calculateWorkflowProgress(status: string, workflow?: WorkflowSta
     isCompleted
   };
 }
+
+/**
+ * Returns the next sequential stage in the workflow following step-by-step rules.
+ */
+export function getNextWorkflowStage(currentStatus: string, workflow?: WorkflowStage[]): WorkflowStage | null {
+  const { activeStages, currentStageIndex } = calculateWorkflowProgress(currentStatus, workflow);
+  if (currentStageIndex < activeStages.length - 1) {
+    return activeStages[currentStageIndex + 1];
+  }
+  return null;
+}
+
+/**
+ * Returns the previous sequential stage in the workflow.
+ */
+export function getPreviousWorkflowStage(currentStatus: string, workflow?: WorkflowStage[]): WorkflowStage | null {
+  const { activeStages, currentStageIndex } = calculateWorkflowProgress(currentStatus, workflow);
+  if (currentStageIndex > 0) {
+    return activeStages[currentStageIndex - 1];
+  }
+  return null;
+}
+
+/**
+ * Validates whether transition from current stage to next stage follows workflow progression.
+ */
+export function isStepByStepAllowed(currentStatus: string, targetStatus: string, workflow?: WorkflowStage[]): boolean {
+  const { activeStages, currentStageIndex } = calculateWorkflowProgress(currentStatus, workflow);
+  const targetInfo = calculateWorkflowProgress(targetStatus, workflow);
+  // Allowed if advancing to next step (+1) or staying on current step
+  return targetInfo.currentStageIndex === currentStageIndex + 1 || targetInfo.currentStageIndex === currentStageIndex;
+}
+
