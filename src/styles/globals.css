@@ -610,11 +610,24 @@ a {
 
 
 /* Live Operations Telemetry Ticker Marquee */
-@keyframes marquee {
+@-webkit-keyframes marquee {
   0% {
+    -webkit-transform: translate3d(0, 0, 0);
     transform: translate3d(0, 0, 0);
   }
   100% {
+    -webkit-transform: translate3d(-50%, 0, 0);
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes marquee {
+  0% {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    -webkit-transform: translate3d(-50%, 0, 0);
     transform: translate3d(-50%, 0, 0);
   }
 }
@@ -626,23 +639,33 @@ a {
   font-size: 0.78rem;
   color: #94a3b8;
   overflow: hidden;
+  overflow-x: hidden;
   white-space: nowrap;
   width: 100%;
   display: flex;
   position: relative;
   user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
 }
 
-.telemetry-ticker-bar:hover .ticker-track,
-.telemetry-ticker-bar:active .ticker-track {
-  animation-play-state: paused;
+/* Only pause on hover if device has a physical cursor mouse that can hover */
+@media (hover: hover) and (pointer: fine) {
+  .telemetry-ticker-bar:hover .ticker-track {
+    -webkit-animation-play-state: paused;
+    animation-play-state: paused;
+  }
 }
 
 .ticker-track {
   display: flex;
   width: max-content;
+  flex-shrink: 0;
   will-change: transform;
-  animation: marquee 28s linear infinite;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  -webkit-animation: marquee 24s linear infinite;
+  animation: marquee 24s linear infinite;
 }
 
 .ticker-content {
@@ -651,19 +674,24 @@ a {
   gap: 2rem;
   padding-right: 2rem;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 @media (max-width: 768px) {
   .telemetry-ticker-bar {
-    padding: 0.5rem 0;
-    font-size: 0.74rem;
+    padding: 0.45rem 0;
+    font-size: 0.72rem;
+    overflow-x: hidden;
   }
   .ticker-track {
-    animation-duration: 20s;
+    -webkit-animation: marquee 16s linear infinite !important;
+    animation: marquee 16s linear infinite !important;
+    -webkit-animation-play-state: running !important;
+    animation-play-state: running !important;
   }
   .ticker-content {
-    gap: 1.5rem;
-    padding-right: 1.5rem;
+    gap: 1.25rem;
+    padding-right: 1.25rem;
   }
 }
 
