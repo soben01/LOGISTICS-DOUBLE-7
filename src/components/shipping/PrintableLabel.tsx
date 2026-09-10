@@ -7,45 +7,69 @@ import { Printer, CheckCircle2, ShieldCheck, MapPin, Phone, Package, Truck, QrCo
 interface PrintableLabelProps {
   shipment: Shipment;
   onClose?: () => void;
+  isModal?: boolean;
 }
 
-export default function PrintableLabel({ shipment, onClose }: PrintableLabelProps) {
+export default function PrintableLabel({ shipment, onClose, isModal = Boolean(onClose) }: PrintableLabelProps) {
   const handlePrint = () => {
     if (typeof window !== 'undefined') {
       window.print();
     }
   };
 
+  React.useEffect(() => {
+    if (!isModal || !onClose) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isModal, onClose]);
+
   const originCode = (shipment.origin.city || 'KTM').substring(0, 3).toUpperCase();
   const destCode = (shipment.destination.city || 'NP').substring(0, 3).toUpperCase();
 
-  return (
-    <div>
+  const labelContent = (
+    <div style={{
+      width: '100%',
+      maxWidth: '740px',
+      margin: isModal ? 'auto' : '0 auto',
+      position: 'relative'
+    }}>
       {/* On-screen control buttons (Hidden during actual print) */}
       <div className="no-print" style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        background: 'rgba(255, 102, 0, 0.08)',
-        border: '1px solid rgba(255, 102, 0, 0.3)',
-        borderRadius: '8px',
-        padding: '0.75rem 1.25rem',
-        marginBottom: '1.25rem',
+        background: 'rgba(16, 25, 46, 0.96)',
+        border: '1px solid rgba(255, 102, 0, 0.4)',
+        borderRadius: '12px',
+        padding: '0.85rem 1.25rem',
+        marginBottom: '1rem',
         flexWrap: 'wrap',
-        gap: '0.75rem'
+        gap: '0.75rem',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+        backdropFilter: 'blur(12px)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', color: '#ffffff', fontSize: '0.92rem', fontWeight: 700 }}>
           <Printer size={18} color="var(--brand-orange)" />
-          <span>Official Nepal Domestic Shipping Label Ready for Thermal / A4 Print</span>
+          <span>Airway Bill (AWB) Label Preview &bull; {shipment.id}</span>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.65rem' }}>
           {onClose && (
             <button
               type="button"
               onClick={onClose}
               className="btn btn-secondary btn-sm"
-              style={{ fontSize: '0.8rem' }}
+              style={{ fontSize: '0.82rem', padding: '0.45rem 0.85rem' }}
             >
               Close Preview
             </button>
@@ -54,31 +78,38 @@ export default function PrintableLabel({ shipment, onClose }: PrintableLabelProp
             type="button"
             onClick={handlePrint}
             className="btn btn-primary btn-sm"
-            style={{ fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+            style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.45rem', padding: '0.45rem 1.1rem', fontWeight: 800 }}
           >
-            <Printer size={14} />
+            <Printer size={15} />
             <span>Print Label Now</span>
           </button>
         </div>
       </div>
 
-      {/* ================= PRINTABLE SHIPPING LABEL ================= */}
-      {/* This element has id="printable-shipping-label" and is the ONLY thing printed by @media print */}
-      <div
-        id="printable-shipping-label"
-        style={{
-          background: '#ffffff',
-          color: '#000000',
-          padding: '18px',
-          borderRadius: '4px',
-          border: '3px solid #000000',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
-          lineHeight: '1.3',
-          maxWidth: '720px',
-          margin: '0 auto',
-          boxShadow: '0 8px 30px rgba(0, 0, 0, 0.4)'
-        }}
-      >
+      {/* Scrollable label preview container */}
+      <div style={{
+        maxHeight: isModal ? 'calc(90vh - 85px)' : undefined,
+        overflowY: isModal ? 'auto' : undefined,
+        borderRadius: '6px',
+        boxShadow: isModal ? '0 16px 48px rgba(0, 0, 0, 0.8)' : undefined
+      }}>
+        {/* ================= PRINTABLE SHIPPING LABEL ================= */}
+        {/* This element has id="printable-shipping-label" and is the ONLY thing printed by @media print */}
+        <div
+          id="printable-shipping-label"
+          style={{
+            background: '#ffffff',
+            color: '#000000',
+            padding: '18px',
+            borderRadius: '4px',
+            border: '3px solid #000000',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+            lineHeight: '1.3',
+            maxWidth: '720px',
+            margin: '0 auto',
+            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.4)'
+          }}
+        >
         {/* Top Header Row */}
         <div style={{
           display: 'flex',
@@ -288,6 +319,38 @@ export default function PrintableLabel({ shipment, onClose }: PrintableLabelProp
           </div>
         </div>
       </div>
+      {/* End scroll container */}
+      </div>
     </div>
   );
+
+  if (isModal) {
+    return (
+      <div
+        className="print-modal-overlay"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 99999,
+          backgroundColor: 'rgba(5, 10, 20, 0.85)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1.25rem',
+          overflowY: 'auto'
+        }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget && onClose) {
+            onClose();
+          }
+        }}
+      >
+        {labelContent}
+      </div>
+    );
+  }
+
+  return labelContent;
 }
