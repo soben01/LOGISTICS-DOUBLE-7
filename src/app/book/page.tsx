@@ -276,6 +276,7 @@ function BookContent() {
         description: cargoDesc,
         declaredValueNpr: Number(declaredValueNpr),
       },
+      codAmount: isCod ? Number(codAmountNpr) : 0,
     });
 
     // Automatic email dispatch notice

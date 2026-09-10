@@ -147,6 +147,8 @@ export default function PrintableLabel({
           {items.map((s, idx) => {
             const originCode = (s.origin.city || 'KTM').substring(0, 3).toUpperCase();
             const destCode = (s.destination.city || 'NP').substring(0, 3).toUpperCase();
+            const isCod = Boolean(s.codAmount && Number(s.codAmount) > 0);
+            const codAmount = Number(s.codAmount || 0);
 
             return (
               <div key={s.id} style={{ marginBottom: isBulk ? '1.5rem' : 0 }}>
@@ -330,35 +332,45 @@ export default function PrintableLabel({
                     </div>
                   </div>
 
-                  {/* Cargo Specs & Payment Details */}
+                  {/* Cargo Specs & Payment Details (Declared Value removed; dynamic Payment/COD) */}
                   <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(4, 1fr)',
-                    gap: '8px',
+                    gridTemplateColumns: '1fr 1fr 1.3fr',
+                    gap: '10px',
                     borderBottom: '2px solid #000000',
                     paddingBottom: '12px',
                     marginBottom: '12px',
                     fontSize: '0.82rem'
                   }}>
-                    <div style={{ border: '1px solid #000', padding: '6px' }}>
-                      <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#666' }}>COLLI / PKGS</div>
-                      <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#000' }}>{s.cargo.pieces} PKG</div>
+                    <div style={{ border: '1px solid #000000', padding: '8px' }}>
+                      <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#666666' }}>COLLI / PKGS</div>
+                      <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#000000', marginTop: '2px' }}>{s.cargo.pieces} PKG</div>
                     </div>
 
-                    <div style={{ border: '1px solid #000', padding: '6px' }}>
-                      <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#666' }}>GROSS WEIGHT</div>
-                      <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#000' }}>{s.cargo.weightKg} KG</div>
+                    <div style={{ border: '1px solid #000000', padding: '8px' }}>
+                      <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#666666' }}>GROSS WEIGHT</div>
+                      <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#000000', marginTop: '2px' }}>{s.cargo.weightKg} KG</div>
                     </div>
 
-                    <div style={{ border: '1px solid #000', padding: '6px' }}>
-                      <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#666' }}>DECLARED VAL</div>
-                      <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#000' }}>Rs. {(s.cargo.declaredValueNpr || 0).toLocaleString()}</div>
-                    </div>
-
-                    <div style={{ border: '2px solid #000', padding: '6px', background: '#e5e7eb' }}>
-                      <div style={{ fontSize: '0.68rem', fontWeight: 900, color: '#000' }}>PAYMENT / COD</div>
-                      <div style={{ fontSize: '0.95rem', fontWeight: 900, color: '#000' }}>VERIFIED</div>
-                    </div>
+                    {isCod ? (
+                      <div style={{ border: '2px solid #000000', padding: '6px 10px', background: '#f3f4f6', textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.72rem', fontWeight: 900, color: '#000000', letterSpacing: '0.05em' }}>
+                          COD
+                        </div>
+                        <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#000000', fontFamily: 'monospace', marginTop: '2px' }}>
+                          Rs. {codAmount.toLocaleString()}
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ border: '2px solid #000000', padding: '6px 10px', background: '#f3f4f6', textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.72rem', fontWeight: 900, color: '#000000', letterSpacing: '0.05em' }}>
+                          PAYMENT
+                        </div>
+                        <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#000000', letterSpacing: '0.08em', marginTop: '2px' }}>
+                          PAID
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Commodity Description */}
