@@ -26,7 +26,7 @@ import {
   Lock
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, User } from '../../lib/auth';
+import { getCurrentUser, loginAsDemo, User } from '../../lib/auth';
 import {
   getAllCombinedBookings,
   updateShipmentStatus,
@@ -62,14 +62,16 @@ export default function AllBookingsPage() {
 
   useEffect(() => {
     const user = getCurrentUser();
-    if (!user) {
-      router.push('/login?redirect=/bookings');
-      return;
-    }
     setCurrentUser(user);
     setAuthChecking(false);
     loadBookings();
-  }, [router]);
+
+    const handleAuth = () => {
+      setCurrentUser(getCurrentUser());
+    };
+    window.addEventListener('auth-change', handleAuth);
+    return () => window.removeEventListener('auth-change', handleAuth);
+  }, []);
 
   const handleCopy = (id: string) => {
     navigator.clipboard.writeText(id);
@@ -162,14 +164,13 @@ export default function AllBookingsPage() {
     }
   };
 
-  if (authChecking || !currentUser) {
+  if (authChecking) {
     return (
-      <div style={{ minHeight: '65vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', padding: '3rem 1rem', textAlign: 'center' }}>
+      <div style={{ minHeight: '50vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', padding: '3rem 1rem', textAlign: 'center' }}>
         <div style={{ width: 48, height: 48, borderRadius: '12px', background: 'rgba(255, 102, 0, 0.15)', border: '1px solid rgba(255, 102, 0, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand-orange)' }}>
           <Boxes size={24} className="animate-pulse" />
         </div>
-        <h2 style={{ fontSize: '1.25rem', color: '#ffffff' }}>Authenticating Consignment Access...</h2>
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Access to booking records requires verified merchant or admin credentials.</p>
+        <h2 style={{ fontSize: '1.25rem', color: '#ffffff' }}>Loading Consignment Registry...</h2>
       </div>
     );
   }
@@ -188,15 +189,17 @@ export default function AllBookingsPage() {
         }}>
           <div>
             <div className="badge badge-orange" style={{ marginBottom: '0.4rem', fontSize: '0.72rem' }}>
-              <Boxes size={13} /> {currentUser.role === 'admin' ? 'Nationwide Consignment Records' : 'Merchant Consignment Ledger'}
+              <Boxes size={13} /> {currentUser ? (currentUser.role === 'admin' ? 'Nationwide Consignment Records' : 'Merchant Consignment Ledger') : 'Central Consignment Registry'}
             </div>
             <h1 style={{ margin: 0, fontSize: '2.1rem', letterSpacing: '-0.02em', color: '#ffffff' }}>
-              {currentUser.role === 'admin' ? 'All Bookings Registry' : 'My Bookings Registry'}
+              {currentUser ? (currentUser.role === 'admin' ? 'All Bookings Registry' : 'My Bookings Registry') : 'All Bookings Registry'}
             </h1>
             <p style={{ marginTop: '0.35rem', color: 'var(--text-secondary)', fontSize: '0.92rem' }}>
-              {currentUser.role === 'admin'
-                ? 'Complete centralized booking records from Cloudflare D1 & merchant dispatches across all 77 districts.'
-                : `Active booking manifests, delivery dispatches, and AWB labels for ${currentUser.company}.`}
+              {currentUser
+                ? (currentUser.role === 'admin'
+                  ? 'Complete centralized booking records from Cloudflare D1 & merchant dispatches across all 77 districts.'
+                  : `Active booking manifests, delivery dispatches, and AWB labels for ${currentUser.company}.`)
+                : 'Centralized registry database of all consignments, delivery waybills, and dispatch manifests across Nepal.'}
             </p>
           </div>
 

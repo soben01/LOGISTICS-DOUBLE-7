@@ -44,6 +44,8 @@ export default function Navbar() {
   };
 
   const navLinks = [
+    { href: '/dashboard', label: 'Dashboard' },
+    { href: '/bookings', label: 'Bookings' },
     { href: '/track', label: 'Track' },
     { href: currentUser ? '/book' : '/login?redirect=/book', label: 'Book Cargo' },
     { href: '/rates', label: 'Rates' },
@@ -142,21 +144,6 @@ export default function Navbar() {
               </Link>
             );
           })}
-
-          {/* If authenticated, link to Bookings */}
-          {currentUser && (
-            <Link
-              href="/bookings"
-              style={{
-                fontSize: '0.9rem',
-                fontWeight: pathname === '/bookings' ? 700 : 500,
-                color: pathname === '/bookings' ? '#ffffff' : 'var(--text-secondary)',
-                textDecoration: 'none',
-              }}
-            >
-              Bookings
-            </Link>
-          )}
         </nav>
 
         {/* Right Actions */}
@@ -386,45 +373,29 @@ export default function Navbar() {
             ))}
 
             {currentUser && (
-              <>
-                <Link
-                  href="/bookings"
-                  onClick={() => setMobileMenuOpen(false)}
-                  style={{ padding: '0.45rem 0', color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.95rem' }}
-                >
-                  Bookings Registry
-                </Link>
-                <Link
-                  href="/dashboard"
-                  onClick={() => setMobileMenuOpen(false)}
-                  style={{ padding: '0.45rem 0', color: 'var(--brand-cyan)', fontWeight: 600, fontSize: '0.95rem' }}
-                >
-                  Operations Dashboard
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="btn btn-outline"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                    width: '100%',
-                    color: '#ef4444',
-                    borderColor: 'rgba(239, 68, 68, 0.35)',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    padding: '0.75rem 1rem',
-                    fontSize: '0.92rem',
-                    fontWeight: 700,
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    marginTop: '0.5rem',
-                  }}
-                >
-                  <LogOut size={16} /> Sign Out of {currentUser.name}
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="btn btn-outline"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  width: '100%',
+                  color: '#ef4444',
+                  borderColor: 'rgba(239, 68, 68, 0.35)',
+                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.92rem',
+                  fontWeight: 700,
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  marginTop: '0.5rem',
+                }}
+              >
+                <LogOut size={16} /> Sign Out of {currentUser.name}
+              </button>
             )}
           </div>
         </div>

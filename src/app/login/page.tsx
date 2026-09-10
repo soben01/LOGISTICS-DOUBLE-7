@@ -27,6 +27,7 @@ import {
   findUserByEmail,
   getMatchingPortal,
   resolveMatchedRedirect,
+  loginAsDemo,
   User
 } from '../../lib/auth';
 
@@ -104,6 +105,18 @@ function LoginContent() {
         router.push(destination);
       }, 500);
     }
+  };
+
+  const handleQuickDemoLogin = (role: 'merchant' | 'admin') => {
+    setErrorMsg('');
+    const demoUser = loginAsDemo(role);
+    const destination = resolveMatchedRedirect(demoUser, redirectPath);
+    setSuccessMsg(
+      `✓ Logged in as Demo ${role.toUpperCase()} (${demoUser.name} - ${demoUser.company})! Redirecting...`
+    );
+    setTimeout(() => {
+      router.push(destination);
+    }, 400);
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -379,6 +392,56 @@ function LoginContent() {
                 <span>Login</span>
                 <ArrowRight size={16} />
               </button>
+
+              {/* 1-Click Instant Demo Credentials */}
+              <div style={{
+                marginTop: '1.5rem',
+                paddingTop: '1.25rem',
+                borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px', fontWeight: 700, marginBottom: '0.75rem' }}>
+                  ⚡ 1-Click Instant Demo Access
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => handleQuickDemoLogin('merchant')}
+                    className="btn btn-secondary btn-sm"
+                    style={{
+                      justifyContent: 'center',
+                      background: 'rgba(6, 182, 212, 0.08)',
+                      borderColor: 'rgba(6, 182, 212, 0.3)',
+                      color: 'var(--brand-cyan)',
+                      fontSize: '0.78rem',
+                      padding: '0.55rem 0.5rem'
+                    }}
+                  >
+                    <Building size={14} />
+                    <span>Demo Merchant</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleQuickDemoLogin('admin')}
+                    className="btn btn-secondary btn-sm"
+                    style={{
+                      justifyContent: 'center',
+                      background: 'rgba(255, 102, 0, 0.08)',
+                      borderColor: 'rgba(255, 102, 0, 0.3)',
+                      color: 'var(--brand-orange)',
+                      fontSize: '0.78rem',
+                      padding: '0.55rem 0.5rem'
+                    }}
+                  >
+                    <ShieldCheck size={14} />
+                    <span>Demo Admin</span>
+                  </button>
+                </div>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                  Instant access to merchant COD ledger or command HQ telemetry console.
+                </div>
+              </div>
             </form>
           ) : (
             /* ================= TAB 2: REGISTER MERCHANT ================= */

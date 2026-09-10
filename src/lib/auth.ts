@@ -57,6 +57,19 @@ const DEFAULT_USERS: User[] = [
     totalShipments: 0,
     createdAt: '2026-09-08',
   },
+  {
+    id: 'usr-merch-demo',
+    name: 'Pradeep Gurung',
+    email: 'merchant@double7.np',
+    company: 'Pokhara Electronics Hub',
+    phone: '+977 9812345678',
+    role: 'merchant',
+    subRole: 'Merchant Consignor / Shipper',
+    status: 'active',
+    codBalanceNpr: 45200,
+    totalShipments: 14,
+    createdAt: '2026-09-01',
+  },
 ];
 
 export function getUsers(): User[] {
@@ -190,6 +203,19 @@ export function loginUser(email: string, password?: string, subRole?: string): {
   }
 
   return { success: true, user };
+}
+
+export function loginAsDemo(role: 'merchant' | 'admin'): User {
+  const users = getUsers();
+  let targetUser = users.find(u => u.role === role);
+  if (!targetUser) {
+    targetUser = role === 'admin' ? DEFAULT_USERS[0] : (DEFAULT_USERS.find(u => u.role === 'merchant') || DEFAULT_USERS[0]);
+  }
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(targetUser));
+    window.dispatchEvent(new Event('auth-change'));
+  }
+  return targetUser;
 }
 
 export function updateUserSubRole(subRole: string): boolean {

@@ -49,6 +49,9 @@ export default function HomePage() {
   // FAQ Accordion State
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
+  // Phone Frame Interactive Preview State
+  const [phoneTab, setPhoneTab] = useState<'feed' | 'remittance' | 'actions'>('feed');
+
   useEffect(() => {
     setCurrentUser(getCurrentUser());
     const handleAuth = () => setCurrentUser(getCurrentUser());
@@ -646,12 +649,12 @@ export default function HomePage() {
 
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                 <Link
-                  href={currentUser?.role === 'merchant' ? '/merchant' : currentUser?.role === 'admin' ? '/admin' : '/dashboard'}
+                  href="/dashboard"
                   className="btn btn-primary"
                   style={{ padding: '0.8rem 1.6rem' }}
                 >
                   <LayoutDashboard size={16} />
-                  <span>Launch Phone Dashboard</span>
+                  <span>Launch Live Dashboard</span>
                 </Link>
                 <Link
                   href="/track"
@@ -659,91 +662,263 @@ export default function HomePage() {
                   style={{ padding: '0.8rem 1.6rem' }}
                 >
                   <Search size={16} />
-                  <span>Mobile Waybill Track</span>
+                  <span>Track Consignment</span>
                 </Link>
               </div>
             </div>
 
-            {/* Right: Phone Frame Simulation Mockup */}
+            {/* Right: Phone Frame Simulation Mockup (Interactive) */}
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <div style={{
                 width: '100%',
                 maxWidth: '360px',
                 backgroundColor: '#050811',
                 border: '8px solid #1e293b',
-                borderRadius: '36px',
-                padding: '1.25rem 1rem 1.5rem 1rem',
-                boxShadow: '0 25px 60px rgba(0,0,0,0.8), 0 0 30px rgba(255, 102, 0, 0.15)',
+                borderRadius: '38px',
+                padding: '1.1rem 1rem 1.25rem 1rem',
+                boxShadow: '0 25px 60px rgba(0,0,0,0.85), 0 0 35px rgba(255, 102, 0, 0.18)',
                 position: 'relative'
               }}>
-                {/* Phone Speaker Notch */}
-                <div style={{ width: '90px', height: '14px', backgroundColor: '#1e293b', borderRadius: '10px', margin: '0 auto 1.25rem auto' }} />
+                {/* Phone Speaker Notch & Status Bar */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', padding: '0 0.5rem', fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+                  <span style={{ fontWeight: 700, color: '#ffffff', fontFamily: 'var(--font-mono)' }}>18:00 NPT</span>
+                  <div style={{ width: '80px', height: '12px', backgroundColor: '#1e293b', borderRadius: '10px' }} />
+                  <span style={{ fontWeight: 600 }}>5G &bull; 100%</span>
+                </div>
 
                 {/* Mobile App Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
                   <div>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--brand-orange)', fontWeight: 800, textTransform: 'uppercase' }}>
-                      DOUBLE 7 MOBILE COMMAND
+                    <div style={{ fontSize: '0.65rem', color: 'var(--brand-orange)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      DOUBLE 7 MOBILE FLEET
                     </div>
-                    <div style={{ fontSize: '1rem', fontWeight: 800, color: '#fff' }}>
-                      Phone Fleet Hub
+                    <div style={{ fontSize: '0.98rem', fontWeight: 800, color: '#fff' }}>
+                      Phone Operations Hub
                     </div>
                   </div>
-                  <span style={{ background: '#10b98122', color: '#10b981', border: '1px solid #10b98144', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px' }}>
+                  <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)', fontSize: '0.62rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px' }}>
                     LIVE 6 PM RESET
                   </span>
                 </div>
 
-                {/* Swipeable Phone KPI Cards */}
-                <div className="mobile-kpi-scroll-row" style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', marginBottom: '1rem', paddingBottom: '0.25rem' }}>
-                  <div style={{ flex: '0 0 105px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '0.65rem' }}>
-                    <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>In-Transit</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#38bdf8' }}>14</div>
-                    <div style={{ fontSize: '0.6rem', color: '#34d399' }}>On Schedule</div>
-                  </div>
-                  <div style={{ flex: '0 0 105px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '0.65rem' }}>
-                    <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>COD Remitted</div>
-                    <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#34d399' }}>Rs. 45.2K</div>
-                    <div style={{ fontSize: '0.6rem', color: '#ff8533' }}>Cleared 6 PM</div>
-                  </div>
-                  <div style={{ flex: '0 0 105px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '0.65rem' }}>
-                    <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Delivered</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#a78bfa' }}>128</div>
-                    <div style={{ fontSize: '0.6rem', color: '#38bdf8' }}>100% SLA</div>
-                  </div>
+                {/* Interactive Phone KPI Cards (Tap to switch views) */}
+                <div className="mobile-kpi-scroll-row" style={{ display: 'flex', gap: '0.45rem', overflowX: 'auto', marginBottom: '0.85rem', paddingBottom: '0.2rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setPhoneTab('feed')}
+                    style={{
+                      flex: '1 1 0',
+                      background: phoneTab === 'feed' ? 'rgba(56, 189, 248, 0.15)' : '#0f172a',
+                      border: phoneTab === 'feed' ? '1px solid #38bdf8' : '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '10px',
+                      padding: '0.55rem 0.4rem',
+                      textAlign: 'left',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <div style={{ fontSize: '0.58rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>In-Transit</div>
+                    <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#38bdf8' }}>14</div>
+                    <div style={{ fontSize: '0.55rem', color: '#34d399' }}>Live Feed</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPhoneTab('remittance')}
+                    style={{
+                      flex: '1 1 0',
+                      background: phoneTab === 'remittance' ? 'rgba(52, 211, 153, 0.15)' : '#0f172a',
+                      border: phoneTab === 'remittance' ? '1px solid #34d399' : '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '10px',
+                      padding: '0.55rem 0.4rem',
+                      textAlign: 'left',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <div style={{ fontSize: '0.58rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>COD Ledger</div>
+                    <div style={{ fontSize: '1.0rem', fontWeight: 800, color: '#34d399' }}>Rs. 45.2K</div>
+                    <div style={{ fontSize: '0.55rem', color: '#ff8533' }}>Cleared 6 PM</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPhoneTab('actions')}
+                    style={{
+                      flex: '1 1 0',
+                      background: phoneTab === 'actions' ? 'rgba(167, 139, 250, 0.15)' : '#0f172a',
+                      border: phoneTab === 'actions' ? '1px solid #a78bfa' : '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '10px',
+                      padding: '0.55rem 0.4rem',
+                      textAlign: 'left',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <div style={{ fontSize: '0.58rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Quick Tools</div>
+                    <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#a78bfa' }}>1-Touch</div>
+                    <div style={{ fontSize: '0.55rem', color: '#38bdf8' }}>Actions</div>
+                  </button>
                 </div>
 
-                {/* Vertical Consignment Feed Mock */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-                  <div style={{ background: '#0d1527', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '0.75rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                      <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#38bdf8', fontSize: '0.8rem' }}>NEP-882194</span>
-                      <span style={{ fontSize: '0.65rem', background: '#38bdf822', color: '#38bdf8', padding: '1px 6px', borderRadius: '4px', fontWeight: 700 }}>In Transit</span>
+                {/* Tab 1: Live Consignments Feed */}
+                {phoneTab === 'feed' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+                    <Link
+                      href="/track?id=D7-8821-EXP"
+                      style={{
+                        background: '#0d1527',
+                        border: '1px solid rgba(56, 189, 248, 0.25)',
+                        borderRadius: '10px',
+                        padding: '0.7rem 0.75rem',
+                        textDecoration: 'none',
+                        display: 'block'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                        <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#38bdf8', fontSize: '0.8rem' }}>D7-8821-EXP</span>
+                        <span style={{ fontSize: '0.62rem', background: 'rgba(56, 189, 248, 0.18)', color: '#38bdf8', padding: '1px 6px', borderRadius: '4px', fontWeight: 700 }}>In Transit</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#cbd5e1' }}>
+                        <span>Kathmandu &rarr; Pokhara</span>
+                        <span style={{ fontWeight: 700, color: '#34d399' }}>Rs. 4,500 COD</span>
+                      </div>
+                      <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                        BA 2 KHA 8841 &bull; Prithvi Highway Corridor
+                      </div>
+                    </Link>
+
+                    <Link
+                      href="/track?id=D7-7730-EXP"
+                      style={{
+                        background: '#0d1527',
+                        border: '1px solid rgba(16, 185, 129, 0.25)',
+                        borderRadius: '10px',
+                        padding: '0.7rem 0.75rem',
+                        textDecoration: 'none',
+                        display: 'block'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                        <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#38bdf8', fontSize: '0.8rem' }}>D7-7730-EXP</span>
+                        <span style={{ fontSize: '0.62rem', background: 'rgba(16, 185, 129, 0.18)', color: '#10b981', padding: '1px 6px', borderRadius: '4px', fontWeight: 700 }}>Delivered</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#cbd5e1' }}>
+                        <span>Kathmandu &rarr; Biratnagar</span>
+                        <span style={{ fontWeight: 700, color: '#34d399' }}>Rs. 12,800 COD</span>
+                      </div>
+                      <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                        Signed by Dipendra Chaudhari &bull; 100% SLA
+                      </div>
+                    </Link>
+                  </div>
+                )}
+
+                {/* Tab 2: COD Remittances */}
+                {phoneTab === 'remittance' && (
+                  <div style={{
+                    background: '#0d1527',
+                    border: '1px solid rgba(52, 211, 153, 0.25)',
+                    borderRadius: '10px',
+                    padding: '0.8rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.5rem'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Cleared Available Balance</span>
+                      <span style={{ fontSize: '0.62rem', background: '#10b98122', color: '#10b981', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>VERIFIED</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#cbd5e1' }}>
-                      <span>Kathmandu &rarr; Pokhara</span>
-                      <span style={{ fontWeight: 700, color: '#34d399' }}>Rs. 4,500 COD</span>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#34d399' }}>
+                      Rs. 45,200
+                    </div>
+                    <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)' }}>
+                      Auto-Transfer: <strong>Nabil Bank (AC ****4891)</strong>
+                    </div>
+                    <div style={{ fontSize: '0.62rem', color: 'var(--brand-orange)', fontWeight: 600 }}>
+                      ⏰ Payout triggers today at 6:00 PM NPT sharp
                     </div>
                   </div>
+                )}
 
-                  <div style={{ background: '#0d1527', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '0.75rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                      <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#38bdf8', fontSize: '0.8rem' }}>NEP-773012</span>
-                      <span style={{ fontSize: '0.65rem', background: '#10b98122', color: '#10b981', padding: '1px 6px', borderRadius: '4px', fontWeight: 700 }}>Delivered</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#cbd5e1' }}>
-                      <span>Kathmandu &rarr; Biratnagar</span>
-                      <span style={{ fontWeight: 700, color: '#34d399' }}>Rs. 12,800 COD</span>
-                    </div>
+                {/* Tab 3: Quick 1-Touch Actions */}
+                {phoneTab === 'actions' && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                    <Link
+                      href="/book"
+                      style={{
+                        background: '#0d1527',
+                        border: '1px solid rgba(255, 102, 0, 0.3)',
+                        borderRadius: '8px',
+                        padding: '0.65rem 0.5rem',
+                        textDecoration: 'none',
+                        color: '#ffffff',
+                        textAlign: 'center',
+                        fontSize: '0.7rem',
+                        fontWeight: 700
+                      }}
+                    >
+                      <div style={{ fontSize: '1rem', marginBottom: '2px' }}>📦</div>
+                      Book Cargo
+                    </Link>
+
+                    <Link
+                      href="/dashboard"
+                      style={{
+                        background: '#0d1527',
+                        border: '1px solid rgba(6, 182, 212, 0.3)',
+                        borderRadius: '8px',
+                        padding: '0.65rem 0.5rem',
+                        textDecoration: 'none',
+                        color: '#ffffff',
+                        textAlign: 'center',
+                        fontSize: '0.7rem',
+                        fontWeight: 700
+                      }}
+                    >
+                      <div style={{ fontSize: '1rem', marginBottom: '2px' }}>🛰️</div>
+                      Fleet Radar
+                    </Link>
+
+                    <Link
+                      href="/bookings"
+                      style={{
+                        background: '#0d1527',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '8px',
+                        padding: '0.65rem 0.5rem',
+                        textDecoration: 'none',
+                        color: '#ffffff',
+                        textAlign: 'center',
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        gridColumn: 'span 2'
+                      }}
+                    >
+                      <span>🖨️ 4x6 Thermal Waybill Printing &rarr;</span>
+                    </Link>
                   </div>
-                </div>
+                )}
 
-                {/* Bottom Quick Bar Mock */}
-                <div style={{ marginTop: '1rem', paddingTop: '0.85rem', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-around', fontSize: '0.68rem', color: 'var(--text-muted)' }}>
-                  <span style={{ color: 'var(--brand-orange)', fontWeight: 700 }}>● Home</span>
-                  <span>🔍 Track</span>
-                  <span>+ Book</span>
-                  <span>📊 Fleet</span>
+                {/* Bottom Quick Bar Mock with Working Next.js Links */}
+                <div style={{
+                  marginTop: '0.85rem',
+                  paddingTop: '0.65rem',
+                  borderTop: '1px solid rgba(255,255,255,0.08)',
+                  display: 'flex',
+                  justifyContent: 'space-around',
+                  fontSize: '0.68rem',
+                  color: 'var(--text-muted)'
+                }}>
+                  <Link href="/" style={{ color: 'var(--brand-orange)', textDecoration: 'none', fontWeight: 700 }}>
+                    ● Home
+                  </Link>
+                  <Link href="/track" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
+                    🔍 Track
+                  </Link>
+                  <Link href="/book" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
+                    + Book
+                  </Link>
+                  <Link href="/dashboard" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
+                    📊 Fleet
+                  </Link>
                 </div>
               </div>
             </div>
