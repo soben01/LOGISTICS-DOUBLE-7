@@ -85,6 +85,7 @@ import PrintableLabel from '../../components/shipping/PrintableLabel';
 import EmailSummaryModal from '../../components/notifications/EmailSummaryModal';
 import AccountStructureAndCodWorkflow from '../../components/workflow/AccountStructureAndCodWorkflow';
 import AdminToolsSuite from '../../components/admin/AdminToolsSuite';
+import TrackingWorkflowEditor from '../../components/admin/TrackingWorkflowEditor';
 
 type AdminSection =
   | 'overview'
@@ -96,6 +97,7 @@ type AdminSection =
   | 'edge'
   | 'email'
   | 'workflow'
+  | 'tracking_workflow'
   | 'audit';
 
 interface AuditEntry {
@@ -378,7 +380,7 @@ export default function AdminControlPanel() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const secParam = params.get('section');
-      if (secParam && ['overview', 'shipments', 'cod', 'users', 'roles', 'settings', 'edge', 'email', 'workflow', 'audit'].includes(secParam)) {
+      if (secParam && ['overview', 'shipments', 'cod', 'users', 'roles', 'settings', 'edge', 'email', 'workflow', 'tracking_workflow', 'audit'].includes(secParam)) {
         setActiveSection(secParam as AdminSection);
       }
     }
@@ -938,6 +940,40 @@ export default function AdminControlPanel() {
                 </button>
 
                 <button
+                  onClick={() => setActiveSection('tracking_workflow')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
+                    fontWeight: activeSection === 'tracking_workflow' ? 700 : 500,
+                    backgroundColor: activeSection === 'tracking_workflow' ? 'rgba(255, 102, 0, 0.18)' : 'transparent',
+                    color: activeSection === 'tracking_workflow' ? '#fff' : 'var(--text-secondary)',
+                    textAlign: 'left'
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <SlidersHorizontal size={18} color={activeSection === 'tracking_workflow' ? 'var(--brand-orange)' : 'currentColor'} />
+                    Tracking Status Workflow
+                  </span>
+                  <span style={{
+                    fontSize: '0.65rem',
+                    padding: '0.1rem 0.45rem',
+                    borderRadius: '4px',
+                    backgroundColor: 'rgba(255, 102, 0, 0.2)',
+                    color: 'var(--brand-orange)',
+                    fontWeight: 800
+                  }}>
+                    Editable
+                  </span>
+                </button>
+
+                <button
                   onClick={() => setActiveSection('workflow')}
                   style={{
                     display: 'flex',
@@ -1032,6 +1068,7 @@ export default function AdminControlPanel() {
               { id: 'cod', label: 'COD Ledger', icon: Banknote },
               { id: 'email', label: 'Email & CF', icon: Mail },
               { id: 'settings', label: 'Settings', icon: SettingsIcon },
+              { id: 'tracking_workflow', label: 'Workflow', icon: SlidersHorizontal },
               { id: 'roles', label: 'Roles Matrix', icon: ShieldCheck },
               { id: 'edge', label: 'Edge Diagnostics', icon: Activity },
               { id: 'workflow', label: 'Architecture', icon: Layers },
@@ -2391,7 +2428,14 @@ export default function AdminControlPanel() {
             )}
 
             {/* ========================================================================= */}
-            {/* SECTION 8: WORKFLOW ARCHITECTURE */}
+            {/* SECTION 8: TRACKING STATUS WORKFLOW (SUPER ADMIN EDITABLE) */}
+            {/* ========================================================================= */}
+            {activeSection === 'tracking_workflow' && (
+              <TrackingWorkflowEditor isSuperAdmin={currentUser?.role === 'admin'} />
+            )}
+
+            {/* ========================================================================= */}
+            {/* SECTION 8B: WORKFLOW ARCHITECTURE & COD FLOW */}
             {/* ========================================================================= */}
             {activeSection === 'workflow' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

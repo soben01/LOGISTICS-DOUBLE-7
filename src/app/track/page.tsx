@@ -34,6 +34,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { getShipmentById, getShipments, fetchD1Tracking, Shipment, Checkpoint } from '../../lib/store';
+import { getTrackingWorkflow, calculateWorkflowProgress, WorkflowStage } from '../../lib/workflow';
 import PrintableLabel from '../../components/shipping/PrintableLabel';
 import EmailSummaryModal from '../../components/notifications/EmailSummaryModal';
 
@@ -49,6 +50,16 @@ function TrackContent() {
   const [showPrintLabel, setShowPrintLabel] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [workflowStages, setWorkflowStages] = useState<WorkflowStage[]>([]);
+
+  useEffect(() => {
+    setWorkflowStages(getTrackingWorkflow().filter(s => s.enabled));
+    const handleUpdate = () => {
+      setWorkflowStages(getTrackingWorkflow().filter(s => s.enabled));
+    };
+    window.addEventListener('workflow-updated', handleUpdate);
+    return () => window.removeEventListener('workflow-updated', handleUpdate);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -351,64 +362,58 @@ function TrackContent() {
                   </div>
                 </div>
 
-                {/* Animated Route Step Progression Bar */}
-                <div style={{
-                  background: 'rgba(9, 13, 24, 0.7)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: '1.25rem 1.5rem',
-                  border: '1px solid var(--border-subtle)',
-                  marginBottom: '1.75rem'
-                }}>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
-                    <span>DISPATCH PROGRESSION STATUS</span>
-                    <span style={{ color: 'var(--brand-orange)', fontFamily: 'var(--font-mono)' }}>STAGE {currentStep} OF 4</span>
-                  </div>
+                {/* Animated Dynamic Workflow Route Step Progression Bar */}
+                {(() => {
+                  const activeWorkflow = workflowStages.length > 0 ? workflowStages : getTrackingWorkflow().filter(s => s.enabled);
+                  const progressInfo = currentShipment
+                    ? calculateWorkflowProgress(currentShipment.status, activeWorkflow)
+                    : null;
 
-                  <div className="route-progress-bar">
-                    {/* Step 1 */}
-                    <div className={`route-step ${currentStep >= 1 ? (currentStep === 1 ? 'active' : 'completed') : ''}`}>
-                      <div className="route-step-node">
-                        {currentStep > 1 ? <Check size={14} /> : 1}
+                  return (
+                    <div style={{
+                      background: 'rgba(9, 13, 24, 0.7)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '1.25rem 1.5rem',
+                      border: '1px solid var(--border-subtle)',
+                      marginBottom: '1.75rem',
+                      overflowX: 'auto'
+                    }}>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.4rem' }}>
+                        <span>DISPATCH PROGRESSION STATUS</span>
+                        <span style={{ color: 'var(--brand-orange)', fontFamily: 'var(--font-mono)' }}>
+                          STAGE {progressInfo ? progressInfo.currentStageIndex + 1 : 1} OF {activeWorkflow.length} &bull; {progressInfo?.currentStage?.label || currentShipment.status}
+                        </span>
                       </div>
-                      <span style={{ fontSize: '0.72rem', color: currentStep >= 1 ? '#ffffff' : 'var(--text-muted)', marginTop: '0.4rem', fontWeight: 600 }}>
-                        Booked
-                      </span>
-                      <div className="route-step-line" />
-                    </div>
 
-                    {/* Step 2 */}
-                    <div className={`route-step ${currentStep >= 2 ? (currentStep === 2 ? 'active' : 'completed') : ''}`}>
-                      <div className="route-step-node">
-                        {currentStep > 2 ? <Check size={14} /> : 2}
-                      </div>
-                      <span style={{ fontSize: '0.72rem', color: currentStep >= 2 ? '#ffffff' : 'var(--text-muted)', marginTop: '0.4rem', fontWeight: 600 }}>
-                        Cross-Docked
-                      </span>
-                      <div className="route-step-line" />
-                    </div>
+                      <div className="route-progress-bar" style={{ minWidth: `${Math.max(450, activeWorkflow.length * 85)}px` }}>
+                        {activeWorkflow.map((stage, idx) => {
+                          const isPast = progressInfo ? idx < progressInfo.currentStageIndex : false;
+                          const isCurrent = progressInfo ? idx === progressInfo.currentStageIndex : idx === 0;
 
-                    {/* Step 3 */}
-                    <div className={`route-step ${currentStep >= 3 ? (currentStep === 3 ? 'active' : 'completed') : ''}`}>
-                      <div className="route-step-node">
-                        {currentStep > 3 ? <Check size={14} /> : 3}
+                          return (
+                            <div
+                              key={stage.id}
+                              className={`route-step ${isPast ? 'completed' : isCurrent ? 'active' : ''}`}
+                            >
+                              <div className="route-step-node">
+                                {isPast ? <Check size={14} /> : idx + 1}
+                              </div>
+                              <span style={{
+                                fontSize: '0.72rem',
+                                color: isCurrent ? 'var(--brand-orange)' : isPast ? '#ffffff' : 'var(--text-muted)',
+                                marginTop: '0.4rem',
+                                fontWeight: isCurrent || isPast ? 700 : 500
+                              }}>
+                                {stage.label}
+                              </span>
+                              {idx < activeWorkflow.length - 1 && <div className="route-step-line" />}
+                            </div>
+                          );
+                        })}
                       </div>
-                      <span style={{ fontSize: '0.72rem', color: currentStep >= 3 ? '#ffffff' : 'var(--text-muted)', marginTop: '0.4rem', fontWeight: 600 }}>
-                        In Linehaul
-                      </span>
-                      <div className="route-step-line" />
                     </div>
-
-                    {/* Step 4 */}
-                    <div className={`route-step ${currentStep >= 4 ? 'completed' : ''}`}>
-                      <div className="route-step-node">
-                        {currentStep >= 4 ? <Check size={14} /> : 4}
-                      </div>
-                      <span style={{ fontSize: '0.72rem', color: currentStep >= 4 ? 'var(--brand-emerald)' : 'var(--text-muted)', marginTop: '0.4rem', fontWeight: 600 }}>
-                        Delivered
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                  );
+                })()}
 
                 {/* Origin -> Destination Visual Banner */}
                 <div style={{
