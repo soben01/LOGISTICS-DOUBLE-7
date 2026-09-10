@@ -23,7 +23,8 @@ import {
   ArrowRight,
   ShieldCheck,
   FileText,
-  Lock
+  Lock,
+  Layers
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser, loginAsDemo, User } from '../../lib/auth';
@@ -44,6 +45,9 @@ export default function AllBookingsPage() {
   const [hubFilter, setHubFilter] = useState('ALL');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [printingShipment, setPrintingShipment] = useState<Shipment | null>(null);
+  const [bulkPrintingShipments, setBulkPrintingShipments] = useState<Shipment[] | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [printFeedback, setPrintFeedback] = useState<string | null>(null);
   const router = useRouter();
 
   // Quick edit status modal state
@@ -111,6 +115,55 @@ export default function AllBookingsPage() {
     }
   };
 
+  const handleLabelsPrinted = (ids: string[]) => {
+    ids.forEach(id => {
+      updateShipmentStatus(id, 'Label Generated', undefined, 'Shipping label generated and ready for hub dispatch');
+    });
+    loadBookings();
+    setPrintFeedback(`✓ Shipping label printed! Status automatically updated to "Label Generated" for ${ids.length} consignment(s).`);
+    setTimeout(() => setPrintFeedback(null), 6000);
+  };
+
+  const handleBulkMarkLabelGenerated = () => {
+    if (selectedIds.size === 0) return;
+    const ids = Array.from(selectedIds);
+    ids.forEach(id => {
+      updateShipmentStatus(id, 'Label Generated', undefined, 'Batch status update to Label Generated');
+    });
+    loadBookings();
+    setSelectedIds(new Set());
+    setPrintFeedback(`✓ Marked ${ids.length} selected consignment(s) as "Label Generated".`);
+    setTimeout(() => setPrintFeedback(null), 6000);
+  };
+
+  const handleExportSelectedCSV = () => {
+    const selectedShipments = shipments.filter(s => selectedIds.has(s.id));
+    if (selectedShipments.length === 0) return;
+    const headers = ['AWB_ID', 'Date', 'Origin_City', 'Destination_City', 'Consignee_Name', 'Consignee_Phone', 'Pieces', 'Weight_KG', 'Service', 'Status', 'Declared_Value_NPR'];
+    const rows = selectedShipments.map(s => [
+      s.id,
+      s.checkpoints[0]?.timestamp || '2026-08-27',
+      s.origin.city,
+      s.destination.city,
+      `"${s.recipient.name.replace(/"/g, '""')}"`,
+      `"${s.recipient.phone}"`,
+      s.cargo.pieces,
+      s.cargo.weightKg,
+      s.service,
+      s.status,
+      s.cargo.declaredValueNpr || 0
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `Double7_Selected_${selectedShipments.length}_Manifest_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleExportCSV = () => {
     if (shipments.length === 0) return;
     const headers = ['AWB_ID', 'Date', 'Origin_City', 'Destination_City', 'Consignee_Name', 'Consignee_Phone', 'Pieces', 'Weight_KG', 'Service', 'Status', 'Declared_Value_NPR'];
@@ -158,6 +211,8 @@ export default function AllBookingsPage() {
 
   const getStatusBadge = (status: Shipment['status']) => {
     switch (status) {
+      case 'Label Generated':
+        return <span className="badge badge-purple">Label Generated</span>;
       case 'Delivered':
         return <span className="badge badge-emerald">Delivered</span>;
       case 'Out for Delivery':
@@ -279,6 +334,7 @@ export default function AllBookingsPage() {
           <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap', marginTop: '1rem', paddingTop: '0.85rem', borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
             {[
               { id: 'ALL', label: 'All Bookings', count: shipments.length },
+              { id: 'LABEL GENERATED', label: 'Label Generated', count: shipments.filter(s => s.status === 'Label Generated').length },
               { id: 'IN TRANSIT', label: 'In Transit', count: shipments.filter(s => s.status === 'In Transit').length },
               { id: 'OUT FOR DELIVERY', label: 'Out for Delivery', count: shipments.filter(s => s.status === 'Out for Delivery').length },
               { id: 'DELIVERED', label: 'Delivered', count: shipments.filter(s => s.status === 'Delivered').length },
@@ -303,6 +359,139 @@ export default function AllBookingsPage() {
           </div>
         </div>
 
+        {/* Print Feedback Notification */}
+        {printFeedback && (
+          <div style={{
+            background: 'rgba(168, 85, 247, 0.16)',
+            border: '1px solid rgba(168, 85, 247, 0.45)',
+            color: '#f3e8ff',
+            padding: '0.85rem 1.25rem',
+            borderRadius: '10px',
+            marginBottom: '1.25rem',
+            fontSize: '0.88rem',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '0.75rem',
+            boxShadow: '0 8px 24px rgba(168, 85, 247, 0.15)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              <CheckCircle2 size={18} color="#c084fc" />
+              <span>{printFeedback}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPrintFeedback(null)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#d8b4fe',
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+                fontWeight: 700
+              }}
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        {/* Bulk Selection Actions Floating Toolbar */}
+        {selectedIds.size > 0 && (
+          <div style={{
+            position: 'sticky',
+            top: '76px',
+            zIndex: 40,
+            background: 'linear-gradient(135deg, rgba(16, 25, 46, 0.98), rgba(10, 15, 29, 0.98))',
+            border: '1px solid rgba(255, 102, 0, 0.5)',
+            borderRadius: '12px',
+            padding: '0.85rem 1.25rem',
+            marginBottom: '1.25rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '0.75rem',
+            boxShadow: '0 12px 36px rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(12px)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{
+                background: 'rgba(255, 102, 0, 0.22)',
+                color: 'var(--brand-orange)',
+                fontWeight: 800,
+                fontSize: '0.82rem',
+                padding: '0.35rem 0.85rem',
+                borderRadius: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                border: '1px solid rgba(255, 102, 0, 0.4)'
+              }}>
+                <Check size={14} />
+                <span>{selectedIds.size} Selected</span>
+              </div>
+              <span style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
+                Batch warehouse actions ready
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const selectedList = shipments.filter(s => selectedIds.has(s.id));
+                  setBulkPrintingShipments(selectedList);
+                }}
+                className="btn btn-primary btn-sm"
+                style={{
+                  fontWeight: 800,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  padding: '0.45rem 1.1rem',
+                  boxShadow: '0 4px 14px rgba(255, 102, 0, 0.35)'
+                }}
+              >
+                <Printer size={15} />
+                <span>Bulk Print Labels ({selectedIds.size})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleBulkMarkLabelGenerated}
+                className="btn btn-secondary btn-sm"
+                style={{ fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem 0.85rem' }}
+                title="Mark all selected consignments as Label Generated"
+              >
+                <CheckCircle2 size={14} color="#c084fc" />
+                <span>Mark as Label Generated</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleExportSelectedCSV}
+                className="btn btn-outline btn-sm"
+                style={{ fontSize: '0.82rem', padding: '0.45rem 0.75rem' }}
+                title="Export selected rows as CSV Manifest"
+              >
+                <Download size={14} />
+                <span>Export Selected</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedIds(new Set())}
+                className="btn btn-secondary btn-sm"
+                style={{ fontSize: '0.8rem', opacity: 0.8 }}
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Bookings Data Table */}
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
           <div style={{
@@ -315,6 +504,7 @@ export default function AllBookingsPage() {
           }}>
             <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
               Showing <strong>{filteredShipments.length}</strong> of <strong>{shipments.length}</strong> total bookings
+              {selectedIds.size > 0 && <span style={{ color: 'var(--brand-orange)', marginLeft: '0.5rem' }}>&bull; {selectedIds.size} selected</span>}
             </div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
               Sorted by latest booking date
@@ -325,6 +515,25 @@ export default function AllBookingsPage() {
             <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
               <thead>
                 <tr style={{ background: 'rgba(15, 23, 42, 0.6)', textAlign: 'left', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <th style={{ width: '42px', padding: '0.85rem 0.5rem 0.85rem 1rem', textAlign: 'center' }}>
+                    <input
+                      type="checkbox"
+                      aria-label="Select all consignments in view"
+                      checked={filteredShipments.length > 0 && filteredShipments.every(s => selectedIds.has(s.id))}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          const next = new Set(selectedIds);
+                          filteredShipments.forEach(s => next.add(s.id));
+                          setSelectedIds(next);
+                        } else {
+                          const next = new Set(selectedIds);
+                          filteredShipments.forEach(s => next.delete(s.id));
+                          setSelectedIds(next);
+                        }
+                      }}
+                      style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--brand-orange)' }}
+                    />
+                  </th>
                   <th style={{ padding: '0.85rem 1rem' }}>AWB / Consignment ID</th>
                   <th style={{ padding: '0.85rem 1rem' }}>Origin &rarr; Destination Hub</th>
                   <th style={{ padding: '0.85rem 1rem' }}>Consignee (Recipient)</th>
@@ -337,7 +546,7 @@ export default function AllBookingsPage() {
               <tbody>
                 {filteredShipments.length === 0 ? (
                   <tr>
-                    <td colSpan={7} style={{ padding: '3.5rem 1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <td colSpan={8} style={{ padding: '3.5rem 1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
                       <Boxes size={32} style={{ margin: '0 auto 0.75rem auto', opacity: 0.4 }} />
                       <div style={{ fontSize: '1rem', color: '#ffffff', fontWeight: 600 }}>No bookings match your filter criteria</div>
                       <div style={{ fontSize: '0.8rem', marginTop: '0.25rem' }}>Try clearing your search query or selecting "All Bookings".</div>
@@ -349,10 +558,30 @@ export default function AllBookingsPage() {
                       key={s.id}
                       style={{
                         borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
-                        transition: 'background var(--transition-fast)'
+                        transition: 'background var(--transition-fast)',
+                        background: selectedIds.has(s.id) ? 'rgba(255, 102, 0, 0.07)' : undefined
                       }}
                       className="table-row-hover"
                     >
+                      {/* Checkbox */}
+                      <td style={{ width: '42px', padding: '0.85rem 0.5rem 0.85rem 1rem', textAlign: 'center', verticalAlign: 'middle' }}>
+                        <input
+                          type="checkbox"
+                          aria-label={`Select consignment ${s.id}`}
+                          checked={selectedIds.has(s.id)}
+                          onChange={() => {
+                            const next = new Set(selectedIds);
+                            if (next.has(s.id)) {
+                              next.delete(s.id);
+                            } else {
+                              next.add(s.id);
+                            }
+                            setSelectedIds(next);
+                          }}
+                          style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--brand-orange)' }}
+                        />
+                      </td>
+
                       {/* AWB # */}
                       <td style={{ padding: '0.85rem 1rem', verticalAlign: 'middle' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
@@ -522,6 +751,7 @@ export default function AllBookingsPage() {
                     className="select-field"
                   >
                     <option value="Pending Pickup">Pending Pickup</option>
+                    <option value="Label Generated">Label Generated</option>
                     <option value="In Transit">In Transit</option>
                     <option value="Out for Delivery">Out for Delivery</option>
                     <option value="Delivered">Delivered</option>
@@ -569,11 +799,21 @@ export default function AllBookingsPage() {
           </div>
         )}
 
-        {/* Printable Label Modal */}
+        {/* Single Printable Label Modal */}
         {printingShipment && (
           <PrintableLabel
             shipment={printingShipment}
             onClose={() => setPrintingShipment(null)}
+            onPrinted={handleLabelsPrinted}
+          />
+        )}
+
+        {/* Bulk Printable Labels Modal */}
+        {bulkPrintingShipments && bulkPrintingShipments.length > 0 && (
+          <PrintableLabel
+            shipments={bulkPrintingShipments}
+            onClose={() => setBulkPrintingShipments(null)}
+            onPrinted={handleLabelsPrinted}
           />
         )}
       </div>

@@ -529,6 +529,13 @@ a {
   box-shadow: 0 0 10px rgba(245, 158, 11, 0.1);
 }
 
+.badge-purple {
+  background: rgba(168, 85, 247, 0.14);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.1);
+}
+
 .badge-subtle {
   background: rgba(255, 255, 255, 0.06);
   color: var(--text-secondary);
@@ -1684,9 +1691,11 @@ html, body {
     visibility: hidden;
   }
 
-  /* Make only the designated printable shipping label visible and centered */
+  /* Make only designated printable shipping labels visible and centered */
   #printable-shipping-label,
-  #printable-shipping-label * {
+  #printable-shipping-label *,
+  .printable-label-page,
+  .printable-label-page * {
     visibility: visible !important;
   }
 
@@ -1697,6 +1706,18 @@ html, body {
     width: 100% !important;
     max-width: 180mm !important;
     margin: 0 auto !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: none !important;
+    box-shadow: none !important;
+    display: block !important;
+  }
+
+  .printable-label-page {
+    width: 100% !important;
+    max-width: 180mm !important;
+    margin: 0 auto 20mm auto !important;
     padding: 16px !important;
     background: #ffffff !important;
     color: #000000 !important;
@@ -1704,14 +1725,27 @@ html, body {
     border-radius: 4px !important;
     box-shadow: none !important;
     display: block !important;
+    page-break-after: always !important;
+    break-after: page !important;
     page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .printable-label-page:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
+    margin-bottom: 0 !important;
   }
 
   /* High contrast black borders for shipping label grid */
   #printable-shipping-label table,
   #printable-shipping-label td,
   #printable-shipping-label th,
-  #printable-shipping-label div {
+  #printable-shipping-label div,
+  .printable-label-page table,
+  .printable-label-page td,
+  .printable-label-page th,
+  .printable-label-page div {
     color: #000000 !important;
   }
 }
