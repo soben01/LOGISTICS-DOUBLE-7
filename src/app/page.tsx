@@ -150,41 +150,52 @@ export default function HomePage() {
     <div style={{ minHeight: '100vh', backgroundColor: '#060911', color: '#f8fafc' }}>
       
       {/* ================= LIVE OPERATIONS TELEMETRY TICKER ================= */}
-      <div style={{
-        backgroundColor: '#0a0f1d',
-        borderBottom: '1px solid rgba(255, 102, 0, 0.25)',
-        padding: '0.55rem 1rem',
-        fontSize: '0.78rem',
-        color: '#94a3b8',
-        overflow: 'hidden',
-        whiteSpace: 'nowrap'
-      }}>
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '2rem',
-          animation: 'marquee 30s linear infinite',
-        }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#34d399', fontWeight: 700 }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981' }} />
-            KATHMANDU CENTRAL HUB: 100% OPERATIONAL
-          </span>
-          <span>&bull;</span>
-          <span style={{ color: '#ff8533', fontWeight: 700 }}>
-            ⏰ DAILY LINEHAUL DISPATCH CUTOFF: 6:00 PM (18:00 NPT)
-          </span>
-          <span>&bull;</span>
-          <span style={{ color: '#38bdf8' }}>
-            🚚 PRITHVI &amp; TRIBHUVAN CORRIDORS: ALL TRUCKS GPS TRACKED
-          </span>
-          <span>&bull;</span>
-          <span style={{ color: '#10b981', fontWeight: 700 }}>
-            💰 SAME-DAY COD BANK SETTLEMENTS: 100% CLEARED
-          </span>
-          <span>&bull;</span>
-          <span style={{ color: '#cbd5e1' }}>
-            🏔️ 77 DISTRICTS NATIONAL EXPRESS COVERAGE
-          </span>
+      <div className="telemetry-ticker-bar">
+        <div className="ticker-track">
+          <div className="ticker-content">
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#34d399', fontWeight: 700 }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981' }} />
+              KATHMANDU CENTRAL HUB: 100% OPERATIONAL
+            </span>
+            <span>&bull;</span>
+            <span style={{ color: '#ff8533', fontWeight: 700 }}>
+              ⏰ DAILY LINEHAUL DISPATCH CUTOFF: 6:00 PM (18:00 NPT)
+            </span>
+            <span>&bull;</span>
+            <span style={{ color: '#38bdf8' }}>
+              🚚 PRITHVI &amp; TRIBHUVAN CORRIDORS: ALL TRUCKS GPS TRACKED
+            </span>
+            <span>&bull;</span>
+            <span style={{ color: '#10b981', fontWeight: 700 }}>
+              💰 SAME-DAY COD BANK SETTLEMENTS: 100% CLEARED
+            </span>
+            <span>&bull;</span>
+            <span style={{ color: '#cbd5e1' }}>
+              🏔️ 77 DISTRICTS NATIONAL EXPRESS COVERAGE
+            </span>
+          </div>
+          <div className="ticker-content" aria-hidden="true">
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#34d399', fontWeight: 700 }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981' }} />
+              KATHMANDU CENTRAL HUB: 100% OPERATIONAL
+            </span>
+            <span>&bull;</span>
+            <span style={{ color: '#ff8533', fontWeight: 700 }}>
+              ⏰ DAILY LINEHAUL DISPATCH CUTOFF: 6:00 PM (18:00 NPT)
+            </span>
+            <span>&bull;</span>
+            <span style={{ color: '#38bdf8' }}>
+              🚚 PRITHVI &amp; TRIBHUVAN CORRIDORS: ALL TRUCKS GPS TRACKED
+            </span>
+            <span>&bull;</span>
+            <span style={{ color: '#10b981', fontWeight: 700 }}>
+              💰 SAME-DAY COD BANK SETTLEMENTS: 100% CLEARED
+            </span>
+            <span>&bull;</span>
+            <span style={{ color: '#cbd5e1' }}>
+              🏔️ 77 DISTRICTS NATIONAL EXPRESS COVERAGE
+            </span>
+          </div>
         </div>
       </div>
 

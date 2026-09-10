@@ -43,6 +43,7 @@ import {
 
 export default function DashboardPage() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [authChecking, setAuthChecking] = useState(true);
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [d1Status, setD1Status] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -77,8 +78,7 @@ export default function DashboardPage() {
   const handleLogout = () => {
     logoutUser();
     setCurrentUser(null);
-    setNoticeMessage('✓ Signed out. Viewing telemetry in Guest Mode.');
-    setTimeout(() => setNoticeMessage(null), 3500);
+    router.push('/login');
   };
 
   const handleQuickLogin = (role: 'merchant' | 'admin') => {
@@ -109,17 +109,26 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const user = getCurrentUser();
-    if (user) {
-      setCurrentUser(user);
+    if (!user) {
+      router.push('/login?redirect=/dashboard');
+      return;
     }
+    setCurrentUser(user);
+    setAuthChecking(false);
     loadData();
 
     const handleAuthChange = () => {
-      setCurrentUser(getCurrentUser());
+      const u = getCurrentUser();
+      if (!u) {
+        router.push('/login?redirect=/dashboard');
+      } else {
+        setCurrentUser(u);
+        setAuthChecking(false);
+      }
     };
     window.addEventListener('auth-change', handleAuthChange);
     return () => window.removeEventListener('auth-change', handleAuthChange);
-  }, []);
+  }, [router]);
 
   // ACCURATE METRICS CALCULATION FROM LIVE DATA
   const totalShipments = shipments.length;
@@ -178,6 +187,17 @@ export default function DashboardPage() {
   const expCount = shipments.filter(s => s.serviceCode === 'EXP').length || 4;
   const cargoCount = shipments.filter(s => s.serviceCode === 'CARGO').length || 1;
   const rushCount = shipments.filter(s => s.serviceCode === 'RUSH').length || 1;
+
+  if (authChecking || !currentUser) {
+    return (
+      <div style={{ minHeight: '50vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', padding: '3rem 1rem', textAlign: 'center' }}>
+        <div style={{ width: 48, height: 48, borderRadius: '12px', background: 'rgba(255, 102, 0, 0.15)', border: '1px solid rgba(255, 102, 0, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand-orange)' }}>
+          <Cpu size={24} className="animate-pulse" />
+        </div>
+        <h2 style={{ fontSize: '1.25rem', color: '#ffffff' }}>Loading Operations Telemetry...</h2>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: '3rem 0 6rem 0' }}>

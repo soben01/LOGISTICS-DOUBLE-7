@@ -44,8 +44,10 @@ export default function Navbar() {
   };
 
   const navLinks = [
-    { href: '/dashboard', label: 'Dashboard' },
-    { href: '/bookings', label: 'Bookings' },
+    ...(currentUser ? [
+      { href: '/dashboard', label: 'Dashboard' },
+      { href: '/bookings', label: 'Bookings' },
+    ] : []),
     { href: '/track', label: 'Track' },
     { href: currentUser ? '/book' : '/login?redirect=/book', label: 'Book Cargo' },
     { href: '/rates', label: 'Rates' },

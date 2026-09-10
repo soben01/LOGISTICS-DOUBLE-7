@@ -62,16 +62,25 @@ export default function AllBookingsPage() {
 
   useEffect(() => {
     const user = getCurrentUser();
+    if (!user) {
+      router.push('/login?redirect=/bookings');
+      return;
+    }
     setCurrentUser(user);
     setAuthChecking(false);
     loadBookings();
 
     const handleAuth = () => {
-      setCurrentUser(getCurrentUser());
+      const u = getCurrentUser();
+      if (!u) {
+        router.push('/login?redirect=/bookings');
+      } else {
+        setCurrentUser(u);
+      }
     };
     window.addEventListener('auth-change', handleAuth);
     return () => window.removeEventListener('auth-change', handleAuth);
-  }, []);
+  }, [router]);
 
   const handleCopy = (id: string) => {
     navigator.clipboard.writeText(id);

@@ -15,7 +15,8 @@ import {
   LogOut,
   X,
   ExternalLink,
-  Cpu
+  Cpu,
+  Calculator
 } from 'lucide-react';
 import { getCurrentUser, logoutUser, User } from '../../lib/auth';
 
@@ -113,15 +114,26 @@ export default function MobileBottomNav() {
           <Plus size={24} strokeWidth={2.8} />
         </Link>
 
-        {/* 4. Phone UI Dashboard Hub */}
-        <Link
-          href={currentUser ? (currentUser.role === 'merchant' ? '/merchant' : '/admin') : '/dashboard'}
-          className={`mobile-bottom-nav-item ${pathname === '/dashboard' ? 'active' : ''}`}
-          aria-label="Live Dashboard"
-        >
-          <LayoutDashboard size={20} strokeWidth={pathname === '/dashboard' ? 2.5 : 1.8} />
-          <span>Dashboard</span>
-        </Link>
+        {/* 4. Rates (Logged out) or Dashboard Hub (Logged in) */}
+        {currentUser ? (
+          <Link
+            href="/dashboard"
+            className={`mobile-bottom-nav-item ${pathname === '/dashboard' ? 'active' : ''}`}
+            aria-label="Live Dashboard"
+          >
+            <LayoutDashboard size={20} strokeWidth={pathname === '/dashboard' ? 2.5 : 1.8} />
+            <span>Dashboard</span>
+          </Link>
+        ) : (
+          <Link
+            href="/rates"
+            className={`mobile-bottom-nav-item ${pathname === '/rates' ? 'active' : ''}`}
+            aria-label="Rates & Tariffs"
+          >
+            <Calculator size={20} strokeWidth={pathname === '/rates' ? 2.5 : 1.8} />
+            <span>Rates</span>
+          </Link>
+        )}
 
         {/* 5. Portal / User */}
         <Link
@@ -201,8 +213,17 @@ export default function MobileBottomNav() {
                 className="btn btn-secondary btn-sm"
                 style={{ justifyContent: 'flex-start', padding: '0.65rem 0.9rem' }}
               >
-                <Cpu size={16} color="var(--brand-cyan)" />
-                <span>Live Fleet & Ops Telemetry</span>
+                <LayoutDashboard size={16} color="var(--brand-orange)" />
+                <span>Executive Operations Dashboard</span>
+              </Link>
+              <Link
+                href="/bookings"
+                onClick={() => setShowAccountSheet(false)}
+                className="btn btn-secondary btn-sm"
+                style={{ justifyContent: 'flex-start', padding: '0.65rem 0.9rem' }}
+              >
+                <Boxes size={16} color="var(--brand-cyan)" />
+                <span>All Bookings & Consignments</span>
               </Link>
             </div>
 

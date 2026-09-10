@@ -608,6 +608,65 @@ a {
   }
 }
 
+
+/* Live Operations Telemetry Ticker Marquee */
+@keyframes marquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.telemetry-ticker-bar {
+  background-color: #0a0f1d;
+  border-bottom: 1px solid rgba(255, 102, 0, 0.25);
+  padding: 0.55rem 0;
+  font-size: 0.78rem;
+  color: #94a3b8;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 100%;
+  display: flex;
+  position: relative;
+  user-select: none;
+}
+
+.telemetry-ticker-bar:hover .ticker-track,
+.telemetry-ticker-bar:active .ticker-track {
+  animation-play-state: paused;
+}
+
+.ticker-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marquee 28s linear infinite;
+}
+
+.ticker-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 2rem;
+  padding-right: 2rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .telemetry-ticker-bar {
+    padding: 0.5rem 0;
+    font-size: 0.74rem;
+  }
+  .ticker-track {
+    animation-duration: 20s;
+  }
+  .ticker-content {
+    gap: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
 @keyframes radar-sweep {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
