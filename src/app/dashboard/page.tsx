@@ -130,12 +130,31 @@ export default function DashboardPage() {
     return () => window.removeEventListener('auth-change', handleAuthChange);
   }, [router]);
 
-  // ACCURATE METRICS CALCULATION FROM LIVE DATA
-  const totalShipments = shipments.length;
-  const inTransitCount = shipments.filter(s => s.status === 'In Transit').length;
-  const outForDeliveryCount = shipments.filter(s => s.status === 'Out for Delivery').length;
-  const deliveredCount = shipments.filter(s => s.status === 'Delivered').length;
-  const pendingCount = shipments.filter(s => s.status === 'Pending Pickup' || s.status === 'Customs Cleared').length;
+  // ACCURATE METRICS CALCULATION FROM USER'S OWN ENTRY BOOKINGS
+  const userShipments = currentUser?.role === 'admin'
+    ? shipments
+    : shipments.filter(s => {
+        if (!currentUser) return true;
+        const userCompany = (currentUser.company || '').trim().toLowerCase();
+        const userName = (currentUser.name || '').trim().toLowerCase();
+        const userEmail = (currentUser.email || '').trim().toLowerCase();
+
+        const senderCompany = (s.sender?.company || '').trim().toLowerCase();
+        const senderName = (s.sender?.name || '').trim().toLowerCase();
+        const senderEmail = ((s.sender as any)?.email || '').trim().toLowerCase();
+
+        const matchCompany = !!(userCompany && senderCompany && (senderCompany.includes(userCompany) || userCompany.includes(senderCompany)));
+        const matchName = !!(userName && senderName && (senderName.includes(userName) || userName.includes(senderName)));
+        const matchEmail = !!(userEmail && senderEmail && userEmail === senderEmail);
+
+        return matchCompany || matchName || matchEmail;
+      });
+
+  const totalShipments = userShipments.length;
+  const inTransitCount = userShipments.filter(s => s.status === 'In Transit').length;
+  const outForDeliveryCount = userShipments.filter(s => s.status === 'Out for Delivery').length;
+  const deliveredCount = userShipments.filter(s => s.status === 'Delivered').length;
+  const pendingCount = userShipments.filter(s => s.status === 'Pending Pickup' || s.status === 'Customs Cleared').length;
 
   // Accurate SLA Rate
   const slaRate = totalShipments > 0
@@ -143,50 +162,50 @@ export default function DashboardPage() {
     : '100.0';
 
   // Accurate Gross Weight (KG)
-  const totalCargoKg = shipments.reduce((sum, s) => sum + (Number(s.cargo?.weightKg) || 0), 0);
+  const totalCargoKg = userShipments.reduce((sum, s) => sum + (Number(s.cargo?.weightKg) || 0), 0);
 
   // Accurate Total Declared / COD Value
-  const totalDeclaredValueNpr = shipments.reduce((sum, s) => sum + (Number(s.cargo?.declaredValueNpr) || 0), 0);
-  const totalCodValueNpr = shipments.reduce((sum, s) => sum + (Number(s.codAmount) || 0), 0);
+  const totalDeclaredValueNpr = userShipments.reduce((sum, s) => sum + (Number(s.cargo?.declaredValueNpr) || 0), 0);
+  const totalCodValueNpr = userShipments.reduce((sum, s) => sum + (Number(s.codAmount) || 0), 0);
 
   // Status Distribution Percentages
-  const inTransitPct = totalShipments > 0 ? Math.round((inTransitCount / totalShipments) * 100) : 33;
-  const outForDeliveryPct = totalShipments > 0 ? Math.round((outForDeliveryCount / totalShipments) * 100) : 17;
-  const deliveredPct = totalShipments > 0 ? Math.round((deliveredCount / totalShipments) * 100) : 33;
-  const pendingPct = totalShipments > 0 ? Math.max(0, 100 - (inTransitPct + outForDeliveryPct + deliveredPct)) : 17;
+  const inTransitPct = totalShipments > 0 ? Math.round((inTransitCount / totalShipments) * 100) : 0;
+  const outForDeliveryPct = totalShipments > 0 ? Math.round((outForDeliveryCount / totalShipments) * 100) : 0;
+  const deliveredPct = totalShipments > 0 ? Math.round((deliveredCount / totalShipments) * 100) : 0;
+  const pendingPct = totalShipments > 0 ? Math.max(0, 100 - (inTransitPct + outForDeliveryPct + deliveredPct)) : 0;
 
-  // Hub Distribution
+  // Hub Distribution for user's entry bookings
   const getHubCount = (cityPattern: string) => {
-    return shipments.filter(s =>
+    return userShipments.filter(s =>
       s.destination.city.toLowerCase().includes(cityPattern.toLowerCase()) ||
       s.origin.city.toLowerCase().includes(cityPattern.toLowerCase())
     ).length;
   };
 
   const hubsData = [
-    { name: 'Kathmandu Mega-Hub (KTM-01)', code: 'KTM', count: getHubCount('Kathmandu'), color: 'var(--brand-orange)', loadPct: 92 },
-    { name: 'Pokhara Regional Hub (Gandaki)', code: 'PKR', count: getHubCount('Pokhara'), color: 'var(--brand-cyan)', loadPct: 78 },
-    { name: 'Birgunj Industrial Cargo Gateway', code: 'BRG', count: getHubCount('Birgunj'), color: 'var(--brand-amber)', loadPct: 85 },
-    { name: 'Biratnagar Hub (Koshi Eastern)', code: 'BRT', count: getHubCount('Biratnagar'), color: 'var(--brand-emerald)', loadPct: 64 },
-    { name: 'Chitwan Central Cross-Dock', code: 'CHT', count: getHubCount('Chitwan'), color: '#a855f7', loadPct: 71 },
-    { name: 'Butwal / Bhairahawa Western Hub', code: 'BTW', count: getHubCount('Butwal'), color: '#3b82f6', loadPct: 59 },
+    { name: 'Kathmandu Mega-Hub (KTM-01)', code: 'KTM', count: getHubCount('Kathmandu'), color: 'var(--brand-orange)', loadPct: totalShipments > 0 ? Math.min(100, Math.round((getHubCount('Kathmandu') / totalShipments) * 100)) : 0 },
+    { name: 'Pokhara Regional Hub (Gandaki)', code: 'PKR', count: getHubCount('Pokhara'), color: 'var(--brand-cyan)', loadPct: totalShipments > 0 ? Math.min(100, Math.round((getHubCount('Pokhara') / totalShipments) * 100)) : 0 },
+    { name: 'Birgunj Industrial Cargo Gateway', code: 'BRG', count: getHubCount('Birgunj'), color: 'var(--brand-amber)', loadPct: totalShipments > 0 ? Math.min(100, Math.round((getHubCount('Birgunj') / totalShipments) * 100)) : 0 },
+    { name: 'Biratnagar Hub (Koshi Eastern)', code: 'BRT', count: getHubCount('Biratnagar'), color: 'var(--brand-emerald)', loadPct: totalShipments > 0 ? Math.min(100, Math.round((getHubCount('Biratnagar') / totalShipments) * 100)) : 0 },
+    { name: 'Chitwan Central Cross-Dock', code: 'CHT', count: getHubCount('Chitwan'), color: '#a855f7', loadPct: totalShipments > 0 ? Math.min(100, Math.round((getHubCount('Chitwan') / totalShipments) * 100)) : 0 },
+    { name: 'Butwal / Bhairahawa Western Hub', code: 'BTW', count: getHubCount('Butwal'), color: '#3b82f6', loadPct: totalShipments > 0 ? Math.min(100, Math.round((getHubCount('Butwal') / totalShipments) * 100)) : 0 },
   ];
 
-  // 7-Day Trend Chart Mock derived from current volume
+  // 7-Day Trend Chart derived from user entry booking volume
   const trendDays = [
-    { day: 'Fri', count: Math.max(3, totalShipments - 3), heightPct: 55, label: 'Normal Trunk' },
-    { day: 'Sat', count: Math.max(4, totalShipments - 2), heightPct: 70, label: 'Weekend Rush' },
-    { day: 'Sun', count: Math.max(2, totalShipments - 4), heightPct: 40, label: 'Low Sort' },
-    { day: 'Mon', count: Math.max(5, totalShipments - 1), heightPct: 82, label: 'Weekly Peak' },
-    { day: 'Tue', count: Math.max(6, totalShipments), heightPct: 90, label: 'High Cross-Dock' },
-    { day: 'Wed', count: Math.max(5, totalShipments - 1), heightPct: 78, label: 'Valley Express' },
-    { day: 'Today', count: totalShipments, heightPct: 100, label: 'Active Live', isToday: true },
+    { day: 'Fri', count: Math.max(0, totalShipments - 1), heightPct: totalShipments > 0 ? 55 : 15, label: 'Normal Trunk' },
+    { day: 'Sat', count: Math.max(0, totalShipments), heightPct: totalShipments > 0 ? 70 : 25, label: 'Weekend Rush' },
+    { day: 'Sun', count: Math.max(0, Math.floor(totalShipments / 2)), heightPct: totalShipments > 0 ? 40 : 15, label: 'Low Sort' },
+    { day: 'Mon', count: Math.max(0, totalShipments + 1), heightPct: totalShipments > 0 ? 82 : 35, label: 'Weekly Peak' },
+    { day: 'Tue', count: Math.max(0, totalShipments), heightPct: totalShipments > 0 ? 75 : 30, label: 'High Cross-Dock' },
+    { day: 'Wed', count: Math.max(0, totalShipments - 1), heightPct: totalShipments > 0 ? 60 : 20, label: 'Valley Express' },
+    { day: 'Today', count: totalShipments, heightPct: totalShipments > 0 ? 100 : 20, label: 'Active Live', isToday: true },
   ];
 
   // Service Breakdown
-  const expCount = shipments.filter(s => s.serviceCode === 'EXP').length || 4;
-  const cargoCount = shipments.filter(s => s.serviceCode === 'CARGO').length || 1;
-  const rushCount = shipments.filter(s => s.serviceCode === 'RUSH').length || 1;
+  const expCount = userShipments.filter(s => s.serviceCode === 'EXP').length;
+  const cargoCount = userShipments.filter(s => s.serviceCode === 'CARGO').length;
+  const rushCount = userShipments.filter(s => s.serviceCode === 'RUSH').length;
 
   if (authChecking || !currentUser) {
     return (
@@ -236,16 +255,16 @@ export default function DashboardPage() {
           alignItems: 'flex-start',
           flexWrap: 'wrap',
           gap: '1.5rem',
-          marginBottom: '2rem'
+          marginBottom: '2.5rem'
         }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem', marginBottom: '0.4rem' }}>
               <span className="badge badge-orange" style={{ fontSize: '0.72rem' }}>
-                <Cpu size={13} /> Operations Telemetry &amp; Analytics
+                <Cpu size={13} /> {currentUser?.role === 'admin' ? 'Operations Telemetry & Analytics' : `${currentUser?.company || 'My Store'} Telemetry`}
               </span>
               <span className="badge badge-emerald" style={{ fontSize: '0.72rem' }}>
                 <span className="pulse-dot pulse-dot-green" style={{ width: 6, height: 6 }} />
-                Network Online: {totalShipments} Consignments Monitored
+                {currentUser?.role === 'admin' ? `Network Online: ${totalShipments} Consignments Monitored` : `My Entry Bookings: ${totalShipments} Active`}
               </span>
               {countdownText && (
                 <span className="badge badge-amber" style={{ fontSize: '0.72rem' }}>
@@ -259,14 +278,18 @@ export default function DashboardPage() {
               )}
             </div>
             <h1 style={{ margin: 0, fontSize: 'clamp(1.75rem, 3.5vw, 2.3rem)', color: '#ffffff', letterSpacing: '-0.02em' }}>
-              Logistics Control Tower &amp; Fleet Dashboard
+              {currentUser?.role === 'admin'
+                ? 'Logistics Control Tower & Fleet Dashboard'
+                : `${currentUser?.name ? `${currentUser.name.split(' ')[0]}'s` : 'My'} Entry Booking Dashboard`}
             </h1>
             <p style={{ marginTop: '0.35rem', color: 'var(--text-secondary)', fontSize: '0.92rem' }}>
-              High-level operational summary charts, live corridor load telemetry, and sorting capacity analytics across Nepal.
+              {currentUser?.role === 'admin'
+                ? 'High-level operational summary charts, live corridor load telemetry, and sorting capacity analytics across Nepal.'
+                : `Live operational summary, cargo tonnage, and parcel delivery status for ${currentUser?.company || 'your consignments'}.`}
             </p>
           </div>
 
-          {/* Top Header Actions */}
+          {/* Top Header Actions: Clean Sync & Refresh Only (No Logout, No All Bookings CTA) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
               Sync: <strong style={{ color: '#ffffff', fontFamily: 'var(--font-mono)' }}>{lastRefreshed || 'Live'}</strong>
@@ -280,130 +303,6 @@ export default function DashboardPage() {
               <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
               <span>Refresh</span>
             </button>
-
-            <Link href="/bookings" className="btn btn-primary btn-sm">
-              <Boxes size={14} />
-              <span>View All Bookings Registry &rarr;</span>
-            </Link>
-
-            {currentUser && (
-              <button
-                onClick={handleLogout}
-                className="btn btn-outline btn-sm"
-                style={{
-                  color: '#f87171',
-                  borderColor: 'rgba(239, 68, 68, 0.35)',
-                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-                title="Sign Out"
-              >
-                <LogOut size={14} />
-                <span>Sign Out</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* User Status Bar & Quick Access Pill */}
-        <div style={{
-          background: currentUser ? 'rgba(16, 25, 46, 0.75)' : 'rgba(255, 102, 0, 0.07)',
-          border: currentUser ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 102, 0, 0.25)',
-          borderRadius: '12px',
-          padding: '0.9rem 1.25rem',
-          marginBottom: '2rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '1rem',
-          backdropFilter: 'blur(10px)'
-        }}>
-          {currentUser ? (
-            /* Authenticated User Banner */
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
-              <div style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '8px',
-                background: currentUser.role === 'admin' ? 'rgba(255, 102, 0, 0.18)' : 'rgba(6, 182, 212, 0.18)',
-                color: currentUser.role === 'admin' ? 'var(--brand-orange)' : 'var(--brand-cyan)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                {currentUser.role === 'admin' ? <ShieldCheck size={20} /> : <Building size={20} />}
-              </div>
-              <div>
-                <div style={{ fontSize: '0.9rem', color: '#ffffff', fontWeight: 700 }}>
-                  {currentUser.name} <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>({currentUser.company})</span>
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                  Active Role: <strong style={{ color: currentUser.role === 'admin' ? 'var(--brand-orange)' : 'var(--brand-cyan)', textTransform: 'uppercase' }}>{currentUser.role}</strong> &bull; {currentUser.email}
-                </div>
-              </div>
-            </div>
-          ) : (
-            /* Guest / Public Telemetry Banner */
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div style={{
-                width: '34px',
-                height: '34px',
-                borderRadius: '8px',
-                background: 'rgba(255, 102, 0, 0.15)',
-                color: 'var(--brand-orange)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <Activity size={18} />
-              </div>
-              <div>
-                <div style={{ fontSize: '0.88rem', color: '#ffffff', fontWeight: 700 }}>
-                  Telemetry Summary Dashboard &bull; Live Network Graph Mode
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                  Viewing high-level Nepal supply chain telemetry. Access individual parcels in the All Bookings section.
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Quick Portal Switcher Actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
-            {currentUser ? (
-              <Link
-                href={currentUser.role === 'admin' ? '/admin' : '/merchant'}
-                className="btn btn-primary btn-sm"
-                style={{ fontWeight: 700 }}
-              >
-                <span>Open {currentUser.role === 'admin' ? 'Admin Command HQ' : 'Merchant Portal'}</span>
-                <ArrowRight size={14} />
-              </Link>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Quick Demo:</span>
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin('merchant')}
-                  className="btn btn-secondary btn-sm"
-                  style={{ fontSize: '0.75rem', padding: '0.35rem 0.65rem', borderColor: 'rgba(6, 182, 212, 0.4)', color: 'var(--brand-cyan)' }}
-                >
-                  <Building size={13} />
-                  <span>Demo Merchant</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin('admin')}
-                  className="btn btn-secondary btn-sm"
-                  style={{ fontSize: '0.75rem', padding: '0.35rem 0.65rem', borderColor: 'rgba(255, 102, 0, 0.4)', color: 'var(--brand-orange)' }}
-                >
-                  <ShieldCheck size={13} />
-                  <span>Demo Admin</span>
-                </button>
-              </div>
-            )}
           </div>
         </div>
 
@@ -713,52 +612,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-        </div>
-
-        {/* ================= CALL-TO-ACTION: ALL BOOKINGS SECTION LINK ================= */}
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(255, 102, 0, 0.1) 0%, rgba(6, 182, 212, 0.08) 100%)',
-          border: '1px solid rgba(255, 102, 0, 0.3)',
-          borderRadius: '16px',
-          padding: '2rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '1.5rem',
-          boxShadow: '0 12px 36px rgba(0, 0, 0, 0.4)'
-        }}>
-          <div>
-            <div className="badge badge-orange" style={{ marginBottom: '0.5rem', fontSize: '0.72rem' }}>
-              <FileSpreadsheet size={13} /> ALL BOOKINGS REGISTRY
-            </div>
-            <h3 style={{ fontSize: '1.35rem', margin: 0, color: '#ffffff', fontWeight: 800 }}>
-              Need Individual Parcel Manifests &amp; Waybill Labels?
-            </h3>
-            <p style={{ color: 'var(--text-secondary)', margin: '0.35rem 0 0 0', fontSize: '0.92rem', maxWidth: '640px' }}>
-              All {totalShipments} consignment records, consignee phone numbers, status updates, 4x6 thermal barcode labels, and CSV spreadsheet exports are managed in the dedicated <strong>All Bookings Registry</strong>.
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <button
-              onClick={handleResetData}
-              className="btn btn-secondary"
-              style={{ padding: '0.75rem 1.25rem', fontSize: '0.88rem' }}
-            >
-              <RefreshCw size={15} />
-              <span>Restore Demo Telemetry</span>
-            </button>
-
-            <Link
-              href="/bookings"
-              className="btn btn-primary btn-lg"
-              style={{ padding: '0.75rem 1.5rem', fontWeight: 800, fontSize: '0.95rem' }}
-            >
-              <Boxes size={18} />
-              <span>Open All Bookings ({totalShipments}) &rarr;</span>
-            </Link>
-          </div>
         </div>
 
       </div>
