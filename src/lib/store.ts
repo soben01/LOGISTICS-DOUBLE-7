@@ -816,7 +816,10 @@ export interface DomesticRateOption {
 }
 
 export function calculateDomesticFreightRate(params: QuoteRequest): DomesticRateOption[] {
-  const volumetricWeight = (params.lengthCm * params.widthCm * params.heightCm) / 5000;
+  const isBulk = (params.weightKg || 0) >= 10;
+  const volumetricWeight = isBulk && params.lengthCm && params.widthCm && params.heightCm
+    ? (params.lengthCm * params.widthCm * params.heightCm) / 5000
+    : 0;
   const chargeableWeight = Math.max(params.weightKg, volumetricWeight, 1);
 
   // Valley vs Outstation calculation
@@ -824,44 +827,137 @@ export function calculateDomesticFreightRate(params: QuoteRequest): DomesticRate
     (params.originCity === 'Kathmandu' || params.originCity === 'Lalitpur' || params.originCity === 'Bhaktapur') &&
     (params.destCity === 'Kathmandu' || params.destCity === 'Lalitpur' || params.destCity === 'Bhaktapur');
 
+  const destLabel = params.destCity || 'Destination';
   const baseExpress = isValley ? 120 + (chargeableWeight - 1) * 40 : 220 + (chargeableWeight - 1) * 70;
   const baseCargo = isValley ? 90 + chargeableWeight * 25 : 160 + chargeableWeight * 45;
-  const baseRush = isValley ? 250 + (chargeableWeight - 1) * 50 : 390 + (chargeableWeight - 1) * 90;
+  const baseRush = isValley ? 250 + (chargeableWeight - 1) * 50 : 390 + (chargeableWeight - 1) * 85;
 
+  if (isBulk) {
+    // 10 KG+ Bulk Cargo / Heavy Freight Options
+    return [
+      {
+        serviceName: `Nationwide Hub Cargo (${destLabel})`,
+        serviceCode: 'CARGO',
+        transitDays: isValley ? 'Next-Day Scheduled Bulk Dispatch' : '2 - 3 Days Nationwide Highway Linehaul',
+        estimatedCostNpr: Math.round(baseCargo),
+        carrierType: 'Heavy Commercial Linehaul & Cross-Dock Network',
+        features: [
+          'Discounted bulk rate (Rs. 45/kg vs Rs. 70/kg express)',
+          'Hydraulic liftgate doorstep commercial pickup',
+          'Automated IATA volumetric calculation standard',
+          'Full digital manifest & multi-box master waybills'
+        ],
+        recommended: true,
+      },
+      {
+        serviceName: `B2B Dedicated Pallet & Crate Linehaul`,
+        serviceCode: 'EXP',
+        transitDays: isValley ? 'Same-Day Bulk Transfer (within 8 hrs)' : `24 - 36 Hours Priority to ${destLabel}`,
+        estimatedCostNpr: Math.round(baseExpress * 0.95), // 5% bulk express volume rebate
+        carrierType: 'Dedicated High-Capacity Freight Fleet',
+        features: [
+          'Shrink-wrapped pallet & crate security strapping',
+          'Forklift dock-to-dock cross-docking',
+          'Priority cargo space allocation on scheduled trucks',
+          'Dedicated account manager & direct dispatcher line'
+        ],
+      },
+      {
+        serviceName: isValley ? 'Valley Direct Van Charter' : `Full Truckload (FTL) Charter to ${destLabel}`,
+        serviceCode: 'RUSH',
+        transitDays: isValley ? 'Direct Point-to-Point (Under 4 Hours)' : `Direct Non-Stop Dispatch to ${destLabel}`,
+        estimatedCostNpr: Math.round(baseRush * 1.15),
+        carrierType: 'Exclusive Dedicated Fleet Vehicle (No Consignment Sharing)',
+        features: [
+          'Exclusive vehicle dispatched directly from your warehouse',
+          'Zero transshipment risk / tamper-evident seals',
+          'Live continuous GPS fleet tracking with geofencing',
+          'Immediate instant digital POD upon offloading'
+        ],
+      },
+      {
+        serviceName: 'International Cross-Border Heavy Air Cargo',
+        serviceCode: 'INTL',
+        transitDays: 'Coming Soon (Launching Q4 2026)',
+        estimatedCostNpr: 0,
+        isComingSoon: true,
+        carrierType: 'Tribhuvan Airport (TIA) Direct Cargo Flights to Global Hubs',
+        features: [
+          'Export customs pre-clearance with Nepal Customs',
+          'Direct air links to India, China, UAE, USA & Europe',
+          'Pre-register verified merchant account for bulk air tariffs'
+        ],
+      },
+    ];
+  }
+
+  // < 10 KG Express Delivery Options for Selected Destination
   return [
     {
-      serviceName: 'Double 7 Nepal Express',
+      serviceName: isValley ? 'Double 7 Valley Express' : `Double 7 ${destLabel} Express`,
       serviceCode: 'EXP',
-      transitDays: isValley ? 'Same-Day (within 6 hrs)' : 'Next-Day (24 hrs Guaranteed)',
+      transitDays: isValley ? 'Same-Day (within 6 hrs)' : `Next-Day (24 hrs Guaranteed to ${destLabel})`,
       estimatedCostNpr: Math.round(baseExpress),
-      carrierType: 'Dedicated High-Speed Electric Fleet & Highway Linehaul',
-      features: ['Real-time GPS rider tracking', 'Free Doorstep Pickup', '100% On-Time SLA Guarantee', 'Automated SMS alerts to recipient'],
+      carrierType: isValley ? 'Dedicated High-Speed Electric Fleet' : `Prithvi / East-West Highway Express Linehaul`,
+      features: [
+        'Real-time GPS rider tracking',
+        'Free Doorstep Pickup',
+        '100% On-Time SLA Guarantee',
+        'Automated SMS alerts with live tracking link to recipient'
+      ],
       recommended: true,
     },
+    ...(isValley ? [
+      {
+        serviceName: 'Same-Day Valley Rush',
+        serviceCode: 'RUSH' as const,
+        transitDays: 'Under 3 Hours (Kathmandu, Lalitpur, Bhaktapur)',
+        estimatedCostNpr: Math.round(baseRush),
+        carrierType: 'Instant Dedicated Electric Two-Wheeler / Van Fleet',
+        features: [
+          'Direct point-to-point courier rider',
+          'Urgent medical, documents & e-commerce orders',
+          'Instant digital POD with consignee photo'
+        ],
+      }
+    ] : [
+      {
+        serviceName: `Priority Highway Rush to ${destLabel}`,
+        serviceCode: 'RUSH' as const,
+        transitDays: `18 Hours Overnight Express Corridor`,
+        estimatedCostNpr: Math.round(baseRush),
+        carrierType: `Dedicated Overnight Express Linehaul to ${destLabel}`,
+        features: [
+          'Nightly 8:00 PM cutoff with guaranteed morning 9:00 AM delivery',
+          'Direct terminal priority cross-docking',
+          'Priority handling for time-sensitive commercial packages'
+        ],
+      }
+    ]),
     {
-      serviceName: 'Nationwide Hub Cargo',
-      serviceCode: 'CARGO',
-      transitDays: '2 - 3 Days Nationwide (All 7 Provinces)',
+      serviceName: `Standard Regional Courier (${destLabel})`,
+      serviceCode: 'CARGO' as const,
+      transitDays: isValley ? 'Next-Day Economy' : `24 - 48 Hours to ${destLabel}`,
       estimatedCostNpr: Math.round(baseCargo),
-      carrierType: 'Inter-Provincial Heavy Freight Network',
-      features: ['Best for bulk parcels & B2B stock', 'Secure warehouse buffering', 'Full waybill tracking across all 77 districts'],
+      carrierType: 'Standard National Distribution Fleet',
+      features: [
+        'Cost-effective economy parcel dispatch',
+        'Full district hub tracking across Nepal',
+        'Door-to-door delivery with OTP confirmation'
+      ],
     },
     {
-      serviceName: 'Same-Day Valley Rush',
-      serviceCode: 'RUSH',
-      transitDays: 'Under 3 Hours (Kathmandu, Lalitpur, Bhaktapur)',
-      estimatedCostNpr: Math.round(baseRush),
-      carrierType: 'Instant Dedicated Electric Two-Wheeler / Van Fleet',
-      features: ['Direct point-to-point courier', 'Urgent medical, documents & food orders', 'Instant digital POD with photo'],
-    },
-    {
-      serviceName: 'International Cross-Border Cargo',
-      serviceCode: 'INTL',
+      serviceName: 'International Cross-Border Express',
+      serviceCode: 'INTL' as const,
       transitDays: 'Coming Soon (Launching Q4 2026)',
       estimatedCostNpr: 0,
       isComingSoon: true,
-      carrierType: 'Tribhuvan Airport (TIA) Direct Cargo Flights to Global Hubs',
-      features: ['Export customs pre-clearance with Nepal Customs', 'Direct connections to India, China, UAE & US/EU', 'Register your business for early access'],
+      carrierType: 'Tribhuvan Airport (TIA) Direct Flights',
+      features: [
+        'Commercial document & parcel export clearance',
+        'Direct connections to India, China, UAE & Western markets',
+        'Register your business for early access'
+      ],
     },
   ];
 }

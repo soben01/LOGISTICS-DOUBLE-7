@@ -42,9 +42,9 @@ export default function RatesPage() {
   const [originCity, setOriginCity] = useState('Kathmandu');
   const [destCity, setDestCity] = useState('Pokhara');
   const [weightKg, setWeightKg] = useState<number>(5);
-  const [lengthCm, setLengthCm] = useState<number>(30);
-  const [widthCm, setWidthCm] = useState<number>(20);
-  const [heightCm, setHeightCm] = useState<number>(20);
+  const [lengthCm, setLengthCm] = useState<number>(45);
+  const [widthCm, setWidthCm] = useState<number>(35);
+  const [heightCm, setHeightCm] = useState<number>(30);
 
   // COD Simulator State
   const [simCodAmount, setSimCodAmount] = useState<number>(4500);
@@ -52,20 +52,29 @@ export default function RatesPage() {
   // Table Filter State
   const [zoneFilter, setZoneFilter] = useState<'ALL' | 'VALLEY' | 'INTERCITY' | 'REGIONAL' | 'REMOTE'>('ALL');
 
+  const isBulk = weightKg >= 10;
+  const volumetricWeight = (lengthCm * widthCm * heightCm) / 5000;
+  const chargeableWeight = isBulk ? Math.max(weightKg, volumetricWeight).toFixed(1) : weightKg.toFixed(1);
+
   const rates: DomesticRateOption[] = calculateDomesticFreightRate({
     originCity,
     destCity,
     weightKg,
-    lengthCm,
-    widthCm,
-    heightCm
+    lengthCm: isBulk ? lengthCm : 0,
+    widthCm: isBulk ? widthCm : 0,
+    heightCm: isBulk ? heightCm : 0
   });
 
-  const volumetricWeight = (lengthCm * widthCm * heightCm) / 5000;
-  const chargeableWeight = Math.max(weightKg, volumetricWeight).toFixed(1);
-
   // Quick weight presets
-  const weightPresets = [1, 2, 5, 10, 15, 25, 40];
+  const weightPresets = [1, 2, 5, 8, 10, 15, 25, 40];
+
+  // Dimension presets for bulk shipment
+  const bulkDimensionPresets = [
+    { label: 'Master Box (45×35×30)', l: 45, w: 35, h: 30 },
+    { label: 'Heavy Carton (60×45×40)', l: 60, w: 45, h: 40 },
+    { label: 'Wooden Crate (80×60×60)', l: 80, w: 60, h: 60 },
+    { label: 'Industrial Pallet (120×80×90)', l: 120, w: 80, h: 90 }
+  ];
 
   // Route telemetry details
   const getRouteDetails = () => {
@@ -181,8 +190,8 @@ export default function RatesPage() {
             </div>
           </div>
 
-          {/* Form Controls Grid */}
-          <div className="grid grid-cols-4 gap-5" style={{ marginBottom: '2rem' }}>
+          {/* Form Controls Grid (Dimensions removed from above) */}
+          <div className="grid grid-cols-3 gap-5" style={{ marginBottom: '2rem' }}>
             {/* Origin */}
             <div className="input-group">
               <label className="input-label">
@@ -231,18 +240,29 @@ export default function RatesPage() {
               </select>
             </div>
 
-            {/* Weight Slider with Presets */}
-            <div className="input-group" style={{ gridColumn: 'span 1' }}>
+            {/* Weight Slider with Presets & Category Pill */}
+            <div className="input-group">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <label className="input-label" style={{ margin: 0 }}>Actual Gross Weight</label>
-                <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--brand-orange)', fontFamily: 'var(--font-mono)' }}>
-                  {weightKg} KG
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  {isBulk ? (
+                    <span className="badge badge-orange" style={{ fontSize: '0.68rem', padding: '0.15rem 0.45rem' }}>
+                      📦 Bulk Cargo (10+ KG)
+                    </span>
+                  ) : (
+                    <span className="badge badge-emerald" style={{ fontSize: '0.68rem', padding: '0.15rem 0.45rem' }}>
+                      ⚡ Express Parcel (&lt; 10 KG)
+                    </span>
+                  )}
+                  <span style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--brand-orange)', fontFamily: 'var(--font-mono)' }}>
+                    {weightKg} KG
+                  </span>
+                </div>
               </div>
               <input
                 type="range"
                 min="0.5"
-                max="50"
+                max="60"
                 step="0.5"
                 value={weightKg}
                 onChange={(e) => setWeightKg(parseFloat(e.target.value) || 0.5)}
@@ -262,52 +282,13 @@ export default function RatesPage() {
                       padding: '0.2rem 0.5rem',
                       background: weightKg === preset ? 'var(--brand-orange)' : 'rgba(255, 255, 255, 0.06)',
                       color: weightKg === preset ? '#ffffff' : 'var(--text-secondary)',
-                      border: '1px solid var(--border-subtle)'
+                      border: '1px solid var(--border-subtle)',
+                      fontWeight: preset >= 10 ? 700 : 400
                     }}
                   >
-                    {preset}kg
+                    {preset}kg {preset >= 10 ? '📦' : ''}
                   </button>
                 ))}
-              </div>
-            </div>
-
-            {/* Dimensions */}
-            <div className="input-group">
-              <label className="input-label">Dimensions (L &times; W &times; H cm)</label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.35rem' }}>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    type="number"
-                    placeholder="L"
-                    value={lengthCm}
-                    onChange={(e) => setLengthCm(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="input-field"
-                    style={{ textAlign: 'center', padding: '0.75rem 0.2rem', fontFamily: 'var(--font-mono)' }}
-                  />
-                  <span style={{ position: 'absolute', right: '4px', top: '2px', fontSize: '0.65rem', color: 'var(--text-muted)' }}>cm</span>
-                </div>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    type="number"
-                    placeholder="W"
-                    value={widthCm}
-                    onChange={(e) => setWidthCm(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="input-field"
-                    style={{ textAlign: 'center', padding: '0.75rem 0.2rem', fontFamily: 'var(--font-mono)' }}
-                  />
-                  <span style={{ position: 'absolute', right: '4px', top: '2px', fontSize: '0.65rem', color: 'var(--text-muted)' }}>cm</span>
-                </div>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    type="number"
-                    placeholder="H"
-                    value={heightCm}
-                    onChange={(e) => setHeightCm(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="input-field"
-                    style={{ textAlign: 'center', padding: '0.75rem 0.2rem', fontFamily: 'var(--font-mono)' }}
-                  />
-                  <span style={{ position: 'absolute', right: '4px', top: '2px', fontSize: '0.65rem', color: 'var(--text-muted)' }}>cm</span>
-                </div>
               </div>
             </div>
           </div>
@@ -356,10 +337,206 @@ export default function RatesPage() {
                 {chargeableWeight} <span style={{ fontSize: '0.85rem', color: 'var(--brand-orange)' }}>KG</span>
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Volumetric: {volumetricWeight.toFixed(2)} KG &bull; Actual: {weightKg} KG
+                {isBulk ? (
+                  <span>Volumetric: {volumetricWeight.toFixed(1)} KG &bull; Actual: {weightKg} KG</span>
+                ) : (
+                  <span>Standard Express Tariff &bull; Flat Actual Weight</span>
+                )}
               </div>
             </div>
           </div>
+
+          {/* ========================================================
+              CONDITIONAL VIEW 1: BULK SHIPMENT SECTION (10 KG+)
+              Includes Dimensions, Presets, and Volumetric Analyzer
+              ======================================================== */}
+          {isBulk ? (
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(255, 102, 0, 0.07) 0%, rgba(13, 20, 36, 0.85) 100%)',
+              border: '1px solid rgba(255, 102, 0, 0.35)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '1.75rem',
+              marginBottom: '2rem',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35)'
+            }}>
+              {/* Bulk Section Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <div className="badge badge-orange" style={{ marginBottom: '0.4rem', fontSize: '0.72rem' }}>
+                    <Boxes size={13} />
+                    <span>BULK SHIPMENT &bull; QUALIFIED FOR HEAVY FREIGHT RATES ({weightKg} KG)</span>
+                  </div>
+                  <h3 style={{ fontSize: '1.35rem', margin: 0, color: '#ffffff', fontWeight: 800 }}>
+                    Bulk Shipment Dimensional Freight Engine
+                  </h3>
+                  <p style={{ color: 'var(--text-secondary)', margin: '0.25rem 0 0 0', fontSize: '0.88rem' }}>
+                    Shipments 10 KG+ qualify for wholesale per-KG rates (Rs. 45/kg). Enter package dimensions to calculate IATA volumetric displacement.
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  {bulkDimensionPresets.map((bp, bIdx) => (
+                    <button
+                      key={bIdx}
+                      type="button"
+                      onClick={() => {
+                        setLengthCm(bp.l);
+                        setWidthCm(bp.w);
+                        setHeightCm(bp.h);
+                      }}
+                      className="badge badge-subtle"
+                      style={{
+                        cursor: 'pointer',
+                        fontSize: '0.72rem',
+                        padding: '0.35rem 0.65rem',
+                        border: (lengthCm === bp.l && widthCm === bp.w && heightCm === bp.h) ? '1px solid var(--brand-orange)' : '1px solid var(--border-subtle)',
+                        background: (lengthCm === bp.l && widthCm === bp.w && heightCm === bp.h) ? 'rgba(255, 102, 0, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                        color: (lengthCm === bp.l && widthCm === bp.w && heightCm === bp.h) ? 'var(--brand-orange)' : 'var(--text-secondary)'
+                      }}
+                    >
+                      {bp.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Dimensions Input & Volumetric Simulator Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.5rem', alignItems: 'center' }} className="bulk-calc-grid">
+                {/* Inputs for Dimensions */}
+                <div>
+                  <label className="input-label" style={{ marginBottom: '0.5rem' }}>
+                    <span>Package / Crate Dimensions (L &times; W &times; H cm)</span>
+                    <span style={{ color: 'var(--brand-orange)', fontSize: '0.75rem' }}>Standard Formula: L&times;W&times;H / 5000</span>
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.65rem' }}>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="number"
+                        placeholder="Length"
+                        value={lengthCm}
+                        onChange={(e) => setLengthCm(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="input-field"
+                        style={{ textAlign: 'center', padding: '0.75rem 1.75rem 0.75rem 0.5rem', fontFamily: 'var(--font-mono)', fontWeight: 700 }}
+                      />
+                      <span style={{ position: 'absolute', right: '8px', top: '10px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>L cm</span>
+                    </div>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="number"
+                        placeholder="Width"
+                        value={widthCm}
+                        onChange={(e) => setWidthCm(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="input-field"
+                        style={{ textAlign: 'center', padding: '0.75rem 1.75rem 0.75rem 0.5rem', fontFamily: 'var(--font-mono)', fontWeight: 700 }}
+                      />
+                      <span style={{ position: 'absolute', right: '8px', top: '10px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>W cm</span>
+                    </div>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="number"
+                        placeholder="Height"
+                        value={heightCm}
+                        onChange={(e) => setHeightCm(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="input-field"
+                        style={{ textAlign: 'center', padding: '0.75rem 1.75rem 0.75rem 0.5rem', fontFamily: 'var(--font-mono)', fontWeight: 700 }}
+                      />
+                      <span style={{ position: 'absolute', right: '8px', top: '10px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>H cm</span>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    <span>&bull; Volume: {((lengthCm * widthCm * heightCm) / 1000).toFixed(1)} Liters</span>
+                    <span>&bull; Hydraulic Tailgate Pickup Available</span>
+                    <span>&bull; Shrink-Wrap Weatherproof Buffer</span>
+                  </div>
+                </div>
+
+                {/* Volumetric Weight vs Actual Comparison Card */}
+                <div style={{
+                  background: 'rgba(10, 16, 30, 0.85)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '1.1rem 1.25rem'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', fontSize: '0.78rem' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Actual Weight:</span>
+                    <strong style={{ fontFamily: 'var(--font-mono)', color: '#ffffff' }}>{weightKg} KG</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem', fontSize: '0.78rem' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>IATA Volumetric Weight:</span>
+                    <strong style={{ fontFamily: 'var(--font-mono)', color: 'var(--brand-cyan)' }}>{volumetricWeight.toFixed(1)} KG</strong>
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                    paddingTop: '0.65rem'
+                  }}>
+                    <div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>FINAL BILLABLE WEIGHT</div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--brand-orange)', fontFamily: 'var(--font-mono)' }}>
+                        {chargeableWeight} KG
+                      </div>
+                    </div>
+                    <div>
+                      {volumetricWeight > weightKg ? (
+                        <span className="badge badge-amber" style={{ fontSize: '0.68rem' }}>
+                          Volumetric Applied (Bulky)
+                        </span>
+                      ) : (
+                        <span className="badge badge-emerald" style={{ fontSize: '0.68rem' }}>
+                          Actual Weight Applied (Dense)
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* ========================================================
+               CONDITIONAL VIEW 2: EXPRESS DELIVERY BANNER (< 10 KG)
+               No Dimensions Required • Express Delivery to Destination
+               ======================================================== */
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(13, 20, 36, 0.85) 100%)',
+              border: '1px solid rgba(6, 182, 212, 0.3)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '1.25rem 1.5rem',
+              marginBottom: '2rem',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '1rem'
+            }}>
+              <div>
+                <div className="badge badge-cyan" style={{ marginBottom: '0.35rem', fontSize: '0.72rem' }}>
+                  <Zap size={13} />
+                  <span>EXPRESS PARCEL DELIVERY &bull; DESTINATION: {destCity.toUpperCase()}</span>
+                </div>
+                <h3 style={{ fontSize: '1.2rem', margin: 0, color: '#ffffff', fontWeight: 800 }}>
+                  Express Doorstep Delivery for {destCity} ({weightKg} KG)
+                </h3>
+                <p style={{ color: 'var(--text-secondary)', margin: '0.2rem 0 0 0', fontSize: '0.85rem' }}>
+                  Standard express parcels under 10 KG are billed strictly on flat actual weight with zero dimensional penalty.
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Need bulk freight?</span>
+                <button
+                  type="button"
+                  onClick={() => setWeightKg(10)}
+                  className="btn btn-secondary btn-sm"
+                  style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem', borderColor: 'rgba(255, 102, 0, 0.4)', color: 'var(--brand-orange)' }}
+                >
+                  <Boxes size={13} />
+                  <span>Switch to 10 KG+ Bulk Mode</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Rate Cards Grid */}
           <div className="grid grid-cols-4 gap-5">
@@ -789,6 +966,9 @@ export default function RatesPage() {
             text-align: left !important;
           }
           .cod-estimator-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .bulk-calc-grid {
             grid-template-columns: 1fr !important;
           }
         }
