@@ -16,7 +16,8 @@ import {
   X,
   ExternalLink,
   Cpu,
-  Calculator
+  Calculator,
+  Settings as SettingsIcon
 } from 'lucide-react';
 import { getCurrentUser, logoutUser, User } from '../../lib/auth';
 
@@ -196,7 +197,7 @@ export default function MobileBottomNav() {
               </button>
             </div>
 
-            {/* Quick Links */}
+            {/* Quick Links: Strictly Tools and Settings (No Dashboard) */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
               <Link
                 href={currentUser.role === 'admin' ? '/admin' : '/merchant'}
@@ -205,25 +206,16 @@ export default function MobileBottomNav() {
                 style={{ justifyContent: 'flex-start', padding: '0.65rem 0.9rem' }}
               >
                 {currentUser.role === 'admin' ? <Shield size={16} color="var(--brand-orange)" /> : <Building size={16} color="var(--brand-cyan)" />}
-                <span>{currentUser.role === 'admin' ? 'Command HQ Admin Portal' : 'Merchant Consignor Portal'}</span>
+                <span>{currentUser.role === 'admin' ? 'Admin Tools' : 'Merchant Tools'}</span>
               </Link>
               <Link
-                href="/dashboard"
+                href={currentUser.role === 'admin' ? '/admin?section=settings' : '/merchant?tab=profile_api'}
                 onClick={() => setShowAccountSheet(false)}
                 className="btn btn-secondary btn-sm"
                 style={{ justifyContent: 'flex-start', padding: '0.65rem 0.9rem' }}
               >
-                <LayoutDashboard size={16} color="var(--brand-orange)" />
-                <span>Executive Operations Dashboard</span>
-              </Link>
-              <Link
-                href="/bookings"
-                onClick={() => setShowAccountSheet(false)}
-                className="btn btn-secondary btn-sm"
-                style={{ justifyContent: 'flex-start', padding: '0.65rem 0.9rem' }}
-              >
-                <Boxes size={16} color="var(--brand-cyan)" />
-                <span>All Bookings & Consignments</span>
+                <SettingsIcon size={16} color="#94a3b8" />
+                <span>Settings</span>
               </Link>
             </div>
 

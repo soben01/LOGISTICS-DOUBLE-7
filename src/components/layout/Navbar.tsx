@@ -12,13 +12,17 @@ import {
   Truck,
   ShieldCheck,
   Building,
-  Cpu
+  Cpu,
+  Settings as SettingsIcon,
+  ChevronDown
 } from 'lucide-react';
 import { getCurrentUser, logoutUser, User } from '../../lib/auth';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -36,9 +40,20 @@ export default function Navbar() {
     };
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setAccountDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleLogout = () => {
     logoutUser();
     setCurrentUser(null);
+    setAccountDropdownOpen(false);
     setMobileMenuOpen(false);
     router.push('/');
   };
@@ -157,99 +172,259 @@ export default function Navbar() {
         }}>
           {currentUser ? (
             <div
-              className="nav-account-capsule"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                borderRadius: '30px',
-                padding: '3px 4px 3px 10px',
-                gap: '0.45rem',
-              }}
+              ref={dropdownRef}
+              className="nav-account-capsule-wrapper"
+              style={{ position: 'relative' }}
             >
-              {/* Profile Link (Desktop) */}
-              <Link
-                href={currentUser.role === 'admin' ? '/admin' : '/merchant'}
-                className="nav-user-desktop"
-                title={currentUser.role === 'admin' ? 'Open Admin Portal' : 'Open Merchant Portal'}
-                style={{
-                  alignItems: 'center',
-                  gap: '0.45rem',
-                  textDecoration: 'none',
-                  color: '#ffffff',
-                  fontSize: '0.84rem',
-                  fontWeight: 600,
-                }}
-              >
-                {currentUser.role === 'admin' ? (
-                  <ShieldCheck size={15} color="var(--brand-orange)" />
-                ) : (
-                  <Building size={15} color="var(--brand-cyan)" />
-                )}
-                <span>{currentUser.name.split(' ')[0]}</span>
-                <span
-                  className={currentUser.role === 'admin' ? 'badge badge-orange' : 'badge badge-cyan'}
-                  style={{ fontSize: '0.6rem', padding: '0.08rem 0.4rem' }}
-                >
-                  {currentUser.role === 'admin' ? 'Admin' : 'Merchant'}
-                </span>
-              </Link>
-
-              {/* Profile Link (Mobile Compact) */}
-              <Link
-                href={currentUser.role === 'admin' ? '/admin' : '/merchant'}
-                className="nav-user-mobile"
-                title={currentUser.role === 'admin' ? 'Open Admin Portal' : 'Open Merchant Portal'}
-                style={{
-                  alignItems: 'center',
-                  gap: '0.35rem',
-                  textDecoration: 'none',
-                  color: '#ffffff',
-                  fontSize: '0.78rem',
-                  fontWeight: 700,
-                }}
-              >
-                {currentUser.role === 'admin' ? (
-                  <ShieldCheck size={14} color="var(--brand-orange)" />
-                ) : (
-                  <Building size={14} color="var(--brand-cyan)" />
-                )}
-                <span>{currentUser.role === 'admin' ? 'Admin' : currentUser.name.split(' ')[0]}</span>
-              </Link>
-
-              {/* Subtle Divider */}
               <div
+                className="nav-account-capsule"
                 style={{
-                  width: '1px',
-                  height: '16px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                }}
-              />
-
-              {/* Sign Out Icon cleanly placed on the RIGHT SIDE of profile link / account section */}
-              <button
-                type="button"
-                onClick={handleLogout}
-                title="Sign Out (Log Out)"
-                style={{
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '26px',
-                  height: '26px',
-                  borderRadius: '50%',
-                  border: 'none',
-                  background: 'rgba(239, 68, 68, 0.12)',
-                  color: '#f87171',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  flexShrink: 0,
-                  padding: 0,
+                  background: accountDropdownOpen ? 'rgba(255, 255, 255, 0.09)' : 'rgba(255, 255, 255, 0.05)',
+                  border: accountDropdownOpen ? '1px solid rgba(255, 255, 255, 0.25)' : '1px solid rgba(255, 255, 255, 0.12)',
+                  borderRadius: '30px',
+                  padding: '3px 4px 3px 10px',
+                  gap: '0.45rem',
+                  userSelect: 'none',
+                  transition: 'all var(--transition-fast)',
                 }}
               >
-                <LogOut size={13} />
-              </button>
+                {/* Profile Trigger (Desktop) */}
+                <button
+                  type="button"
+                  onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
+                  className="nav-user-desktop"
+                  title="Account Menu"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.45rem',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#ffffff',
+                    fontSize: '0.84rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    padding: 0,
+                  }}
+                >
+                  {currentUser.role === 'admin' ? (
+                    <ShieldCheck size={15} color="var(--brand-orange)" />
+                  ) : (
+                    <Building size={15} color="var(--brand-cyan)" />
+                  )}
+                  <span>{currentUser.name.split(' ')[0]}</span>
+                  <span
+                    className={currentUser.role === 'admin' ? 'badge badge-orange' : 'badge badge-cyan'}
+                    style={{ fontSize: '0.6rem', padding: '0.08rem 0.4rem' }}
+                  >
+                    {currentUser.role === 'admin' ? 'Admin' : 'Merchant'}
+                  </span>
+                  <ChevronDown
+                    size={13}
+                    style={{
+                      transform: accountDropdownOpen ? 'rotate(180deg)' : 'none',
+                      transition: 'transform 0.18s ease',
+                      opacity: 0.75,
+                      marginLeft: '-2px',
+                    }}
+                  />
+                </button>
+
+                {/* Profile Trigger (Mobile Compact) */}
+                <button
+                  type="button"
+                  onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
+                  className="nav-user-mobile"
+                  title="Account Menu"
+                  style={{
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#ffffff',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    padding: 0,
+                  }}
+                >
+                  {currentUser.role === 'admin' ? (
+                    <ShieldCheck size={14} color="var(--brand-orange)" />
+                  ) : (
+                    <Building size={14} color="var(--brand-cyan)" />
+                  )}
+                  <span>{currentUser.role === 'admin' ? 'Admin' : currentUser.name.split(' ')[0]}</span>
+                  <ChevronDown
+                    size={12}
+                    style={{
+                      transform: accountDropdownOpen ? 'rotate(180deg)' : 'none',
+                      transition: 'transform 0.18s ease',
+                      opacity: 0.75,
+                    }}
+                  />
+                </button>
+
+                {/* Subtle Divider */}
+                <div
+                  style={{
+                    width: '1px',
+                    height: '16px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  }}
+                />
+
+                {/* Direct Sign Out Button */}
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  title="Sign Out (Log Out)"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '26px',
+                    height: '26px',
+                    borderRadius: '50%',
+                    border: 'none',
+                    background: 'rgba(239, 68, 68, 0.12)',
+                    color: '#f87171',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                    flexShrink: 0,
+                    padding: 0,
+                  }}
+                >
+                  <LogOut size={13} />
+                </button>
+              </div>
+
+              {/* Floating Dropdown Menu (Strictly Settings & Tools - NO Dashboard) */}
+              {accountDropdownOpen && (
+                <div
+                  className="nav-account-dropdown"
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 8px)',
+                    right: 0,
+                    minWidth: '240px',
+                    backgroundColor: '#0a0f1d',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '14px',
+                    padding: '0.65rem',
+                    boxShadow: '0 16px 40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06)',
+                    zIndex: 1000,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.3rem',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
+                    animation: 'fadeIn 0.15s ease',
+                  }}
+                >
+                  {/* Dropdown Header */}
+                  <div style={{
+                    padding: '0.55rem 0.75rem',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                    marginBottom: '0.2rem',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#ffffff' }}>
+                        {currentUser.name}
+                      </span>
+                      <span className={currentUser.role === 'admin' ? 'badge badge-orange' : 'badge badge-cyan'} style={{ fontSize: '0.62rem', padding: '0.1rem 0.4rem' }}>
+                        {currentUser.role === 'admin' ? 'Admin' : 'Merchant'}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.73rem', color: 'var(--text-secondary)', marginTop: '0.2rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {currentUser.company || currentUser.email}
+                    </div>
+                  </div>
+
+                  {/* 1. Admin or Merchant Tools */}
+                  <Link
+                    href={currentUser.role === 'admin' ? '/admin' : '/merchant'}
+                    onClick={() => setAccountDropdownOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.65rem',
+                      padding: '0.6rem 0.75rem',
+                      borderRadius: '8px',
+                      color: '#ffffff',
+                      textDecoration: 'none',
+                      fontSize: '0.86rem',
+                      fontWeight: 600,
+                      backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                      transition: 'background var(--transition-fast)',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)')}
+                  >
+                    {currentUser.role === 'admin' ? (
+                      <ShieldCheck size={16} color="var(--brand-orange)" />
+                    ) : (
+                      <Building size={16} color="var(--brand-cyan)" />
+                    )}
+                    <span>{currentUser.role === 'admin' ? 'Admin Tools' : 'Merchant Tools'}</span>
+                  </Link>
+
+                  {/* 2. Settings */}
+                  <Link
+                    href={currentUser.role === 'admin' ? '/admin?section=settings' : '/merchant?tab=profile_api'}
+                    onClick={() => setAccountDropdownOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.65rem',
+                      padding: '0.6rem 0.75rem',
+                      borderRadius: '8px',
+                      color: '#cbd5e1',
+                      textDecoration: 'none',
+                      fontSize: '0.86rem',
+                      fontWeight: 600,
+                      backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                      transition: 'background var(--transition-fast)',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)')}
+                  >
+                    <SettingsIcon size={16} color="#94a3b8" />
+                    <span>Settings</span>
+                  </Link>
+
+                  {/* Subtle Divider */}
+                  <div style={{ height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.08)', margin: '0.2rem 0' }} />
+
+                  {/* 3. Sign Out */}
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.65rem',
+                      padding: '0.6rem 0.75rem',
+                      borderRadius: '8px',
+                      color: '#f87171',
+                      background: 'rgba(239, 68, 68, 0.06)',
+                      border: 'none',
+                      fontSize: '0.86rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      width: '100%',
+                      transition: 'background var(--transition-fast)',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.14)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.06)')}
+                  >
+                    <LogOut size={16} color="#f87171" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="nav-desktop-auth" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
@@ -318,22 +493,41 @@ export default function Navbar() {
             <div style={{
               padding: '0.85rem',
               background: 'var(--bg-surface)',
-              borderRadius: '8px',
+              borderRadius: '10px',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
               display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
+              flexDirection: 'column',
+              gap: '0.65rem',
             }}>
-              <div>
-                <div style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.95rem' }}>{currentUser.name}</div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{currentUser.email}</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.95rem' }}>{currentUser.name}</div>
+                  <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>{currentUser.company || currentUser.email}</div>
+                </div>
+                <span className={currentUser.role === 'admin' ? 'badge badge-orange' : 'badge badge-cyan'} style={{ fontSize: '0.65rem' }}>
+                  {currentUser.role === 'admin' ? 'Admin' : 'Merchant'}
+                </span>
               </div>
-              <Link
-                href={currentUser.role === 'admin' ? '/admin' : '/merchant'}
-                onClick={() => setMobileMenuOpen(false)}
-                className="btn btn-primary btn-sm"
-              >
-                Portal →
-              </Link>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.15rem' }}>
+                <Link
+                  href={currentUser.role === 'admin' ? '/admin' : '/merchant'}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="btn btn-secondary btn-sm"
+                  style={{ justifyContent: 'center', fontSize: '0.8rem', padding: '0.5rem 0.6rem' }}
+                >
+                  {currentUser.role === 'admin' ? <ShieldCheck size={14} color="var(--brand-orange)" /> : <Building size={14} color="var(--brand-cyan)" />}
+                  <span>{currentUser.role === 'admin' ? 'Admin Tools' : 'Merchant Tools'}</span>
+                </Link>
+                <Link
+                  href={currentUser.role === 'admin' ? '/admin?section=settings' : '/merchant?tab=profile_api'}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="btn btn-secondary btn-sm"
+                  style={{ justifyContent: 'center', fontSize: '0.8rem', padding: '0.5rem 0.6rem' }}
+                >
+                  <SettingsIcon size={14} color="#94a3b8" />
+                  <span>Settings</span>
+                </Link>
+              </div>
             </div>
           ) : (
             <div style={{ display: 'flex', gap: '0.75rem' }}>

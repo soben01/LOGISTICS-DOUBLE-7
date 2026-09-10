@@ -374,6 +374,14 @@ export default function AdminControlPanel() {
       .then(res => res.json())
       .then((data: any) => setEdgeStatus(data))
       .catch(() => {});
+
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const secParam = params.get('section');
+      if (secParam && ['overview', 'shipments', 'cod', 'users', 'roles', 'settings', 'edge', 'email', 'workflow', 'audit'].includes(secParam)) {
+        setActiveSection(secParam as AdminSection);
+      }
+    }
   }, [router]);
 
   // Handle Save Settings

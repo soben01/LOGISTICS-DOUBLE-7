@@ -94,6 +94,14 @@ export default function MerchantPortal() {
 
     // STRICT MERCHANT DATA: Exclusively show merchant's own consignments (no leak of other merchants' mock shipments)
     setShipments(merchantShipments);
+
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      if (tabParam && ['consignments', 'cod_settlements', 'ndr_desk', 'staff', 'profile_api', 'workflow'].includes(tabParam)) {
+        setActiveTab(tabParam as MerchantTab);
+      }
+    }
   }, [router]);
 
   const handleLogout = () => {
