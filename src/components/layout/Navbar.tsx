@@ -738,7 +738,7 @@ export default function Navbar() {
         .nav-user-mobile {
           display: none;
         }
-        @media (max-width: 900px) {
+        @media (max-width: 1040px) {
           .nav-desktop-links {
             display: none !important;
           }

@@ -127,7 +127,7 @@ export default function RatesPage() {
   const netMerchantPayout = Math.max(0, simCodAmount - estimatedFreight - codHandlingFee);
 
   return (
-    <div style={{ padding: '3.5rem 0 6rem 0', position: 'relative' }}>
+    <div className="rates-hero-wrapper" style={{ padding: '3.5rem 0 6rem 0', position: 'relative' }}>
       {/* Background Ambient Glow */}
       <div className="hero-ambient-glow" style={{ top: '-100px', opacity: 0.8 }} />
 
@@ -174,7 +174,7 @@ export default function RatesPage() {
         {/* ========================================================
             INTERACTIVE FREIGHT CALCULATOR COCKPIT
             ======================================================== */}
-        <div className="glass-panel" style={{ padding: '2.5rem', marginBottom: '4rem', border: '1px solid rgba(255, 102, 0, 0.25)' }}>
+        <div className="glass-panel rates-cockpit-panel" style={{ padding: '2.5rem', marginBottom: '4rem', border: '1px solid rgba(255, 102, 0, 0.25)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
             <div>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: 'var(--brand-orange)', fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.3rem' }}>
@@ -190,19 +190,21 @@ export default function RatesPage() {
             </div>
           </div>
 
-          {/* Form Controls Grid (Dimensions removed from above) */}
-          <div className="grid grid-cols-3 gap-5" style={{ marginBottom: '2rem' }}>
+          {/* Form Controls Grid - Aligned Container Tops */}
+          <div className="grid grid-cols-3 gap-5" style={{ marginBottom: '2rem', alignItems: 'stretch' }}>
             {/* Origin */}
-            <div className="input-group">
-              <label className="input-label">
-                <span>Origin Gateway Hub</span>
-                <MapPin size={14} color="var(--brand-orange)" />
-              </label>
+            <div className="input-group" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ minHeight: '28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <label className="input-label" style={{ margin: 0, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>Origin Gateway Hub</span>
+                  <MapPin size={14} color="var(--brand-orange)" />
+                </label>
+              </div>
               <select
                 value={originCity}
                 onChange={(e) => setOriginCity(e.target.value)}
                 className="select-field"
-                style={{ fontWeight: 600 }}
+                style={{ fontWeight: 600, height: '44px' }}
               >
                 <option value="Kathmandu">Kathmandu (Central Mega-Hub)</option>
                 <option value="Lalitpur">Lalitpur (Patan Hub)</option>
@@ -213,19 +215,25 @@ export default function RatesPage() {
                 <option value="Chitwan">Chitwan (Bharatpur Logistics Center)</option>
                 <option value="Butwal">Butwal (Lumbini Trade Corridor)</option>
               </select>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: 'auto', paddingTop: '0.4rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                <span className="pulse-dot pulse-dot-orange" style={{ width: '6px', height: '6px' }}></span>
+                <span>Active automated outbound dispatch dock</span>
+              </div>
             </div>
 
             {/* Destination */}
-            <div className="input-group">
-              <label className="input-label">
-                <span>Destination City / District</span>
-                <Navigation size={14} color="var(--brand-cyan)" />
-              </label>
+            <div className="input-group" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ minHeight: '28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <label className="input-label" style={{ margin: 0, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>Destination City / District</span>
+                  <Navigation size={14} color="var(--brand-cyan)" />
+                </label>
+              </div>
               <select
                 value={destCity}
                 onChange={(e) => setDestCity(e.target.value)}
                 className="select-field"
-                style={{ fontWeight: 600 }}
+                style={{ fontWeight: 600, height: '44px' }}
               >
                 <option value="Pokhara">Pokhara (Gandaki Province)</option>
                 <option value="Kathmandu">Kathmandu Valley</option>
@@ -238,11 +246,15 @@ export default function RatesPage() {
                 <option value="Dhangadhi">Dhangadhi (Far-West)</option>
                 <option value="Nationwide">Rest of Nepal (77 Districts)</option>
               </select>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: 'auto', paddingTop: '0.4rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                <span className="pulse-dot pulse-dot-green" style={{ width: '6px', height: '6px' }}></span>
+                <span>Direct linehaul route open &bull; Guaranteed SLA</span>
+              </div>
             </div>
 
             {/* Weight Slider with Presets & Category Pill */}
-            <div className="input-group">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="input-group" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ minHeight: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <label className="input-label" style={{ margin: 0 }}>Actual Gross Weight</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   {isBulk ? (
@@ -267,9 +279,9 @@ export default function RatesPage() {
                 value={weightKg}
                 onChange={(e) => setWeightKg(parseFloat(e.target.value) || 0.5)}
                 className="range-slider"
-                style={{ marginTop: '0.6rem', marginBottom: '0.6rem' }}
+                style={{ marginTop: '0.5rem', marginBottom: '0.5rem', height: '8px' }}
               />
-              <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginTop: 'auto' }}>
                 {weightPresets.map((preset) => (
                   <button
                     key={preset}
@@ -293,7 +305,7 @@ export default function RatesPage() {
             </div>
           </div>
 
-          {/* Route Corridor & Telemetry Status Banner */}
+          {/* Route Corridor & Telemetry Status Banner - Top-Aligned Columns */}
           <div style={{
             background: 'linear-gradient(135deg, rgba(13, 20, 36, 0.95), rgba(18, 27, 48, 0.7))',
             border: '1px solid rgba(255, 102, 0, 0.25)',
@@ -303,7 +315,7 @@ export default function RatesPage() {
             display: 'grid',
             gridTemplateColumns: '1.2fr 1fr 1fr',
             gap: '1.25rem',
-            alignItems: 'center'
+            alignItems: 'flex-start'
           }} className="route-telemetry-strip">
             <div>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -312,7 +324,7 @@ export default function RatesPage() {
               <div style={{ fontSize: '1rem', fontWeight: 700, color: '#ffffff', marginTop: '0.2rem' }}>
                 {originCity} &rarr; {destCity}
               </div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--brand-orange)' }}>
+              <div style={{ fontSize: '0.78rem', color: 'var(--brand-orange)', marginTop: '0.2rem' }}>
                 {routeInfo.corridor}
               </div>
             </div>
@@ -324,7 +336,7 @@ export default function RatesPage() {
               <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--brand-emerald)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem' }}>
                 {routeInfo.distance}
               </div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
                 Guaranteed: {routeInfo.transitHours}
               </div>
             </div>
@@ -336,7 +348,7 @@ export default function RatesPage() {
               <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#ffffff', fontFamily: 'var(--font-mono)', marginTop: '0.1rem' }}>
                 {chargeableWeight} <span style={{ fontSize: '0.85rem', color: 'var(--brand-orange)' }}>KG</span>
               </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
                 {isBulk ? (
                   <span>Volumetric: {volumetricWeight.toFixed(1)} KG &bull; Actual: {weightKg} KG</span>
                 ) : (
@@ -400,50 +412,52 @@ export default function RatesPage() {
                 </div>
               </div>
 
-              {/* Dimensions Input & Volumetric Simulator Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.5rem', alignItems: 'center' }} className="bulk-calc-grid">
+              {/* Dimensions Input & Volumetric Simulator Grid - Aligned Tops */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.5rem', alignItems: 'stretch' }} className="bulk-calc-grid">
                 {/* Inputs for Dimensions */}
-                <div>
-                  <label className="input-label" style={{ marginBottom: '0.5rem' }}>
-                    <span>Package / Crate Dimensions (L &times; W &times; H cm)</span>
-                    <span style={{ color: 'var(--brand-orange)', fontSize: '0.75rem' }}>Standard Formula: L&times;W&times;H / 5000</span>
-                  </label>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.65rem' }}>
-                    <div style={{ position: 'relative' }}>
-                      <input
-                        type="number"
-                        placeholder="Length"
-                        value={lengthCm}
-                        onChange={(e) => setLengthCm(Math.max(1, parseInt(e.target.value) || 1))}
-                        className="input-field"
-                        style={{ textAlign: 'center', padding: '0.75rem 1.75rem 0.75rem 0.5rem', fontFamily: 'var(--font-mono)', fontWeight: 700 }}
-                      />
-                      <span style={{ position: 'absolute', right: '8px', top: '10px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>L cm</span>
-                    </div>
-                    <div style={{ position: 'relative' }}>
-                      <input
-                        type="number"
-                        placeholder="Width"
-                        value={widthCm}
-                        onChange={(e) => setWidthCm(Math.max(1, parseInt(e.target.value) || 1))}
-                        className="input-field"
-                        style={{ textAlign: 'center', padding: '0.75rem 1.75rem 0.75rem 0.5rem', fontFamily: 'var(--font-mono)', fontWeight: 700 }}
-                      />
-                      <span style={{ position: 'absolute', right: '8px', top: '10px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>W cm</span>
-                    </div>
-                    <div style={{ position: 'relative' }}>
-                      <input
-                        type="number"
-                        placeholder="Height"
-                        value={heightCm}
-                        onChange={(e) => setHeightCm(Math.max(1, parseInt(e.target.value) || 1))}
-                        className="input-field"
-                        style={{ textAlign: 'center', padding: '0.75rem 1.75rem 0.75rem 0.5rem', fontFamily: 'var(--font-mono)', fontWeight: 700 }}
-                      />
-                      <span style={{ position: 'absolute', right: '8px', top: '10px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>H cm</span>
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div>
+                    <label className="input-label" style={{ marginBottom: '0.5rem' }}>
+                      <span>Package / Crate Dimensions (L &times; W &times; H cm)</span>
+                      <span style={{ color: 'var(--brand-orange)', fontSize: '0.75rem' }}>Standard Formula: L&times;W&times;H / 5000</span>
+                    </label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.65rem' }}>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type="number"
+                          placeholder="Length"
+                          value={lengthCm}
+                          onChange={(e) => setLengthCm(Math.max(1, parseInt(e.target.value) || 1))}
+                          className="input-field"
+                          style={{ textAlign: 'center', padding: '0.75rem 1.75rem 0.75rem 0.5rem', fontFamily: 'var(--font-mono)', fontWeight: 700 }}
+                        />
+                        <span style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.72rem', color: 'var(--text-muted)', pointerEvents: 'none' }}>L cm</span>
+                      </div>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type="number"
+                          placeholder="Width"
+                          value={widthCm}
+                          onChange={(e) => setWidthCm(Math.max(1, parseInt(e.target.value) || 1))}
+                          className="input-field"
+                          style={{ textAlign: 'center', padding: '0.75rem 1.75rem 0.75rem 0.5rem', fontFamily: 'var(--font-mono)', fontWeight: 700 }}
+                        />
+                        <span style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.72rem', color: 'var(--text-muted)', pointerEvents: 'none' }}>W cm</span>
+                      </div>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type="number"
+                          placeholder="Height"
+                          value={heightCm}
+                          onChange={(e) => setHeightCm(Math.max(1, parseInt(e.target.value) || 1))}
+                          className="input-field"
+                          style={{ textAlign: 'center', padding: '0.75rem 1.75rem 0.75rem 0.5rem', fontFamily: 'var(--font-mono)', fontWeight: 700 }}
+                        />
+                        <span style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.72rem', color: 'var(--text-muted)', pointerEvents: 'none' }}>H cm</span>
+                      </div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
                     <span>&bull; Volume: {((lengthCm * widthCm * heightCm) / 1000).toFixed(1)} Liters</span>
                     <span>&bull; Hydraulic Tailgate Pickup Available</span>
                     <span>&bull; Shrink-Wrap Weatherproof Buffer</span>
@@ -538,63 +552,80 @@ export default function RatesPage() {
             </div>
           )}
 
-          {/* Rate Cards Grid */}
-          <div className="grid grid-cols-4 gap-5">
+          {/* Rate Cards Grid - 100% Flush Top-Aligned Cards */}
+          <div className="grid grid-cols-4 gap-5" style={{ alignItems: 'stretch' }}>
             {rates.map((rate, idx) => (
               <div
                 key={idx}
-                className={`card ${rate.recommended ? 'glow-card-orange' : ''}`}
+                className={`card card-overflow-visible ${rate.recommended ? 'glow-card-orange' : ''}`}
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
                   position: 'relative',
-                  border: rate.isComingSoon ? '1px dashed rgba(245, 158, 11, 0.45)' : undefined,
-                  background: rate.isComingSoon ? 'rgba(245, 158, 11, 0.03)' : undefined
+                  border: rate.isComingSoon ? '1px dashed rgba(245, 158, 11, 0.45)' : (rate.recommended ? '1px solid rgba(255, 102, 0, 0.5)' : undefined),
+                  background: rate.isComingSoon ? 'rgba(245, 158, 11, 0.03)' : undefined,
+                  padding: '1.5rem',
+                  height: '100%'
                 }}
               >
-                {rate.recommended && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-11px',
-                    right: '16px',
-                    background: 'linear-gradient(135deg, #ff6600, #ea580c)',
-                    color: '#ffffff',
-                    fontSize: '0.68rem',
-                    fontWeight: 800,
-                    padding: '0.25rem 0.65rem',
-                    borderRadius: '12px',
-                    letterSpacing: '0.05em',
-                    boxShadow: '0 2px 10px rgba(255, 102, 0, 0.4)'
-                  }}>
-                    MOST POPULAR &bull; 100% SLA
+                {/* Top Badging & Service Header Strip */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '0.85rem',
+                  minHeight: '26px',
+                  gap: '0.5rem'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+                      SERVICE: {rate.serviceCode}
+                    </span>
+                    {rate.recommended && (
+                      <span style={{
+                        background: 'linear-gradient(135deg, #ff6600, #ea580c)',
+                        color: '#ffffff',
+                        fontSize: '0.64rem',
+                        fontWeight: 800,
+                        padding: '0.2rem 0.55rem',
+                        borderRadius: '12px',
+                        letterSpacing: '0.04em',
+                        boxShadow: '0 2px 8px rgba(255, 102, 0, 0.35)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.25rem',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        <Sparkles size={11} />
+                        POPULAR &bull; 100% SLA
+                      </span>
+                    )}
+                    {rate.isComingSoon && (
+                      <span style={{
+                        background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                        color: '#000000',
+                        fontSize: '0.64rem',
+                        fontWeight: 800,
+                        padding: '0.2rem 0.55rem',
+                        borderRadius: '12px',
+                        letterSpacing: '0.04em',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.25rem',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        <Clock size={11} />
+                        LAUNCH Q4 2026
+                      </span>
+                    )}
                   </div>
-                )}
 
-                {rate.isComingSoon && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-11px',
-                    right: '16px',
-                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                    color: '#000000',
-                    fontSize: '0.68rem',
-                    fontWeight: 800,
-                    padding: '0.25rem 0.65rem',
-                    borderRadius: '12px',
-                    letterSpacing: '0.05em'
-                  }}>
-                    COMING SOON &bull; Q4 2026
+                  <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                    {rate.serviceCode === 'EXP' && <Truck size={19} color="var(--brand-orange)" />}
+                    {rate.serviceCode === 'CARGO' && <Boxes size={19} color="var(--brand-cyan)" />}
+                    {rate.serviceCode === 'RUSH' && <Zap size={19} color="var(--brand-emerald)" />}
+                    {rate.serviceCode === 'INTL' && <Globe2 size={19} color="var(--brand-amber)" />}
                   </div>
-                )}
-
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
-                    SERVICE: {rate.serviceCode}
-                  </span>
-                  {rate.serviceCode === 'EXP' && <Truck size={18} color="var(--brand-orange)" />}
-                  {rate.serviceCode === 'CARGO' && <Boxes size={18} color="var(--brand-cyan)" />}
-                  {rate.serviceCode === 'RUSH' && <Zap size={18} color="var(--brand-emerald)" />}
-                  {rate.serviceCode === 'INTL' && <Globe2 size={18} color="var(--brand-amber)" />}
                 </div>
 
                 <h3 style={{ fontSize: '1.2rem', marginBottom: '0.75rem' }}>{rate.serviceName}</h3>
@@ -667,7 +698,7 @@ export default function RatesPage() {
           background: 'radial-gradient(circle at left, rgba(16, 185, 129, 0.08) 0%, rgba(11, 17, 32, 0.95) 70%)',
           border: '1px solid rgba(16, 185, 129, 0.3)'
         }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: '2.5rem', alignItems: 'center' }} className="cod-estimator-grid">
+          <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: '2.5rem', alignItems: 'stretch' }} className="cod-estimator-grid">
             <div>
               <div className="badge badge-emerald" style={{ marginBottom: '0.75rem' }}>
                 <Banknote size={14} />
@@ -957,19 +988,39 @@ export default function RatesPage() {
       </div>
 
       <style jsx>{`
-        @media (max-width: 1040px) {
+        @media (max-width: 1080px) {
           .route-telemetry-strip {
             grid-template-columns: 1fr !important;
-            gap: 1rem !important;
+            gap: 1.25rem !important;
           }
           .weight-calc-col {
             text-align: left !important;
           }
           .cod-estimator-grid {
             grid-template-columns: 1fr !important;
+            gap: 2rem !important;
           }
           .bulk-calc-grid {
             grid-template-columns: 1fr !important;
+            gap: 1.5rem !important;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .rates-cockpit-panel {
+            padding: 1.5rem !important;
+            margin-bottom: 2.5rem !important;
+          }
+        }
+
+        /* Optimization for landscape mode on 2412x1080 smartphone screens & compact heights */
+        @media (max-height: 540px) {
+          .rates-hero-wrapper {
+            padding: 1.5rem 0 3.5rem 0 !important;
+          }
+          .rates-cockpit-panel {
+            padding: 1.5rem !important;
+            margin-bottom: 2rem !important;
           }
         }
       `}</style>
