@@ -422,32 +422,50 @@ function TrackContent() {
                     return defaultTimes[idx] || 'Projected';
                   };
 
+                  const progressTrackWidth = activeWorkflow.length > 1
+                    ? Math.min(100, Math.max(0, (currentIdx / (activeWorkflow.length - 1)) * 100))
+                    : 0;
+
                   return (
-                    <div style={{
-                      background: 'rgba(9, 13, 24, 0.85)',
-                      borderRadius: 'var(--radius-md)',
-                      padding: '1.4rem 1.6rem',
-                      border: '1px solid var(--border-subtle)',
-                      marginBottom: '1.75rem',
-                      overflowX: 'auto',
-                      boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-                    }}>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span className="pulse-dot pulse-dot-orange" style={{ width: 6, height: 6 }} />
-                          <span style={{ fontWeight: 700, color: '#e2e8f0' }}>DISPATCH PROGRESSION STATUS</span>
+                    <div className="route-progress-container" style={{ overflowX: 'auto' }}>
+                      {/* Top Header Bar: Clean Enterprise Nomenclature */}
+                      <div style={{
+                        fontSize: '0.74rem',
+                        color: 'var(--text-muted)',
+                        marginBottom: '0.9rem',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '0.5rem'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+                          <span className="pulse-dot pulse-dot-orange" style={{ width: 7, height: 7 }} />
+                          <span style={{ fontWeight: 800, color: '#f1f5f9', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: '0.74rem' }}>
+                            Consignment Dispatch Lifecycle
+                          </span>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                          <span className="badge badge-orange" style={{ fontSize: '0.66rem', padding: '0.15rem 0.5rem', fontFamily: 'var(--font-mono)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+                          <span className="badge badge-orange" style={{ fontSize: '0.66rem', padding: '0.15rem 0.55rem', fontFamily: 'var(--font-mono)' }}>
                             {percentComplete}% COMPLETED
                           </span>
-                          <span style={{ color: 'var(--brand-orange)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
-                            STAGE {currentIdx + 1} OF {activeWorkflow.length} &bull; {progressInfo?.currentStage?.label || currentShipment.status}
+                          <span style={{ color: '#e2e8f0', fontFamily: 'var(--font-mono)', fontSize: '0.72rem', fontWeight: 600 }}>
+                            STAGE <strong style={{ color: 'var(--brand-orange)' }}>{currentIdx + 1}</strong> OF {activeWorkflow.length} &bull; <strong style={{ color: '#ffffff' }}>{progressInfo?.currentStage?.label || currentShipment.status}</strong>
                           </span>
                         </div>
                       </div>
 
-                      <div className="route-progress-bar" style={{ minWidth: `${Math.max(500, activeWorkflow.length * 90)}px`, margin: '1rem 0 0.5rem 0' }}>
+                      {/* Continuous Master Stepper Progress Track */}
+                      <div className="route-progress-bar" style={{ minWidth: `${Math.max(540, activeWorkflow.length * 95)}px` }}>
+                        {/* Background Rail & Glowing Fill Segment */}
+                        <div className="route-progress-track">
+                          <div
+                            className="route-progress-fill"
+                            style={{ width: `${progressTrackWidth}%` }}
+                          />
+                        </div>
+
+                        {/* Individual Stage Nodes */}
                         {activeWorkflow.map((stage, idx) => {
                           const isPast = idx < currentIdx;
                           const isCurrent = idx === currentIdx;
@@ -459,48 +477,70 @@ function TrackContent() {
                             >
                               <div className="route-step-node">
                                 {isPast ? (
-                                  <Check size={14} />
+                                  <Check size={13} strokeWidth={2.5} />
                                 ) : isCurrent ? (
-                                  <Truck size={14} className="animate-pulse" />
+                                  <Truck size={15} />
                                 ) : (
-                                  idx + 1
+                                  <span>{idx + 1}</span>
                                 )}
                               </div>
 
-                              <span style={{
-                                fontSize: '0.72rem',
-                                color: isCurrent ? 'var(--brand-orange)' : isPast ? '#ffffff' : 'var(--text-muted)',
-                                marginTop: '0.45rem',
-                                fontWeight: isCurrent ? 800 : isPast ? 700 : 500,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                gap: '2px'
-                              }}>
-                                <span>{stage.label}</span>
-                                <span className="route-step-time">
-                                  {getStageTime(idx)}
-                                </span>
-                                {isCurrent && (
-                                  <span style={{
-                                    fontSize: '0.58rem',
-                                    background: 'var(--brand-orange)',
-                                    color: '#ffffff',
-                                    padding: '1px 5px',
-                                    borderRadius: '10px',
-                                    fontWeight: 800,
-                                    letterSpacing: '0.5px',
-                                    marginTop: '2px'
-                                  }}>
-                                    CURRENT
-                                  </span>
-                                )}
-                              </span>
+                              <div className="route-step-label">
+                                {stage.label}
+                              </div>
 
-                              {idx < activeWorkflow.length - 1 && <div className="route-step-line" />}
+                              <div className="route-step-time">
+                                {getStageTime(idx)}
+                              </div>
+
+                              {isCurrent && (
+                                <span className="badge badge-orange" style={{
+                                  fontSize: '0.55rem',
+                                  padding: '1px 5px',
+                                  fontWeight: 900,
+                                  letterSpacing: '0.4px',
+                                  marginTop: '3px',
+                                  textTransform: 'uppercase'
+                                }}>
+                                  ACTIVE
+                                </span>
+                              )}
                             </div>
                           );
                         })}
+                      </div>
+
+                      {/* Professional Phase Lifecycle Breakdown */}
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        paddingTop: '0.85rem',
+                        marginTop: '0.6rem',
+                        borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                        fontSize: '0.68rem',
+                        color: 'var(--text-muted)',
+                        flexWrap: 'wrap',
+                        gap: '0.5rem'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: currentIdx >= 0 ? '#10b981' : 'rgba(255,255,255,0.2)' }} />
+                          <span style={{ color: currentIdx < 4 ? '#e2e8f0' : undefined }}>
+                            Phase 1: Inward &amp; Origin Processing (1 - 4)
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: currentIdx >= 4 ? 'var(--brand-orange)' : 'rgba(255,255,255,0.2)' }} />
+                          <span style={{ color: currentIdx === 4 ? '#ffb380' : undefined, fontWeight: currentIdx === 4 ? 700 : 500 }}>
+                            Phase 2: Highway Linehaul Corridor (5)
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: currentIdx >= 5 ? '#06b6d4' : 'rgba(255,255,255,0.2)' }} />
+                          <span style={{ color: currentIdx >= 5 ? '#e2e8f0' : undefined }}>
+                            Phase 3: Destination Hub &amp; Final Delivery (6 - 8)
+                          </span>
+                        </div>
                       </div>
                     </div>
                   );
