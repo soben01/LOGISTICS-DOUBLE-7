@@ -318,3 +318,66 @@ export function isStepByStepAllowed(currentStatus: string, targetStatus: string,
   return targetInfo.currentStageIndex === currentStageIndex + 1 || targetInfo.currentStageIndex === currentStageIndex;
 }
 
+// --- Failed Delivery & Reattempt Exception Workflow (ChatGPT Section 7) ---
+
+export interface DeliveryAttemptRecord {
+  attemptNumber: number;
+  timestamp: string;
+  reason: string;
+  riderNote?: string;
+  nextAction: 'reattempt' | 'return_to_merchant';
+  nextScheduledDate?: string;
+}
+
+export interface FailedDeliveryEvaluation {
+  attemptCount: number;
+  maxAttempts: number;
+  isMaxAttemptsExceeded: boolean;
+  nextStatus: 'Reattempt Scheduled' | 'Return Initiated (RTO)';
+  statusMessage: string;
+  attemptRecord: DeliveryAttemptRecord;
+}
+
+/**
+ * Evaluates a delivery failure according to the Failed Delivery Graph:
+ * If attempt < maxAttempts -> Reattempt Scheduled
+ * If attempt >= maxAttempts -> Return Initiated (RTO)
+ */
+export function evaluateDeliveryFailure(
+  currentAttemptCount: number,
+  reason: string,
+  maxAllowedAttempts: number = 2,
+  riderNote?: string
+): FailedDeliveryEvaluation {
+  const attemptNumber = currentAttemptCount + 1;
+  const isMaxAttemptsExceeded = attemptNumber >= maxAllowedAttempts;
+
+  const nextAction = isMaxAttemptsExceeded ? 'return_to_merchant' : 'reattempt';
+  const nextStatus = isMaxAttemptsExceeded ? 'Return Initiated (RTO)' : 'Reattempt Scheduled';
+
+  const statusMessage = isMaxAttemptsExceeded
+    ? `Max delivery attempts reached (${attemptNumber}/${maxAllowedAttempts}). Consignment flagged for return to merchant.`
+    : `Delivery attempt ${attemptNumber} of ${maxAllowedAttempts} unsuccessful (${reason}). Reattempt scheduled for next transit cycle.`;
+
+  const attemptRecord: DeliveryAttemptRecord = {
+    attemptNumber,
+    timestamp: new Date().toISOString(),
+    reason,
+    riderNote,
+    nextAction,
+    nextScheduledDate: !isMaxAttemptsExceeded
+      ? new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      : undefined
+  };
+
+  return {
+    attemptCount: attemptNumber,
+    maxAttempts: maxAllowedAttempts,
+    isMaxAttemptsExceeded,
+    nextStatus,
+    statusMessage,
+    attemptRecord
+  };
+}
+
+

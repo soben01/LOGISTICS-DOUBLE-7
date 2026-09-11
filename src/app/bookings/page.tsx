@@ -38,8 +38,10 @@ import {
   getTrackingWorkflow,
   getNextWorkflowStage,
   calculateWorkflowProgress,
-  WorkflowStage
+  WorkflowStage,
+  evaluateDeliveryFailure
 } from '../../lib/workflow';
+import { getWebsiteSettings } from '../../lib/settings';
 
 export default function AllBookingsPage() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -809,6 +811,58 @@ export default function AllBookingsPage() {
                     ) : (
                       <div style={{ fontSize: '0.8rem', color: '#34d399', marginTop: '0.4rem', fontWeight: 600 }}>
                         ✓ Final Terminal Milestone Reached (Delivered).
+                      </div>
+                    )}
+
+                    {/* NDR Failed Delivery Exception Trigger (ChatGPT Section 7) */}
+                    {['Out for Delivery', 'Reattempt Scheduled'].includes(editingShipment.status) && (
+                      <div style={{
+                        marginTop: '0.65rem',
+                        padding: '0.65rem 0.85rem',
+                        background: 'rgba(239, 68, 68, 0.08)',
+                        border: '1px solid rgba(239, 68, 68, 0.25)',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '0.75rem',
+                        flexWrap: 'wrap'
+                      }}>
+                        <div>
+                          <div style={{ fontSize: '0.75rem', color: '#f87171', fontWeight: 700 }}>
+                            ⚠️ Record Delivery Attempt Failure
+                          </div>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                            Attempt #{editingShipment.deliveryAttempts || 1} of {getWebsiteSettings().maxDeliveryAttempts} max
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const conf = getWebsiteSettings();
+                            const reason = conf.failedDeliveryReasons[0] || 'Customer Unavailable';
+                            const result = evaluateDeliveryFailure(
+                              editingShipment.deliveryAttempts || 0,
+                              reason,
+                              conf.maxDeliveryAttempts
+                            );
+                            setNewStatus(result.nextStatus as any);
+                            setNewNote(result.statusMessage);
+                            if (!newLocation) setNewLocation(editingShipment.destination.city);
+                          }}
+                          className="btn btn-sm"
+                          style={{
+                            background: 'rgba(239, 68, 68, 0.2)',
+                            borderColor: '#ef4444',
+                            color: '#f87171',
+                            fontWeight: 700,
+                            padding: '0.35rem 0.75rem',
+                            fontSize: '0.78rem'
+                          }}
+                        >
+                          Trigger Failed Attempt &rarr;
+                        </button>
                       </div>
                     )}
                   </div>

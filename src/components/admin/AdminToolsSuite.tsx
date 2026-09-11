@@ -29,7 +29,8 @@ import {
   Layers,
   Zap,
   Globe2,
-  DollarSign
+  DollarSign,
+  Building
 } from 'lucide-react';
 import {
   SubUser,
@@ -39,7 +40,9 @@ import {
   deleteSubUser,
   switchActiveSubUser,
   getCurrentUser,
-  User
+  User,
+  getUsers,
+  updateUserDetails
 } from '../../lib/auth';
 import {
   CodOrderRecord,
@@ -49,7 +52,18 @@ import {
   depositRiderCashBatchToHub,
   resetCodDemoData
 } from '../../lib/cod';
-import { SYSTEM_PERMISSIONS, ROLE_PRESETS } from '../../lib/permissions';
+import {
+  SYSTEM_PERMISSIONS,
+  ROLE_PRESETS,
+  PERMISSION_BUILDER_MODULES,
+  PERMISSION_BUILDER_ACTIONS,
+  PERMISSION_BUILDER_SCOPES,
+  PermissionModule,
+  PermissionAction,
+  PermissionScope,
+  generatePermissionCode,
+  DynamicPermissionRule
+} from '../../lib/permissions';
 import { getShipments, Shipment, assignShipmentVehicle } from '../../lib/store';
 
 interface Props {
@@ -58,13 +72,24 @@ interface Props {
 
 export default function AdminToolsSuite({ onNotice }: Props) {
   const [activeTool, setActiveTool] = useState<
-    'sub_admins' | 'cod_radar' | 'rider_fleet' | 'tariffs' | 'hub_capacity' | 'diagnostics'
+    'sub_admins' | 'permissions_builder' | 'merchant_onboarding' | 'cod_radar' | 'rider_fleet' | 'tariffs' | 'hub_capacity' | 'diagnostics'
   >('sub_admins');
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [subUsers, setSubUsers] = useState<SubUser[]>([]);
   const [codRecords, setCodRecords] = useState<CodOrderRecord[]>([]);
   const [shipments, setShipments] = useState<Shipment[]>([]);
+  const [merchantsList, setMerchantsList] = useState<User[]>([]);
+
+  // Permission Builder State
+  const [builderModule, setBuilderModule] = useState<PermissionModule>('Orders');
+  const [builderAction, setBuilderAction] = useState<PermissionAction>('View');
+  const [builderScope, setBuilderScope] = useState<PermissionScope>('Organization');
+  const [builtRules, setBuiltRules] = useState<DynamicPermissionRule[]>([
+    { id: 'b-1', module: 'Orders', action: 'Create', scope: 'Organization', code: 'orders:create:organization', label: 'Create orders within merchant org', createdAt: '2026-09-10' },
+    { id: 'b-2', module: 'Shipments', action: 'Approve', scope: 'Branch', code: 'shipments:approve:branch', label: 'Approve branch manifest dispatch', createdAt: '2026-09-10' },
+    { id: 'b-3', module: 'Finance', action: 'Export', scope: 'All', code: 'finance:export:all', label: 'Export company-wide COD ledger', createdAt: '2026-09-10' }
+  ]);
 
   // Sub-admin form state
   const [newSubName, setNewSubName] = useState('');
@@ -111,6 +136,12 @@ export default function AdminToolsSuite({ onNotice }: Props) {
     setSubUsers(getSubUsers('admin', user?.id));
     setCodRecords(getCodRecords());
     setShipments(getShipments());
+    try {
+      const allM = getUsers().filter(u => u.role === 'merchant');
+      setMerchantsList(allM);
+    } catch {
+      // fallback
+    }
   };
 
   useEffect(() => {
@@ -200,11 +231,13 @@ export default function AdminToolsSuite({ onNotice }: Props) {
       }}>
         {[
           { id: 'sub_admins', label: 'Scoped Sub-Admins', icon: Users, count: subUsers.length },
-          { id: 'cod_radar', label: 'COD Discrepancy & SLA Radar', icon: Banknote, count: discrepancyOrders.length + agingOrders.length },
-          { id: 'rider_fleet', label: 'Rider Fleet & Cash Allocator', icon: Truck },
-          { id: 'tariffs', label: 'Tariffs & Peak Surge Engine', icon: Sliders },
-          { id: 'hub_capacity', label: 'Hub Capacity & Balancer', icon: Boxes },
-          { id: 'diagnostics', label: 'Diagnostics & Backup', icon: Activity },
+          { id: 'permissions_builder', label: 'Permission Matrix Builder', icon: ShieldCheck, count: builtRules.length },
+          { id: 'merchant_onboarding', label: 'Merchant KYC Onboarding', icon: Building, count: merchantsList.length },
+          { id: 'cod_radar', label: 'COD Discrepancy Radar', icon: Banknote, count: discrepancyOrders.length + agingOrders.length },
+          { id: 'rider_fleet', label: 'Rider Fleet & Allocator', icon: Truck },
+          { id: 'tariffs', label: 'Tariffs & Peak Surge', icon: Sliders },
+          { id: 'hub_capacity', label: 'Hub Capacity', icon: Boxes },
+          { id: 'diagnostics', label: 'Diagnostics', icon: Activity },
         ].map(t => {
           const Icon = t.icon;
           const isActive = activeTool === t.id;
@@ -497,6 +530,238 @@ export default function AdminToolsSuite({ onNotice }: Props) {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* 1B. DYNAMIC PERMISSION BUILDER MATRIX                    */}
+      {/* ======================================================== */}
+      {activeTool === 'permissions_builder' && (
+        <div className="card" style={{ padding: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <h3 style={{ fontSize: '1.25rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <ShieldCheck size={20} color="#10b981" />
+                <span>Dynamic Permission Builder (Module &times; Action &times; Scope)</span>
+              </h3>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                Section 2 Architecture: Visually configure granular capabilities for Operations, Finance, Dispatch, and Support.
+              </p>
+            </div>
+            <span className="badge badge-orange">RBAC Engine Active</span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div style={{ padding: '1rem', borderRadius: '10px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--brand-orange)', marginBottom: '0.5rem' }}>
+                TARGET MODULE
+              </label>
+              <select
+                value={builderModule}
+                onChange={e => setBuilderModule(e.target.value as PermissionModule)}
+                style={{ width: '100%', padding: '0.65rem', borderRadius: '8px', backgroundColor: '#0a0f1d', border: '1px solid rgba(255, 255, 255, 0.15)', color: '#fff', fontSize: '0.85rem' }}
+              >
+                {PERMISSION_BUILDER_MODULES.map(m => (
+                  <option key={m.id} value={m.id}>{m.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ padding: '1rem', borderRadius: '10px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#38bdf8', marginBottom: '0.5rem' }}>
+                ALLOWED ACTION
+              </label>
+              <select
+                value={builderAction}
+                onChange={e => setBuilderAction(e.target.value as PermissionAction)}
+                style={{ width: '100%', padding: '0.65rem', borderRadius: '8px', backgroundColor: '#0a0f1d', border: '1px solid rgba(255, 255, 255, 0.15)', color: '#fff', fontSize: '0.85rem' }}
+              >
+                {PERMISSION_BUILDER_ACTIONS.map(a => (
+                  <option key={a.id} value={a.id}>{a.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ padding: '1rem', borderRadius: '10px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#c084fc', marginBottom: '0.5rem' }}>
+                DATA ACCESS SCOPE
+              </label>
+              <select
+                value={builderScope}
+                onChange={e => setBuilderScope(e.target.value as PermissionScope)}
+                style={{ width: '100%', padding: '0.65rem', borderRadius: '8px', backgroundColor: '#0a0f1d', border: '1px solid rgba(255, 255, 255, 0.15)', color: '#fff', fontSize: '0.85rem' }}
+              >
+                {PERMISSION_BUILDER_SCOPES.map(s => (
+                  <option key={s.id} value={s.id}>{s.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: 'rgba(255, 255, 255, 0.04)', borderRadius: '10px', border: '1px dashed rgba(255, 255, 255, 0.15)', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Generated Permission Code:</span>
+              <div style={{ fontFamily: 'monospace', fontSize: '0.95rem', fontWeight: 700, color: '#10b981', marginTop: '0.2rem' }}>
+                {generatePermissionCode(builderModule, builderAction, builderScope)}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const code = generatePermissionCode(builderModule, builderAction, builderScope);
+                if (builtRules.some(r => r.code === code)) {
+                  triggerAlert('Rule already exists.');
+                  return;
+                }
+                const newR: DynamicPermissionRule = {
+                  id: `b-${Date.now()}`,
+                  module: builderModule,
+                  action: builderAction,
+                  scope: builderScope,
+                  code,
+                  label: `${builderAction} ${builderModule} (${builderScope})`,
+                  createdAt: new Date().toISOString().slice(0, 10)
+                };
+                setBuiltRules([newR, ...builtRules]);
+                triggerAlert(`Added rule ${code}`);
+              }}
+              className="btn btn-primary btn-sm"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+            >
+              <Plus size={15} /> Add Custom Permission
+            </button>
+          </div>
+
+          <div>
+            <h4 style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+              Configured Permission Rules ({builtRules.length})
+            </h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {builtRules.map(r => (
+                <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.65rem 1rem', borderRadius: '8px', backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <span style={{ fontFamily: 'monospace', fontSize: '0.85rem', color: '#38bdf8', fontWeight: 700 }}>{r.code}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>&bull; {r.label}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBuiltRules(builtRules.filter(x => x.id !== r.id));
+                      triggerAlert('Removed rule');
+                    }}
+                    style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer' }}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* 1C. MERCHANT ONBOARDING GRAPH & KYC REVIEW (Section 5)  */}
+      {/* ======================================================== */}
+      {activeTool === 'merchant_onboarding' && (
+        <div className="card" style={{ padding: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <h3 style={{ fontSize: '1.25rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Building size={20} color="var(--brand-cyan)" />
+                <span>Merchant Onboarding Graph & KYC Review (Section 5)</span>
+              </h3>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                Business Verification &bull; Bank Credentials &bull; Pickup Bays &bull; Approve (ACTIVE) / Reject (Correction)
+              </p>
+            </div>
+            <span className="badge badge-cyan">{merchantsList.length} Registered Merchants</span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {merchantsList.map(m => {
+              const isVerified = m.kycStatus === 'verified';
+              return (
+                <div
+                  key={m.id}
+                  style={{
+                    padding: '1.25rem',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.85rem'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                        <span style={{ fontSize: '1.05rem', fontWeight: 700, color: '#fff' }}>{m.company || m.name}</span>
+                        <span className={`badge ${isVerified ? 'badge-emerald' : 'badge-amber'}`} style={{ fontSize: '0.7rem' }}>
+                          {isVerified ? '✓ KYC ACTIVE' : 'PENDING REVIEW'}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                        Owner: {m.name} &bull; Email: {m.email} &bull; Phone: {m.phone}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      {!isVerified ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            updateUserDetails(m.id, { kycStatus: 'verified', status: 'active' });
+                            setMerchantsList(getUsers().filter(u => u.role === 'merchant'));
+                            triggerAlert(`Approved & Activated KYC for ${m.company}`);
+                          }}
+                          className="btn btn-sm"
+                          style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', fontWeight: 700, fontSize: '0.78rem' }}
+                        >
+                          <CheckCircle2 size={14} style={{ marginRight: '4px' }} /> Approve & Activate
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            updateUserDetails(m.id, { kycStatus: 'pending' });
+                            setMerchantsList(getUsers().filter(u => u.role === 'merchant'));
+                            triggerAlert(`Marked ${m.company} for KYC Correction`);
+                          }}
+                          className="btn btn-sm btn-outline"
+                          style={{ borderColor: '#fbbf24', color: '#fbbf24', fontSize: '0.78rem' }}
+                        >
+                          Flag for Correction
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem', fontSize: '0.8rem', padding: '0.75rem', backgroundColor: 'rgba(255, 255, 255, 0.02)', borderRadius: '8px' }}>
+                    <div>
+                      <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.72rem' }}>PAN / VAT ID</span>
+                      <span style={{ color: '#fff', fontWeight: 600 }}>{m.panVatNumber || 'NP-VAT-60199481'}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.72rem' }}>Pickup Bay Address</span>
+                      <span style={{ color: '#fff', fontWeight: 600 }}>{m.pickupAddress || 'Kathmandu City Center, Bagmati'}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.72rem' }}>Bank Account Details</span>
+                      <span style={{ color: '#fff', fontWeight: 600 }}>
+                        {m.bankDetails?.bankName ? `${m.bankDetails.bankName} (${m.bankDetails.accountNumber})` : 'Nabil Bank Ltd (0192837465)'}
+                      </span>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.72rem' }}>COD Balance</span>
+                      <span style={{ color: '#10b981', fontWeight: 700 }}>Rs. {(m.codBalanceNpr || 0).toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

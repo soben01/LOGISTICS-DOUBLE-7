@@ -233,3 +233,54 @@ export function hasPermission(grantedPermissions: string[] | undefined, permissi
   if (!grantedPermissions) return false;
   return grantedPermissions.includes(permissionId);
 }
+
+// --- Dynamic Permission Builder Matrix (ChatGPT Architecture Section 2) ---
+
+export type PermissionModule = 'Orders' | 'Shipments' | 'Delivery' | 'Finance' | 'Reports' | 'Users' | 'Settings';
+export type PermissionAction = 'View' | 'Create' | 'Edit' | 'Delete' | 'Approve' | 'Assign' | 'Export';
+export type PermissionScope = 'All' | 'Organization' | 'Branch' | 'Warehouse' | 'Territory' | 'Assigned' | 'Own Records';
+
+export interface DynamicPermissionRule {
+  id: string;
+  module: PermissionModule;
+  action: PermissionAction;
+  scope: PermissionScope;
+  code: string; // e.g. "orders:view:organization"
+  label: string;
+  createdAt: string;
+}
+
+export const PERMISSION_BUILDER_MODULES: { id: PermissionModule; label: string; icon: string; description: string }[] = [
+  { id: 'Orders', label: 'Orders Desk', icon: 'Boxes', description: 'Booking generation, order intake, and digital airway bills' },
+  { id: 'Shipments', label: 'Shipments & Linehaul', icon: 'Truck', description: 'Highway trunk movement, container seals, and branch manifests' },
+  { id: 'Delivery', label: 'Last-Mile Delivery', icon: 'Radio', description: 'Doorstep courier dispatch, POD, and NDR reattempt handling' },
+  { id: 'Finance', label: 'Finance & COD Treasury', icon: 'Banknote', description: 'COD collection, VAT invoices, and merchant payout remittances' },
+  { id: 'Reports', label: 'Reports & Analytics', icon: 'FileText', description: 'Throughput metrics, delivery success SLAs, and operational audits' },
+  { id: 'Users', label: 'Users & Staff Directory', icon: 'Users', description: 'Admin, branch operator, and merchant account provisioning' },
+  { id: 'Settings', label: 'System Settings', icon: 'Sliders', description: 'Platform tariffs, 2FA, API keys, and logistics workflow engine' },
+];
+
+export const PERMISSION_BUILDER_ACTIONS: { id: PermissionAction; label: string; description: string }[] = [
+  { id: 'View', label: 'View / Read', description: 'Read records and inspect status' },
+  { id: 'Create', label: 'Create / Book', description: 'Create new entries and issue documents' },
+  { id: 'Edit', label: 'Edit / Update', description: 'Modify records and amend details' },
+  { id: 'Delete', label: 'Delete / Void', description: 'Remove or cancel entries' },
+  { id: 'Approve', label: 'Approve / Authorize', description: 'Authorize dispatches, refunds, and KYC onboarding' },
+  { id: 'Assign', label: 'Assign / Delegate', description: 'Assign riders, vehicles, and branch cages' },
+  { id: 'Export', label: 'Export / Download', description: 'Export CSV sheets and generate PDF reports' },
+];
+
+export const PERMISSION_BUILDER_SCOPES: { id: PermissionScope; label: string; description: string }[] = [
+  { id: 'All', label: 'All (Platform Master)', description: 'Universal access across entire company and all branches' },
+  { id: 'Organization', label: 'Organization Level', description: 'Scoped strictly within assigned tenant organization' },
+  { id: 'Branch', label: 'Branch Hub', description: 'Scoped strictly to user assigned regional branch' },
+  { id: 'Warehouse', label: 'Warehouse / Sort Bay', description: 'Restricted to origin sorting bays or drop points' },
+  { id: 'Territory', label: 'Territory / Zone', description: 'Restricted to designated municipal delivery zone' },
+  { id: 'Assigned', label: 'Assigned Directly', description: 'Only parcels explicitly assigned to this operator or rider' },
+  { id: 'Own Records', label: 'Own Records Only', description: 'Restricted exclusively to records booked by this user' },
+];
+
+export function generatePermissionCode(module: PermissionModule, action: PermissionAction, scope: PermissionScope): string {
+  return `${module.toLowerCase()}:${action.toLowerCase()}:${scope.toLowerCase().replace(/\s+/g, '_')}`;
+}
+

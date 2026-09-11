@@ -13,6 +13,14 @@ export interface User {
   totalShipments?: number;
   createdAt: string;
   password?: string;
+  kycStatus?: 'verified' | 'pending' | 'rejected';
+  panVatNumber?: string;
+  pickupAddress?: string;
+  bankDetails?: {
+    bankName: string;
+    accountNumber: string;
+    branch: string;
+  };
 }
 
 const USERS_STORAGE_KEY = 'double7_users_prod_v1';
