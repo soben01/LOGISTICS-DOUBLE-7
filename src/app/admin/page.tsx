@@ -212,10 +212,7 @@ export default function AdminControlPanel() {
   });
 
   // COD & Remittance State
-  const [payoutRequests, setPayoutRequests] = useState([
-    { id: 'rem-101', merchantName: 'Himalayan Commerce Pvt Ltd', email: 'sobin@merchant.com', amount: 45200, bank: 'Nabil Bank (A/C: 019283746501)', status: 'Pending Review', requestedAt: 'Today 11:20 NPT' },
-    { id: 'rem-102', merchantName: 'Everest Retail & Cargo Hub', email: 'merchant@double7.com.np', amount: 32400, bank: 'Global IME Bank (A/C: 99102837461)', status: 'Pending Review', requestedAt: 'Today 14:45 NPT' },
-  ]);
+  const [payoutRequests, setPayoutRequests] = useState<Array<{ id: string; merchantName: string; email: string; amount: number; bank: string; status: string; requestedAt: string }>>([]);
 
   // Audit Logs State
   const [auditLogs, setAuditLogs] = useState<AuditEntry[]>(INITIAL_AUDIT_LOGS);

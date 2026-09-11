@@ -23,10 +23,10 @@ export interface User {
   };
 }
 
-const USERS_STORAGE_KEY = 'double7_users_prod_v1';
-const CURRENT_USER_KEY = 'double7_current_user_prod_v1';
+const USERS_STORAGE_KEY = 'double7_users_prod_v2';
+const CURRENT_USER_KEY = 'double7_current_user_prod_v2';
 
-const DEFAULT_USERS: User[] = [
+export const DEFAULT_USERS: User[] = [
   {
     id: 'usr-admin-upreti',
     name: 'Soben Upreti',
@@ -34,92 +34,11 @@ const DEFAULT_USERS: User[] = [
     company: 'Double 7 Logistics Command HQ',
     phone: '+977 1 4411000',
     role: 'admin',
-    subRole: 'Command HQ / Executive Director',
+    subRole: 'Command HQ / Executive Director (Super Admin)',
     status: 'active',
     codBalanceNpr: 0,
     totalShipments: 0,
     createdAt: '2026-09-08',
-  },
-  {
-    id: 'usr-admin-anil',
-    name: 'Anil',
-    email: 'anil@double7.com.np',
-    company: 'Double 7 Logistics Command HQ',
-    phone: '+977 1 4411000',
-    role: 'admin',
-    subRole: 'Command HQ / Operations Admin',
-    status: 'active',
-    codBalanceNpr: 0,
-    totalShipments: 0,
-    createdAt: '2026-09-08',
-  },
-  {
-    id: 'usr-branch-ktm',
-    name: 'Kathmandu Central Hub',
-    email: 'branch.ktm@double7.com.np',
-    company: 'Double 7 Logistics - Kathmandu Mega-Hub (KTM-01)',
-    phone: '+977 1 4411222',
-    role: 'branch',
-    branchCode: 'KTM-01',
-    subRole: 'Kathmandu Hub Branch Controller',
-    status: 'active',
-    codBalanceNpr: 0,
-    totalShipments: 42,
-    createdAt: '2026-09-08',
-  },
-  {
-    id: 'usr-branch-pkr',
-    name: 'Pokhara Gateway Branch',
-    email: 'branch.pkr@double7.com.np',
-    company: 'Double 7 Logistics - Pokhara Regional Sort Hub (Gandaki)',
-    phone: '+977 61 520000',
-    role: 'branch',
-    branchCode: 'PKR-01',
-    subRole: 'Pokhara Branch Controller',
-    status: 'active',
-    codBalanceNpr: 0,
-    totalShipments: 24,
-    createdAt: '2026-09-08',
-  },
-  {
-    id: 'usr-branch-brt',
-    name: 'Biratnagar Eastern Branch',
-    email: 'branch.brt@double7.com.np',
-    company: 'Double 7 Logistics - Biratnagar Hub (Koshi Eastern Corridor)',
-    phone: '+977 21 440000',
-    role: 'branch',
-    branchCode: 'BRT-01',
-    subRole: 'Biratnagar Hub Branch Controller',
-    status: 'active',
-    codBalanceNpr: 0,
-    totalShipments: 18,
-    createdAt: '2026-09-08',
-  },
-  {
-    id: 'usr-admin-dispatch',
-    name: 'Dispatch Command',
-    email: 'dispatch@sobinupreti.com.np',
-    company: 'Double 7 Logistics Command HQ',
-    phone: '+977 1 4411000',
-    role: 'admin',
-    subRole: 'Command HQ / Automated Dispatch Center',
-    status: 'active',
-    codBalanceNpr: 0,
-    totalShipments: 0,
-    createdAt: '2026-09-08',
-  },
-  {
-    id: 'usr-merch-demo',
-    name: 'Pradeep Gurung',
-    email: 'merchant@double7.np',
-    company: 'Pokhara Electronics Hub',
-    phone: '+977 9812345678',
-    role: 'merchant',
-    subRole: 'Merchant Consignor / Shipper',
-    status: 'active',
-    codBalanceNpr: 45200,
-    totalShipments: 14,
-    createdAt: '2026-09-01',
   },
 ];
 
@@ -127,6 +46,7 @@ export function getUsers(): User[] {
   if (typeof window === 'undefined') return DEFAULT_USERS;
   try {
     // Purge legacy storage versions
+    localStorage.removeItem('double7_users_prod_v1');
     localStorage.removeItem('double7_users_v1');
     localStorage.removeItem('double11_users_v2');
     localStorage.removeItem('double11_users_v3');
@@ -136,18 +56,20 @@ export function getUsers(): User[] {
       localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(DEFAULT_USERS));
       return DEFAULT_USERS;
     }
-    const parsed: User[] = JSON.parse(raw);
-    // Ensure all DEFAULT_USERS are present in stored users
-    let updated = false;
-    for (const def of DEFAULT_USERS) {
-      if (!parsed.some(p => p.email.toLowerCase() === def.email.toLowerCase())) {
-        parsed.push(def);
-        updated = true;
-      }
+    let parsed: User[] = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(DEFAULT_USERS));
+      return DEFAULT_USERS;
     }
-    if (updated) {
-      localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(parsed));
+    // Filter out legacy demo accounts
+    parsed = parsed.filter(u =>
+      !['merchant@double7.np', 'branch.ktm@double7.com.np', 'branch.pkr@double7.com.np', 'branch.brt@double7.com.np', 'dispatch@sobinupreti.com.np', 'anil@double7.com.np'].includes(u.email.toLowerCase())
+    );
+    // Ensure Super Admin is always present
+    if (!parsed.some(p => p.email.toLowerCase() === DEFAULT_USERS[0].email.toLowerCase())) {
+      parsed.unshift(DEFAULT_USERS[0]);
     }
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(parsed));
     return parsed;
   } catch {
     return DEFAULT_USERS;
@@ -157,6 +79,7 @@ export function getUsers(): User[] {
 export function getCurrentUser(): User | null {
   if (typeof window === 'undefined') return null;
   try {
+    localStorage.removeItem('double7_current_user_prod_v1');
     localStorage.removeItem('double7_current_user_v1');
     localStorage.removeItem('double11_current_user_v2');
     localStorage.removeItem('double11_current_user');

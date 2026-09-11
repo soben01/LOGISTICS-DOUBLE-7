@@ -44,106 +44,14 @@ export interface BranchManifest {
   notes?: string;
 }
 
-const MANIFESTS_STORAGE_KEY = 'double7_branch_manifests_v1';
+const MANIFESTS_STORAGE_KEY = 'double7_branch_manifests_v2';
 
-export const DEFAULT_BRANCH_MANIFESTS: BranchManifest[] = [
-  {
-    id: 'MNF-KTM-2026-0910-001',
-    manifestNumber: 'MNF-KTM-0910-001',
-    branchOrigin: 'Kathmandu Mega-Hub (KTM-01)',
-    branchCode: 'KTM-01',
-    destinationHub: 'Pokhara Regional Sort Hub (Gandaki)',
-    destinationCity: 'Pokhara',
-    linehaulVehicle: 'BA 2 KHA 8841 (Express E-Van)',
-    driverName: 'Bhimsen Thapa',
-    driverPhone: '+977 98510 11223',
-    sealNumber: 'SL-88190',
-    items: [
-      {
-        bookingId: 'D7-8821-EXP',
-        consigneeName: 'Suresh Shrestha',
-        consigneePhone: '+977 9846012345',
-        destinationCity: 'Pokhara',
-        destinationHub: 'Pokhara Regional Sort Hub (Gandaki)',
-        pieces: 2,
-        weightKg: 4.5,
-        service: 'Double 7 Nepal Express',
-        serviceCode: 'EXP',
-        codAmount: 4500,
-        status: 'Shipment Dispatched',
-        addedAt: '2026-09-10 10:45 NPT',
-      },
-      {
-        bookingId: 'D7-6042-CARGO',
-        consigneeName: 'Bijay Shrestha',
-        consigneePhone: '+977 9801045678',
-        destinationCity: 'Pokhara',
-        destinationHub: 'Pokhara Regional Sort Hub (Gandaki)',
-        pieces: 6,
-        weightKg: 28.5,
-        service: 'Double 7 Heavy Cargo',
-        serviceCode: 'CARGO',
-        codAmount: 12800,
-        status: 'Shipment Dispatched',
-        addedAt: '2026-09-10 11:15 NPT',
-      }
-    ],
-    totalShipments: 2,
-    totalPieces: 8,
-    totalWeightKg: 33.0,
-    totalCodNpr: 17300,
-    status: 'Approved & Dispatched',
-    createdAt: '2026-09-10T11:00:00Z',
-    generatedAt: '2026-09-10T11:30:00Z',
-    printedAt: '2026-09-10T11:40:00Z',
-    dispatchedAt: '2026-09-10T12:00:00Z',
-    dispatchedBy: 'Soben Upreti (Command HQ)',
-    notes: 'Prithvi Highway corridor linehaul dispatched on time with zero seal tampering.'
-  },
-  {
-    id: 'MNF-KTM-2026-0910-002',
-    manifestNumber: 'MNF-KTM-0910-002',
-    branchOrigin: 'Kathmandu Mega-Hub (KTM-01)',
-    branchCode: 'KTM-01',
-    destinationHub: 'Biratnagar Hub (Koshi Eastern Corridor)',
-    destinationCity: 'Biratnagar',
-    linehaulVehicle: 'NA 6 KHA 2109 (Linehaul Truck)',
-    driverName: 'Ram Kumar Mandal',
-    driverPhone: '+977 98040 22334',
-    sealNumber: 'SL-99241',
-    items: [
-      {
-        bookingId: 'D7-7730-EXP',
-        consigneeName: 'Dipendra Chaudhari',
-        consigneePhone: '+977 9804056789',
-        destinationCity: 'Biratnagar',
-        destinationHub: 'Biratnagar Hub (Koshi Eastern Corridor)',
-        pieces: 4,
-        weightKg: 12.0,
-        service: 'Double 7 Nepal Express',
-        serviceCode: 'EXP',
-        codAmount: 0,
-        status: 'Delivered',
-        addedAt: '2026-09-09 14:00 NPT',
-      }
-    ],
-    totalShipments: 1,
-    totalPieces: 4,
-    totalWeightKg: 12.0,
-    totalCodNpr: 0,
-    status: 'Approved & Dispatched',
-    createdAt: '2026-09-09T14:30:00Z',
-    generatedAt: '2026-09-09T14:45:00Z',
-    printedAt: '2026-09-09T14:50:00Z',
-    dispatchedAt: '2026-09-09T15:00:00Z',
-    dispatchedBy: 'Kathmandu Hub Dispatch Officer',
-    notes: 'BP Highway linehaul trunk movement completed.'
-  }
-];
+export const DEFAULT_BRANCH_MANIFESTS: BranchManifest[] = [];
 
 export function getBranchManifests(branchCode?: string): BranchManifest[] {
   if (typeof window === 'undefined') return DEFAULT_BRANCH_MANIFESTS;
   try {
+    localStorage.removeItem('double7_branch_manifests_v1');
     const raw = localStorage.getItem(MANIFESTS_STORAGE_KEY);
     let list: BranchManifest[] = raw ? JSON.parse(raw) : DEFAULT_BRANCH_MANIFESTS;
     if (!raw) {

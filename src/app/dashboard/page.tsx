@@ -159,7 +159,7 @@ export default function DashboardPage() {
   // Accurate SLA Rate
   const slaRate = totalShipments > 0
     ? (((deliveredCount + inTransitCount + outForDeliveryCount) / totalShipments) * 100).toFixed(1)
-    : '100.0';
+    : '0.0';
 
   // Accurate Gross Weight (KG)
   const totalCargoKg = userShipments.reduce((sum, s) => sum + (Number(s.cargo?.weightKg) || 0), 0);
@@ -191,15 +191,15 @@ export default function DashboardPage() {
     { name: 'Butwal / Bhairahawa Western Hub', code: 'BTW', count: getHubCount('Butwal'), color: '#3b82f6', loadPct: totalShipments > 0 ? Math.min(100, Math.round((getHubCount('Butwal') / totalShipments) * 100)) : 0 },
   ];
 
-  // 7-Day Trend Chart derived from user entry booking volume
+  // 7-Day Trend Chart derived from user entry booking volume (all 0 on launch)
   const trendDays = [
-    { day: 'Fri', count: Math.max(0, totalShipments - 1), heightPct: totalShipments > 0 ? 55 : 15, label: 'Normal Trunk' },
-    { day: 'Sat', count: Math.max(0, totalShipments), heightPct: totalShipments > 0 ? 70 : 25, label: 'Weekend Rush' },
-    { day: 'Sun', count: Math.max(0, Math.floor(totalShipments / 2)), heightPct: totalShipments > 0 ? 40 : 15, label: 'Low Sort' },
-    { day: 'Mon', count: Math.max(0, totalShipments + 1), heightPct: totalShipments > 0 ? 82 : 35, label: 'Weekly Peak' },
-    { day: 'Tue', count: Math.max(0, totalShipments), heightPct: totalShipments > 0 ? 75 : 30, label: 'High Cross-Dock' },
-    { day: 'Wed', count: Math.max(0, totalShipments - 1), heightPct: totalShipments > 0 ? 60 : 20, label: 'Valley Express' },
-    { day: 'Today', count: totalShipments, heightPct: totalShipments > 0 ? 100 : 20, label: 'Active Live', isToday: true },
+    { day: 'Fri', count: 0, heightPct: 0, label: 'Normal Trunk' },
+    { day: 'Sat', count: 0, heightPct: 0, label: 'Weekend Rush' },
+    { day: 'Sun', count: 0, heightPct: 0, label: 'Low Sort' },
+    { day: 'Mon', count: 0, heightPct: 0, label: 'Weekly Peak' },
+    { day: 'Tue', count: 0, heightPct: 0, label: 'High Cross-Dock' },
+    { day: 'Wed', count: 0, heightPct: 0, label: 'Valley Express' },
+    { day: 'Today', count: totalShipments, heightPct: totalShipments > 0 ? 100 : 0, label: 'Active Live', isToday: true },
   ];
 
   // Service Breakdown
@@ -335,8 +335,8 @@ export default function DashboardPage() {
             <span className="metric-number" style={{ color: 'var(--brand-emerald)', margin: '0.5rem 0', fontSize: '2.2rem', fontWeight: 800 }}>
               {slaRate}%
             </span>
-            <div style={{ fontSize: '0.72rem', color: 'var(--brand-emerald)', fontWeight: 600 }}>
-              ✓ 24H Intercity &bull; 3H Kathmandu Rush
+            <div style={{ fontSize: '0.72rem', color: totalShipments > 0 ? 'var(--brand-emerald)' : 'var(--text-muted)', fontWeight: 600 }}>
+              {totalShipments > 0 ? '✓ 24H Intercity • 3H Kathmandu Rush' : 'Ready for initial dispatches'}
             </div>
           </div>
 
@@ -385,7 +385,7 @@ export default function DashboardPage() {
                 </p>
               </div>
               <span className="badge badge-emerald" style={{ fontSize: '0.68rem', fontWeight: 700 }}>
-                +18.4% WoW Growth
+                {totalShipments > 0 ? '+18.4% WoW Growth' : '0% Launch Baseline'}
               </span>
             </div>
 
@@ -426,8 +426,8 @@ export default function DashboardPage() {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              <span>Peak Day: <strong>Tuesday (Valley Cross-Dock)</strong></span>
-              <span>Network Velocity: <strong style={{ color: 'var(--brand-cyan)' }}>62 km/h Avg</strong></span>
+              <span>Peak Day: <strong>{totalShipments > 0 ? 'Tuesday (Valley Cross-Dock)' : 'None (Ready to Launch)'}</strong></span>
+              <span>Network Velocity: <strong style={{ color: 'var(--brand-cyan)' }}>{totalShipments > 0 ? '62 km/h Avg' : '0 km/h'}</strong></span>
             </div>
           </div>
 
@@ -444,7 +444,7 @@ export default function DashboardPage() {
                 </p>
               </div>
               <span className="badge badge-cyan" style={{ fontSize: '0.68rem', fontWeight: 700 }}>
-                100% Pipeline Tracked
+                {totalShipments > 0 ? '100% Pipeline Tracked' : '0% Initial Pipeline'}
               </span>
             </div>
 
@@ -522,13 +522,13 @@ export default function DashboardPage() {
                 <span>Regional Hub Load Distribution</span>
               </h3>
               <span className="badge badge-emerald" style={{ fontSize: '0.65rem' }}>
-                6 HUBS ONLINE &bull; ACTIVE SORT
+                {totalShipments > 0 ? '6 HUBS ONLINE • ACTIVE SORT' : '6 HUBS STANDBY • READY'}
               </span>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
               {hubsData.map(hub => {
-                const percentage = Math.min(100, Math.max(16, Math.round((hub.count / (totalShipments || 1)) * 100)));
+                const percentage = totalShipments > 0 ? Math.min(100, Math.round((hub.count / totalShipments) * 100)) : 0;
                 return (
                   <div key={hub.name}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>

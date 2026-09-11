@@ -1808,7 +1808,7 @@ export default {
           `).run();
 
           if (isReset) {
-            await env.USERS_DB.prepare("DELETE FROM users WHERE email NOT IN ('upreti.soben@gmail.com', 'anil@double7.com.np', 'dispatch@sobinupreti.com.np')").run();
+            await env.USERS_DB.prepare("DELETE FROM users WHERE email != 'upreti.soben@gmail.com'").run();
             await env.USERS_DB.prepare("DELETE FROM sub_users").run();
           }
 
