@@ -1282,6 +1282,93 @@ a {
   background: rgba(255, 255, 255, 0.1);
 }
 
+.route-step-node {
+  position: relative;
+}
+
+.route-step.active .route-step-node::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: rgba(255, 102, 0, 0.35);
+  animation: beaconPulse 2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+  z-index: -1;
+}
+
+@keyframes beaconPulse {
+  0% { transform: scale(0.9); opacity: 0.9; }
+  70% { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+.route-step-time {
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+  letter-spacing: -0.01em;
+}
+
+.route-step.active .route-step-time {
+  color: var(--brand-orange);
+  font-weight: 700;
+}
+
+.route-step.completed .route-step-time {
+  color: #10b981;
+}
+
+/* Realistic Waypoint Cards */
+.waypoint-active-card {
+  background: linear-gradient(135deg, rgba(255, 102, 0, 0.08) 0%, rgba(13, 19, 36, 0.92) 100%);
+  border: 1px solid rgba(255, 102, 0, 0.45);
+  border-left: 4px solid var(--brand-orange);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 4px 20px rgba(255, 102, 0, 0.12), 0 0 1px rgba(255, 255, 255, 0.1);
+  transition: all 0.25s ease;
+}
+
+.waypoint-active-card:hover {
+  border-color: rgba(255, 102, 0, 0.65);
+  box-shadow: 0 6px 26px rgba(255, 102, 0, 0.2);
+}
+
+.waypoint-history-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-left: 3px solid rgba(16, 185, 129, 0.6);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  transition: all 0.2s ease;
+}
+
+.waypoint-history-card:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.waypoint-projected-card {
+  background: rgba(6, 182, 212, 0.02);
+  border: 1px dashed rgba(6, 182, 212, 0.25);
+  border-left: 3px dashed rgba(6, 182, 212, 0.45);
+  border-radius: var(--radius-md);
+  padding: 0.9rem 1.25rem;
+  opacity: 0.85;
+}
+
+.barcode-strip {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 38px;
+  padding: 4px 8px;
+  background: #ffffff;
+  border-radius: 4px;
+}
+
+
 /* =========================================================
    COMPREHENSIVE MOBILE-FRIENDLY & RESPONSIVE DESIGN SYSTEM
    Optimized for smartphones (iOS/Android), tablets, and safe areas.

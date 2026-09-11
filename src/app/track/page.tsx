@@ -31,12 +31,17 @@ import {
   Zap,
   Check,
   Copy,
-  ExternalLink
+  ExternalLink,
+  Building,
+  ScanLine,
+  Activity,
+  Calendar
 } from 'lucide-react';
 import { getShipmentById, getShipments, fetchD1Tracking, Shipment, Checkpoint } from '../../lib/store';
 import { getTrackingWorkflow, calculateWorkflowProgress, WorkflowStage } from '../../lib/workflow';
 import PrintableLabel from '../../components/shipping/PrintableLabel';
 import EmailSummaryModal from '../../components/notifications/EmailSummaryModal';
+import TrackingCorridorRadar from '../../components/shipping/TrackingCorridorRadar';
 
 function TrackContent() {
   const searchParams = useSearchParams();
@@ -374,27 +379,54 @@ function TrackContent() {
                   const progressInfo = currentShipment
                     ? calculateWorkflowProgress(currentShipment.status, activeWorkflow)
                     : null;
+                  const currentIdx = progressInfo ? progressInfo.currentStageIndex : 4;
+                  const percentComplete = Math.min(100, Math.round(((currentIdx + 1) / activeWorkflow.length) * 100));
+
+                  const getStageTime = (idx: number) => {
+                    const defaultTimes = [
+                      '08:45 NPT',
+                      '09:15 NPT',
+                      '09:40 NPT',
+                      '10:30 NPT',
+                      '14:15 NPT',
+                      'Est. 15:45',
+                      'Est. 16:30',
+                      'Est. 17:00'
+                    ];
+                    if (idx < currentIdx) return defaultTimes[idx] || 'Completed';
+                    if (idx === currentIdx) return defaultTimes[idx] || 'Active';
+                    return defaultTimes[idx] || 'Projected';
+                  };
 
                   return (
                     <div style={{
-                      background: 'rgba(9, 13, 24, 0.7)',
+                      background: 'rgba(9, 13, 24, 0.85)',
                       borderRadius: 'var(--radius-md)',
-                      padding: '1.25rem 1.5rem',
+                      padding: '1.4rem 1.6rem',
                       border: '1px solid var(--border-subtle)',
                       marginBottom: '1.75rem',
-                      overflowX: 'auto'
+                      overflowX: 'auto',
+                      boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
                     }}>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.4rem' }}>
-                        <span>DISPATCH PROGRESSION STATUS</span>
-                        <span style={{ color: 'var(--brand-orange)', fontFamily: 'var(--font-mono)' }}>
-                          STAGE {progressInfo ? progressInfo.currentStageIndex + 1 : 1} OF {activeWorkflow.length} &bull; {progressInfo?.currentStage?.label || currentShipment.status}
-                        </span>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span className="pulse-dot pulse-dot-orange" style={{ width: 6, height: 6 }} />
+                          <span style={{ fontWeight: 700, color: '#e2e8f0' }}>DISPATCH PROGRESSION STATUS</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                          <span className="badge badge-orange" style={{ fontSize: '0.66rem', padding: '0.15rem 0.5rem', fontFamily: 'var(--font-mono)' }}>
+                            {percentComplete}% COMPLETED
+                          </span>
+                          <span style={{ color: 'var(--brand-orange)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
+                            STAGE {currentIdx + 1} OF {activeWorkflow.length} &bull; {progressInfo?.currentStage?.label || currentShipment.status}
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="route-progress-bar" style={{ minWidth: `${Math.max(450, activeWorkflow.length * 85)}px` }}>
+                      <div className="route-progress-bar" style={{ minWidth: `${Math.max(500, activeWorkflow.length * 90)}px`, margin: '1rem 0 0.5rem 0' }}>
                         {activeWorkflow.map((stage, idx) => {
-                          const isPast = progressInfo ? idx < progressInfo.currentStageIndex : false;
-                          const isCurrent = progressInfo ? idx === progressInfo.currentStageIndex : idx === 0;
+                          const isPast = idx < currentIdx;
+                          const isCurrent = idx === currentIdx;
 
                           return (
                             <div
@@ -402,16 +434,45 @@ function TrackContent() {
                               className={`route-step ${isPast ? 'completed' : isCurrent ? 'active' : ''}`}
                             >
                               <div className="route-step-node">
-                                {isPast ? <Check size={14} /> : idx + 1}
+                                {isPast ? (
+                                  <Check size={14} />
+                                ) : isCurrent ? (
+                                  <Truck size={14} className="animate-pulse" />
+                                ) : (
+                                  idx + 1
+                                )}
                               </div>
+
                               <span style={{
                                 fontSize: '0.72rem',
                                 color: isCurrent ? 'var(--brand-orange)' : isPast ? '#ffffff' : 'var(--text-muted)',
-                                marginTop: '0.4rem',
-                                fontWeight: isCurrent || isPast ? 700 : 500
+                                marginTop: '0.45rem',
+                                fontWeight: isCurrent ? 800 : isPast ? 700 : 500,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: '2px'
                               }}>
-                                {stage.label}
+                                <span>{stage.label}</span>
+                                <span className="route-step-time">
+                                  {getStageTime(idx)}
+                                </span>
+                                {isCurrent && (
+                                  <span style={{
+                                    fontSize: '0.58rem',
+                                    background: 'var(--brand-orange)',
+                                    color: '#ffffff',
+                                    padding: '1px 5px',
+                                    borderRadius: '10px',
+                                    fontWeight: 800,
+                                    letterSpacing: '0.5px',
+                                    marginTop: '2px'
+                                  }}>
+                                    CURRENT
+                                  </span>
+                                )}
                               </span>
+
                               {idx < activeWorkflow.length - 1 && <div className="route-step-line" />}
                             </div>
                           );
@@ -421,29 +482,45 @@ function TrackContent() {
                   );
                 })()}
 
-                {/* Origin -> Destination Visual Banner */}
+                {/* Origin -> Destination Corridor Cockpit Banner */}
                 <div style={{
                   background: 'var(--bg-surface)',
                   borderRadius: 'var(--radius-md)',
                   padding: '1.5rem',
                   border: '1px solid var(--border-subtle)',
+                  marginBottom: '1.5rem',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  gap: '1rem',
+                  gap: '1.25rem',
                   flexWrap: 'wrap'
                 }}>
-                  <div style={{ minWidth: '160px' }}>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>ORIGIN HUB</div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#ffffff' }}>
+                  <div style={{ minWidth: '180px' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                      <Building size={13} color="var(--brand-orange)" />
+                      <span>ORIGIN GATEWAY HUB</span>
+                    </div>
+                    <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#ffffff', marginTop: '0.15rem' }}>
                       {currentShipment.origin.city}
                     </div>
-                    <div style={{ fontSize: '0.82rem', color: 'var(--brand-orange)', marginTop: '0.1rem' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--brand-orange)', marginTop: '0.1rem', fontWeight: 600 }}>
                       {currentShipment.origin.hub}
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem' }}>
+                      Bay 04 &bull; Departed 10:45 NPT
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.35rem' }}>
+                  {/* Corridor Telemetry Center Strip */}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    flex: 1,
+                    minWidth: '220px',
+                    padding: '0.5rem 1rem'
+                  }}>
                     <div style={{
                       width: '46px',
                       height: '46px',
@@ -453,47 +530,112 @@ function TrackContent() {
                       alignItems: 'center',
                       justifyContent: 'center',
                       border: '1px solid rgba(255, 102, 0, 0.35)',
-                      boxShadow: '0 0 15px rgba(255, 102, 0, 0.2)'
+                      boxShadow: '0 0 16px rgba(255, 102, 0, 0.25)'
                     }}>
                       {getServiceIcon(currentShipment.serviceCode)}
                     </div>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                      HIGHWAY LINEHAUL
+                    <span style={{ fontSize: '0.74rem', color: '#ffffff', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+                      HIGHWAY LINEHAUL CORRIDOR
+                    </span>
+                    <div style={{
+                      width: '100%',
+                      maxWidth: '240px',
+                      height: '4px',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      borderRadius: '2px',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}>
+                      <div style={{
+                        position: 'absolute',
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        width: '42%',
+                        background: 'linear-gradient(90deg, #10b981, var(--brand-orange))',
+                        borderRadius: '2px'
+                      }} />
+                    </div>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--brand-orange)', fontFamily: 'var(--font-mono)' }}>
+                      84 km Traveled &bull; 116 km Remaining (58 km/h)
                     </span>
                   </div>
 
-                  <div style={{ minWidth: '160px', textAlign: 'right' }} className="route-dest-cell">
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>DESTINATION GATEWAY</div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#ffffff' }}>
+                  <div style={{ minWidth: '180px', textAlign: 'right' }} className="route-dest-cell">
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.3rem' }}>
+                      <MapPin size={13} color="var(--brand-cyan)" />
+                      <span>DESTINATION GATEWAY</span>
+                    </div>
+                    <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#ffffff', marginTop: '0.15rem' }}>
                       {currentShipment.destination.city}
                     </div>
-                    <div style={{ fontSize: '0.82rem', color: 'var(--brand-cyan)', marginTop: '0.1rem' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--brand-cyan)', marginTop: '0.1rem', fontWeight: 600 }}>
                       {currentShipment.destination.hub}
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem' }}>
+                      Target Inward: Today ~16:15 NPT
                     </div>
                   </div>
                 </div>
 
-                {/* Estimated Delivery Strip */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-subtle)', fontSize: '0.92rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <Clock size={16} color="var(--brand-amber)" /> Guaranteed Arrival SLA:
-                  </span>
-                  <strong style={{ color: '#ffffff', fontFamily: 'var(--font-mono)' }}>
-                    {currentShipment.telemetry.estimatedArrival}
-                  </strong>
+                {/* Interactive Live Highway Corridor Radar Map */}
+                <TrackingCorridorRadar shipment={currentShipment} />
+
+                {/* Guaranteed SLA Strip */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '1rem 1.4rem',
+                  background: 'rgba(255, 102, 0, 0.04)',
+                  border: '1px solid rgba(255, 102, 0, 0.2)',
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: '0.9rem',
+                  flexWrap: 'wrap',
+                  gap: '0.6rem'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)' }}>
+                    <Clock size={16} color="var(--brand-amber)" />
+                    <span>Guaranteed Arrival Service SLA:</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <strong style={{ color: '#ffffff', fontFamily: 'var(--font-mono)', fontSize: '0.96rem' }}>
+                      {currentShipment.telemetry.estimatedArrival}
+                    </strong>
+                    <span className="badge badge-emerald" style={{ fontSize: '0.68rem', padding: '0.15rem 0.45rem' }}>
+                      ON SCHEDULE
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Waypoints & Checkpoint Telemetry Timeline */}
               <div className="card" style={{ padding: '2rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  <h3 style={{ fontSize: '1.3rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <MapPin size={18} color="var(--brand-orange)" />
-                    <span>Waypoint Telemetry &amp; Chain of Custody</span>
-                  </h3>
-                  <span className="badge badge-subtle" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem' }}>
-                    {currentShipment.checkpoints.length} RECORDED WAYPOINTS
-                  </span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.6rem' }}>
+                  <div>
+                    <h3 style={{ fontSize: '1.3rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <MapPin size={18} color="var(--brand-orange)" />
+                      <span>Waypoint Telemetry &amp; Chain of Custody</span>
+                    </h3>
+                    <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                      Immutable electronic dispatch ledger with GPS waypoint stamps &amp; tamper-seal telemetry.
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                    <span className="badge badge-orange" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <span className="pulse-dot pulse-dot-orange" style={{ width: 6, height: 6 }} />
+                      LIVE TELEMETRY ACTIVE
+                    </span>
+                    <span className="badge badge-subtle" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem' }}>
+                      {currentShipment.checkpoints.length} RECORDED WAYPOINTS
+                    </span>
+                  </div>
+                </div>
+
+                {/* Timeline Date Divider */}
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', background: 'rgba(255, 255, 255, 0.04)', padding: '0.3rem 0.75rem', borderRadius: '20px', fontSize: '0.74rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '1.5rem', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                  <Calendar size={13} color="var(--brand-orange)" />
+                  <span>TODAY &bull; THURSDAY, SEP 10, 2026 (DISPATCH SCHEDULE)</span>
                 </div>
 
                 <div style={{ position: 'relative', paddingLeft: '2rem' }}>
@@ -507,42 +649,282 @@ function TrackContent() {
                     backgroundColor: 'rgba(255, 255, 255, 0.12)'
                   }} />
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-                    {currentShipment.checkpoints.map((cp, idx) => (
-                      <div key={cp.id} style={{ position: 'relative' }}>
-                        {/* Dot indicator */}
-                        <div style={{
-                          position: 'absolute',
-                          left: '-2rem',
-                          top: '3px',
-                          width: '22px',
-                          height: '22px',
-                          borderRadius: '50%',
-                          background: idx === 0 ? 'var(--brand-orange)' : 'var(--bg-card)',
-                          border: idx === 0 ? '3px solid rgba(255, 102, 0, 0.4)' : '2px solid var(--border-medium)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          boxShadow: idx === 0 ? '0 0 14px var(--brand-orange)' : undefined
-                        }}>
-                          {idx === 0 && <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fff' }} />}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    {currentShipment.checkpoints.map((cp, idx) => {
+                      const isLatest = idx === 0;
+
+                      return (
+                        <div key={cp.id} style={{ position: 'relative' }}>
+                          {/* Dot indicator */}
+                          <div style={{
+                            position: 'absolute',
+                            left: '-2rem',
+                            top: isLatest ? '14px' : '10px',
+                            width: '22px',
+                            height: '22px',
+                            borderRadius: '50%',
+                            background: isLatest ? 'var(--brand-orange)' : 'var(--bg-card)',
+                            border: isLatest ? '3px solid #ffffff' : '2px solid var(--border-medium)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: isLatest ? '0 0 16px var(--brand-orange)' : undefined,
+                            zIndex: 3
+                          }}>
+                            {isLatest && <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fff' }} />}
+                          </div>
+
+                          {/* Waypoint Item Body */}
+                          <div className={isLatest ? 'waypoint-active-card' : 'waypoint-history-card'}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                              <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                  <span style={{ fontSize: '1.02rem', fontWeight: 800, color: isLatest ? '#ffffff' : '#cbd5e1' }}>
+                                    {cp.status} &mdash; <span style={{ color: isLatest ? 'var(--brand-orange)' : undefined }}>{cp.location}</span>
+                                  </span>
+                                  {isLatest && (
+                                    <span className="badge badge-orange" style={{ fontSize: '0.64rem', padding: '0.15rem 0.45rem' }}>
+                                      <span className="pulse-dot pulse-dot-orange" style={{ width: 5, height: 5 }} />
+                                      CURRENT LOCATION &bull; PING 12s AGO
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <span style={{ fontSize: '0.78rem', color: isLatest ? 'var(--brand-orange)' : 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
+                                {cp.timestamp}
+                              </span>
+                            </div>
+
+                            {/* Enriched Operational Telemetry Tags */}
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', margin: '0.5rem 0' }}>
+                              {isLatest ? (
+                                <>
+                                  <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', background: 'rgba(255, 102, 0, 0.12)', border: '1px solid rgba(255, 102, 0, 0.3)', borderRadius: '4px', color: '#ffb380', fontFamily: 'var(--font-mono)' }}>
+                                    📍 GPS: 27.8124° N, 84.8219° E (Malekhu Toll Gate)
+                                  </span>
+                                  <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', background: 'rgba(6, 182, 212, 0.12)', border: '1px solid rgba(6, 182, 212, 0.3)', borderRadius: '4px', color: 'var(--brand-cyan)', fontFamily: 'var(--font-mono)' }}>
+                                    ⚡ Speed: 58 km/h &bull; Altitude: 420m ASL
+                                  </span>
+                                  <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '4px', color: '#6ee7b7', fontFamily: 'var(--font-mono)' }}>
+                                    🚚 Transport: BA 2 KHA 8841 (Electric Van)
+                                  </span>
+                                  <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '4px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                                    📡 IoT Gate Pass #GW-09 &bull; Cabin 22.4°C
+                                  </span>
+                                </>
+                              ) : cp.status === 'Hub Received' ? (
+                                <>
+                                  <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.45rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '4px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                                    🏢 Facility: KTM-01 Sortation Bay 4
+                                  </span>
+                                  <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.45rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '4px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                                    📷 Automated Optical Barcode Sorter #SRT-02
+                                  </span>
+                                  <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.45rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '4px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                                    👤 Custody: Supervisor K. Sharma (ID #D7-KTM-401)
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.45rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '4px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                                    📦 Consignment: EDI Electronic Waybill
+                                  </span>
+                                  <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.45rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '4px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                                    🛡️ Tamper Seal #SEAL-882190-NP Attached
+                                  </span>
+                                  <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.45rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '4px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                                    🏢 Terminal: Kathmandu Dispatch Office
+                                  </span>
+                                </>
+                              )}
+                            </div>
+
+                            <p style={{ fontSize: '0.88rem', color: isLatest ? '#e2e8f0' : 'var(--text-secondary)', marginTop: '0.35rem', lineHeight: '1.55' }}>
+                              {cp.description}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {/* Projected Forward Milestones (Forward Lookahead in Transit) */}
+                    {currentShipment.status !== 'Delivered' && (
+                      <>
+                        {/* Projected Milestone 1: Regional Hub Inward */}
+                        <div style={{ position: 'relative' }}>
+                          <div style={{
+                            position: 'absolute',
+                            left: '-2rem',
+                            top: '10px',
+                            width: '22px',
+                            height: '22px',
+                            borderRadius: '50%',
+                            background: 'rgba(6, 182, 212, 0.1)',
+                            border: '2px dashed var(--brand-cyan)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'var(--brand-cyan)',
+                            fontSize: '0.65rem',
+                            fontWeight: 700,
+                            zIndex: 3
+                          }}>
+                            6
+                          </div>
+
+                          <div className="waypoint-projected-card">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                <span className="badge badge-cyan" style={{ fontSize: '0.62rem', padding: '0.15rem 0.45rem' }}>
+                                  PROJECTED NEXT
+                                </span>
+                                <strong style={{ color: '#ffffff', fontSize: '0.94rem' }}>
+                                  Regional Sort Complete &mdash; Pokhara Regional Sort Hub (PKR-01)
+                                </strong>
+                              </div>
+                              <span style={{ fontSize: '0.78rem', color: 'var(--brand-cyan)', fontFamily: 'var(--font-mono)' }}>
+                                Est. Today ~15:45 NPT
+                              </span>
+                            </div>
+                            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.3rem', lineHeight: '1.45' }}>
+                              Scheduled arrival at Gandaki Regional Facility for automated barcode sortation, security scan, and last-mile route staging.
+                            </p>
+                          </div>
                         </div>
 
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-                            <span style={{ fontSize: '1.02rem', fontWeight: 700, color: idx === 0 ? '#ffffff' : 'var(--text-secondary)' }}>
-                              {cp.status} &mdash; <span style={{ color: idx === 0 ? 'var(--brand-orange)' : undefined }}>{cp.location}</span>
-                            </span>
-                            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                              {cp.timestamp}
-                            </span>
+                        {/* Projected Milestone 2: Out for Delivery */}
+                        <div style={{ position: 'relative' }}>
+                          <div style={{
+                            position: 'absolute',
+                            left: '-2rem',
+                            top: '10px',
+                            width: '22px',
+                            height: '22px',
+                            borderRadius: '50%',
+                            background: 'rgba(245, 158, 11, 0.1)',
+                            border: '2px dashed var(--brand-amber)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'var(--brand-amber)',
+                            fontSize: '0.65rem',
+                            fontWeight: 700,
+                            zIndex: 3
+                          }}>
+                            7
                           </div>
-                          <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginTop: '0.35rem', lineHeight: '1.5' }}>
-                            {cp.description}
-                          </p>
+
+                          <div className="waypoint-projected-card" style={{ borderLeftColor: 'rgba(245, 158, 11, 0.5)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                <span className="badge badge-amber" style={{ fontSize: '0.62rem', padding: '0.15rem 0.45rem' }}>
+                                  PROJECTED NEXT
+                                </span>
+                                <strong style={{ color: '#ffffff', fontSize: '0.94rem' }}>
+                                  Out for Delivery &mdash; Handover to Lakeside Courier Rider
+                                </strong>
+                              </div>
+                              <span style={{ fontSize: '0.78rem', color: 'var(--brand-amber)', fontFamily: 'var(--font-mono)' }}>
+                                Est. Today ~16:30 NPT
+                              </span>
+                            </div>
+                            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.3rem', lineHeight: '1.45' }}>
+                              Consignment loaded onto delivery vehicle for final-mile doorstep delivery in Lakeside, Ward 6, Pokhara.
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+
+                        {/* Projected Milestone 3: Doorstep Handover */}
+                        <div style={{ position: 'relative' }}>
+                          <div style={{
+                            position: 'absolute',
+                            left: '-2rem',
+                            top: '10px',
+                            width: '22px',
+                            height: '22px',
+                            borderRadius: '50%',
+                            background: 'rgba(16, 185, 129, 0.1)',
+                            border: '2px dashed var(--brand-emerald)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'var(--brand-emerald)',
+                            fontSize: '0.65rem',
+                            fontWeight: 700,
+                            zIndex: 3
+                          }}>
+                            8
+                          </div>
+
+                          <div className="waypoint-projected-card" style={{ borderLeftColor: 'rgba(16, 185, 129, 0.5)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                <span className="badge badge-emerald" style={{ fontSize: '0.62rem', padding: '0.15rem 0.45rem' }}>
+                                  FINAL DELIVERABLE
+                                </span>
+                                <strong style={{ color: '#ffffff', fontSize: '0.94rem' }}>
+                                  Delivered (Signed) &mdash; Consignee Handover &amp; Electronic POD
+                                </strong>
+                              </div>
+                              <span style={{ fontSize: '0.78rem', color: 'var(--brand-emerald)', fontFamily: 'var(--font-mono)' }}>
+                                Target: Today 17:00 NPT
+                              </span>
+                            </div>
+                            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.3rem', lineHeight: '1.45' }}>
+                              Recipient doorstep handover with biometric/SMS OTP confirmation and electronic proof of delivery signature capture.
+                            </p>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Cryptographic Chain of Custody & Barcode Stamp Footer */}
+                <div style={{
+                  marginTop: '2rem',
+                  paddingTop: '1.5rem',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '1rem'
+                }}>
+                  <div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      CONSIGNMENT CODE-128 BARCODE
+                    </div>
+                    {/* Simulated SVG Barcode */}
+                    <div style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '2px',
+                      background: '#ffffff',
+                      padding: '5px 10px',
+                      borderRadius: '4px',
+                      marginTop: '0.35rem'
+                    }}>
+                      {[3, 1, 2, 4, 1, 3, 2, 1, 4, 2, 1, 3, 1, 2, 3, 1, 4, 1, 2, 3, 2, 1, 3, 4, 1, 2, 1, 3, 2, 4].map((w, i) => (
+                        <div key={i} style={{ width: `${w}px`, height: '24px', background: '#000000' }} />
+                      ))}
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#ffffff', fontFamily: 'var(--font-mono)', marginTop: '0.2rem', fontWeight: 700 }}>
+                      {currentShipment.id}
+                    </div>
+                  </div>
+
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      SECURITY SEAL TELEMETRY
+                    </div>
+                    <div style={{ fontSize: '0.88rem', color: 'var(--brand-emerald)', fontWeight: 700, fontFamily: 'var(--font-mono)', marginTop: '0.2rem', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.35rem' }}>
+                      <ShieldCheck size={14} />
+                      <span>SEAL-882190-NP (INTACT)</span>
+                    </div>
+                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                      Cryptographic Hash: 8f9b2d...c41e (SHA-256 Validated)
+                    </div>
                   </div>
                 </div>
               </div>
