@@ -192,6 +192,254 @@ export function addWorkflowStage(stage: Omit<WorkflowStage, 'id' | 'order'>): Wo
   return updated;
 }
 
+export function insertWorkflowStageAtIndex(
+  stage: Omit<WorkflowStage, 'id' | 'order'>,
+  index: number
+): WorkflowStage[] {
+  const current = getTrackingWorkflow();
+  const newStage: WorkflowStage = {
+    ...stage,
+    id: `wf-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    order: index + 1
+  };
+  const updated = [...current];
+  updated.splice(index, 0, newStage);
+  const reordered = updated.map((s, idx) => ({ ...s, order: idx + 1 }));
+  saveTrackingWorkflow(reordered);
+  return reordered;
+}
+
+export interface WorkflowPreset {
+  id: string;
+  name: string;
+  description: string;
+  badge: string;
+  stages: WorkflowStage[];
+}
+
+export const WORKFLOW_PRESETS: WorkflowPreset[] = [
+  {
+    id: 'official_8',
+    name: 'Double 7 Official Express (8-Stage)',
+    description: 'Standard end-to-end multi-hub linehaul routing across Nepal gateways',
+    badge: 'Standard Nationwide',
+    stages: DEFAULT_WORKFLOW_STAGES
+  },
+  {
+    id: 'rush_urban_4',
+    name: 'Same-Day Valley Rush (4-Stage)',
+    description: 'Streamlined intra-city dispatch for Kathmandu, Lalitpur & Bhaktapur',
+    badge: 'Intra-City 6h',
+    stages: [
+      {
+        id: 'wf-rush-1',
+        key: 'Order Placed',
+        label: 'Booking Confirmed',
+        description: 'Instant courier booking confirmed in Valley dispatch pool.',
+        category: 'initial',
+        color: 'orange',
+        icon: 'Boxes',
+        order: 1,
+        targetSlaHours: 1,
+        enabled: true,
+        notifyCustomer: true,
+        requireLocation: false,
+        requireNotes: false
+      },
+      {
+        id: 'wf-rush-2',
+        key: 'Pending Pickup',
+        label: 'Courier Dispatched',
+        description: 'Dedicated two-wheeler pickup courier dispatched to shipper.',
+        category: 'processing',
+        color: 'blue',
+        icon: 'Truck',
+        order: 2,
+        targetSlaHours: 2,
+        enabled: true,
+        notifyCustomer: true,
+        requireLocation: true,
+        requireNotes: false
+      },
+      {
+        id: 'wf-rush-3',
+        key: 'Out for Delivery',
+        label: 'Out for Direct Delivery',
+        description: 'Parcel collected and heading directly to consignee address.',
+        category: 'delivery',
+        color: 'amber',
+        icon: 'Radio',
+        order: 3,
+        targetSlaHours: 4,
+        enabled: true,
+        notifyCustomer: true,
+        requireLocation: true,
+        requireNotes: true
+      },
+      {
+        id: 'wf-rush-4',
+        key: 'Delivered',
+        label: 'Handover Completed',
+        description: 'Successfully delivered to recipient with OTP signature.',
+        category: 'completed',
+        color: 'emerald',
+        icon: 'CheckCircle2',
+        order: 4,
+        targetSlaHours: 6,
+        enabled: true,
+        notifyCustomer: true,
+        requireLocation: true,
+        requireNotes: false,
+        isTerminal: true
+      }
+    ]
+  },
+  {
+    id: 'intl_cargo_10',
+    name: 'Cross-Border Air Cargo (9-Stage)',
+    description: 'International customs clearance, airport transfer, and air waybill export',
+    badge: 'International Air/Sea',
+    stages: [
+      {
+        id: 'wf-intl-1',
+        key: 'Order Placed',
+        label: 'Export Booking Created',
+        description: 'Commercial invoice & international airway bill generated.',
+        category: 'initial',
+        color: 'orange',
+        icon: 'Boxes',
+        order: 1,
+        targetSlaHours: 2,
+        enabled: true,
+        notifyCustomer: true,
+        requireLocation: false,
+        requireNotes: false
+      },
+      {
+        id: 'wf-intl-2',
+        key: 'Hub Received',
+        label: 'KTM Export Gateway Inward',
+        description: 'Consignment weighed, x-rayed, and security tagged at Mega-Hub.',
+        category: 'processing',
+        color: 'cyan',
+        icon: 'Building',
+        order: 2,
+        targetSlaHours: 6,
+        enabled: true,
+        notifyCustomer: false,
+        requireLocation: true,
+        requireNotes: true
+      },
+      {
+        id: 'wf-intl-3',
+        key: 'Customs',
+        label: 'Nepal Customs Appraisal',
+        description: 'Department of Customs inspection & export documentation cleared.',
+        category: 'transit',
+        color: 'purple',
+        icon: 'ShieldCheck',
+        order: 3,
+        targetSlaHours: 12,
+        enabled: true,
+        notifyCustomer: true,
+        requireLocation: true,
+        requireNotes: true
+      },
+      {
+        id: 'wf-intl-4',
+        key: 'Shipment Dispatched',
+        label: 'Tribhuvan Airport (TIA) Transfer',
+        description: 'Cargo transferred to air cargo terminal under bonded escort.',
+        category: 'transit',
+        color: 'blue',
+        icon: 'Truck',
+        order: 4,
+        targetSlaHours: 18,
+        enabled: true,
+        notifyCustomer: false,
+        requireLocation: true,
+        requireNotes: false
+      },
+      {
+        id: 'wf-intl-5',
+        key: 'In Flight',
+        label: 'International Flight in Air',
+        description: 'Aircraft departed Kathmandu airspace on scheduled cargo flight.',
+        category: 'transit',
+        color: 'cyan',
+        icon: 'Compass',
+        order: 5,
+        targetSlaHours: 24,
+        enabled: true,
+        notifyCustomer: true,
+        requireLocation: false,
+        requireNotes: false
+      },
+      {
+        id: 'wf-intl-6',
+        key: 'Import Cleared',
+        label: 'Destination Customs Cleared',
+        description: 'Import tariffs assessed and cleared by foreign customs authorities.',
+        category: 'transit',
+        color: 'purple',
+        icon: 'ShieldCheck',
+        order: 6,
+        targetSlaHours: 36,
+        enabled: true,
+        notifyCustomer: true,
+        requireLocation: true,
+        requireNotes: true
+      },
+      {
+        id: 'wf-intl-7',
+        key: 'Regional Sort Complete',
+        label: 'Overseas Gateway Sort',
+        description: 'Sorted at destination air freight hub into regional postal cages.',
+        category: 'transit',
+        color: 'cyan',
+        icon: 'Building',
+        order: 7,
+        targetSlaHours: 48,
+        enabled: true,
+        notifyCustomer: false,
+        requireLocation: true,
+        requireNotes: false
+      },
+      {
+        id: 'wf-intl-8',
+        key: 'Out for Delivery',
+        label: 'Overseas Local Courier Out',
+        description: 'Dispatched with partner courier for last-mile delivery.',
+        category: 'delivery',
+        color: 'amber',
+        icon: 'Radio',
+        order: 8,
+        targetSlaHours: 60,
+        enabled: true,
+        notifyCustomer: true,
+        requireLocation: true,
+        requireNotes: true
+      },
+      {
+        id: 'wf-intl-9',
+        key: 'Delivered',
+        label: 'International Delivery Signed',
+        description: 'Successfully signed for and handed over to consignee abroad.',
+        category: 'completed',
+        color: 'emerald',
+        icon: 'CheckCircle2',
+        order: 9,
+        targetSlaHours: 72,
+        enabled: true,
+        notifyCustomer: true,
+        requireLocation: true,
+        requireNotes: false,
+        isTerminal: true
+      }
+    ]
+  }
+];
+
 export function updateWorkflowStage(id: string, updates: Partial<WorkflowStage>): WorkflowStage[] {
   const current = getTrackingWorkflow();
   const updated = current.map(stage => {
