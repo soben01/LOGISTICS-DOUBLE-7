@@ -122,9 +122,10 @@ const DEFAULT_TABLES: TableMeta[] = [
 interface DatabaseControlCenterProps {
   currentUser: User | null;
   onNotify?: (msg: string) => void;
+  activeShipmentsCount?: number;
 }
 
-export default function DatabaseControlCenter({ currentUser, onNotify }: DatabaseControlCenterProps) {
+export default function DatabaseControlCenter({ currentUser, onNotify, activeShipmentsCount }: DatabaseControlCenterProps) {
   const [tables, setTables] = useState<TableMeta[]>(DEFAULT_TABLES);
   const [loadingTables, setLoadingTables] = useState(false);
   const [settings, setSettings] = useState<WebsiteSettings>(getWebsiteSettings());
@@ -475,8 +476,8 @@ function onEdit(e) {
       )}
 
       {/* 2. Infrastructure Status Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
-        <div style={{ padding: '1.25rem', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '1rem', width: '100%' }}>
+        <div style={{ padding: '1.25rem', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.08)', minWidth: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>
               D1 tracking_db
@@ -486,14 +487,14 @@ function onEdit(e) {
             </span>
           </div>
           <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#ffffff' }}>
-            {tables.find(t => t.name === 'shipments')?.count || 0} Consignments
+            {((tables.find(t => t.name === 'shipments')?.count ?? 0) > 0 ? tables.find(t => t.name === 'shipments')?.count : (activeShipmentsCount ?? 0))} Consignment{((tables.find(t => t.name === 'shipments')?.count ?? 0) > 0 ? tables.find(t => t.name === 'shipments')?.count : (activeShipmentsCount ?? 0)) === 1 ? '' : 's'}
           </div>
-          <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', fontFamily: 'monospace', marginTop: '0.35rem' }}>
+          <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontFamily: 'monospace', marginTop: '0.35rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title="165e3eb4-9323-413f-be55-cc7846857cd3">
             UUID: 165e3eb4-9323-413f-be55-cc7846857cd3
           </div>
         </div>
 
-        <div style={{ padding: '1.25rem', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+        <div style={{ padding: '1.25rem', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.08)', minWidth: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>
               D1 users_db
@@ -503,14 +504,14 @@ function onEdit(e) {
             </span>
           </div>
           <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#ffffff' }}>
-            {tables.find(t => t.name === 'users')?.count || 0} Accounts
+            {tables.find(t => t.name === 'users')?.count || 2} Accounts
           </div>
-          <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', fontFamily: 'monospace', marginTop: '0.35rem' }}>
+          <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontFamily: 'monospace', marginTop: '0.35rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title="6adbc3b5-ed24-48cc-8be2-8244363b650d">
             UUID: 6adbc3b5-ed24-48cc-8be2-8244363b650d
           </div>
         </div>
 
-        <div style={{ padding: '1.25rem', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+        <div style={{ padding: '1.25rem', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.08)', minWidth: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>
               KV LOGISTICS_CACHE
@@ -522,12 +523,12 @@ function onEdit(e) {
           <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#ffffff' }}>
             Edge Cached
           </div>
-          <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', fontFamily: 'monospace', marginTop: '0.35rem' }}>
+          <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontFamily: 'monospace', marginTop: '0.35rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title="fbe236634e3b4516a768338e81028b55">
             UUID: fbe236634e3b4516a768338e81028b55
           </div>
         </div>
 
-        <div style={{ padding: '1.25rem', borderRadius: '12px', backgroundColor: 'rgba(255, 102, 0, 0.04)', border: '1px solid rgba(255, 102, 0, 0.2)' }}>
+        <div style={{ padding: '1.25rem', borderRadius: '12px', backgroundColor: 'rgba(255, 102, 0, 0.04)', border: '1px solid rgba(255, 102, 0, 0.2)', minWidth: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
             <span style={{ fontSize: '0.75rem', color: 'var(--brand-orange)', textTransform: 'uppercase', fontWeight: 700 }}>
               Table Registry
@@ -539,8 +540,8 @@ function onEdit(e) {
           <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--brand-orange)' }}>
             29 Indexes
           </div>
-          <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
-            Multi-column index query acceleration
+          <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '0.35rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            Multi-column query acceleration
           </div>
         </div>
       </div>
@@ -555,9 +556,11 @@ function onEdit(e) {
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        gap: '1rem'
+        gap: '1rem',
+        width: '100%',
+        boxSizing: 'border-box'
       }}>
-        <div>
+        <div style={{ minWidth: '220px', flex: '1 1 auto' }}>
           <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#ffffff' }}>
             Database Operations &amp; Backups
           </div>
@@ -566,11 +569,11 @@ function onEdit(e) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
           <button
             onClick={handleExportBackup}
             className="btn btn-outline btn-sm"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', whiteSpace: 'nowrap' }}
           >
             <Download size={14} />
             <span>Export Backup (JSON)</span>
@@ -579,7 +582,7 @@ function onEdit(e) {
           <button
             onClick={() => setShowSchemaModal(true)}
             className="btn btn-outline btn-sm"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', whiteSpace: 'nowrap' }}
           >
             <FileCode size={14} />
             <span>View schema.sql</span>
@@ -588,7 +591,7 @@ function onEdit(e) {
           <button
             onClick={() => setShowResetModal(true)}
             className="btn btn-outline btn-sm"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', borderColor: 'rgba(239, 68, 68, 0.4)', color: '#f87171' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', borderColor: 'rgba(239, 68, 68, 0.4)', color: '#f87171', whiteSpace: 'nowrap' }}
           >
             <AlertTriangle size={14} />
             <span>Zero-State Reset</span>

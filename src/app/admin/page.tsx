@@ -907,39 +907,13 @@ export default function AdminControlPanel() {
             </div>
 
             {/* Group 3: Infrastructure & Telemetry */}
-            <div>
-              <div style={{ padding: '0 0.75rem 0.5rem 0.75rem', fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', fontWeight: 700 }}>
-                System & Logs
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <button
-                  onClick={() => setActiveSection('database')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    width: '100%',
-                    padding: '0.65rem 0.85rem',
-                    borderRadius: '8px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '0.85rem',
-                    fontWeight: activeSection === 'database' ? 700 : 500,
-                    backgroundColor: activeSection === 'database' ? 'rgba(255, 102, 0, 0.18)' : 'transparent',
-                    color: activeSection === 'database' ? '#fff' : 'var(--text-secondary)',
-                    textAlign: 'left'
-                  }}
-                >
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <Database size={18} color={activeSection === 'database' ? 'var(--brand-orange)' : 'currentColor'} />
-                    Database Controls &amp; Settings
-                  </span>
-                  <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: 'rgba(255, 102, 0, 0.15)', color: 'var(--brand-orange)', fontWeight: 700 }}>
-                    D1
-                  </span>
-                </button>
-                <button
-                  onClick={() => setActiveSection('edge')}
+              <div>
+                <div style={{ padding: '0 0.75rem 0.5rem 0.75rem', fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', fontWeight: 700 }}>
+                  System &amp; Logs
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <button
+                    onClick={() => setActiveSection('edge')}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -2561,6 +2535,7 @@ export default function AdminControlPanel() {
                 <DatabaseControlCenter
                   currentUser={currentUser}
                   onNotify={notify}
+                  activeShipmentsCount={shipments.length}
                 />
               </div>
             )}
