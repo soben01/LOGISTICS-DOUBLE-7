@@ -368,54 +368,6 @@ export default function AllBookingsPage() {
           </div>
         </div>
 
-        {/* Operations Hub Banner */}
-        <div style={{
-          marginBottom: '1.25rem',
-          padding: '0.85rem 1.25rem',
-          borderRadius: '10px',
-          backgroundColor: 'rgba(27, 77, 62, 0.2)',
-          border: '1px solid rgba(45, 106, 79, 0.45)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '0.75rem'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: '#1b4d3e', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '1.15rem' }}>
-              🦅
-            </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#6ee7b7', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span>Operations Desk</span>
-                <span style={{ fontSize: '0.65rem', backgroundColor: '#10b981', color: '#060911', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 800 }}>
-                  BRANCH &bull; RECEPTION &bull; LASTMILE
-                </span>
-              </div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                Dedicated counter intake, barcode scanner inward, rider runsheets &amp; Proof of Delivery (POD).
-              </div>
-            </div>
-          </div>
-          <Link
-            href="/operations"
-            className="btn btn-sm"
-            style={{
-              backgroundColor: '#1b4d3e',
-              color: '#ffffff',
-              border: '1px solid #2d6a4f',
-              fontWeight: 700,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.45rem 0.9rem'
-            }}
-          >
-            <span>Open Operations Desk</span>
-            <ArrowRight size={14} />
-          </Link>
-        </div>
-
         {/* Search & Filtering Controls */}
         <div className="card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>

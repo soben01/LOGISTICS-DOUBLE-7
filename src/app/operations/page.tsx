@@ -1,8 +1,7 @@
 'use client';
 
-import React from 'react';
-import OperationsHub from '../../components/operations/OperationsHub';
+import DashboardPage from '../dashboard/page';
 
 export default function OperationsPage() {
-  return <OperationsHub />;
+  return <DashboardPage />;
 }

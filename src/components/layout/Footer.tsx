@@ -1,8 +1,5 @@
-'use client';
-
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import {
   Truck,
   Boxes,
@@ -23,11 +20,6 @@ function GithubIcon({ size = 16 }: { size?: number }) {
 }
 
 export default function Footer() {
-  const pathname = usePathname();
-  if (pathname?.startsWith('/operations')) {
-    return null;
-  }
-
   return (
     <footer style={{
       backgroundColor: 'var(--bg-surface)',
