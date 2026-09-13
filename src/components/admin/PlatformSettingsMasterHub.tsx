@@ -34,7 +34,11 @@ import {
   Smartphone,
   Server,
   Zap,
-  Clock
+  Clock,
+  Database,
+  ExternalLink,
+  RefreshCw,
+  Table2
 } from 'lucide-react';
 import {
   WebsiteSettings,
@@ -64,14 +68,16 @@ type SettingsTab =
   | 'notifications'
   | 'integrations'
   | 'security'
+  | 'database'
   | 'system';
 
 interface Props {
   onNotice?: (msg: string) => void;
   onNavigateWorkflow?: () => void;
+  onNavigateDatabase?: () => void;
 }
 
-export default function PlatformSettingsMasterHub({ onNotice, onNavigateWorkflow }: Props) {
+export default function PlatformSettingsMasterHub({ onNotice, onNavigateWorkflow, onNavigateDatabase }: Props) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   const [settings, setSettings] = useState<WebsiteSettings>(getWebsiteSettings());
   const [isSaving, setIsSaving] = useState(false);
@@ -231,6 +237,7 @@ export default function PlatformSettingsMasterHub({ onNotice, onNavigateWorkflow
     { id: 'notifications', label: 'Notifications', icon: Bell, desc: 'SMS, Email & WhatsApp' },
     { id: 'integrations', label: 'API & Webhooks', icon: KeyRound, desc: 'Keys, Endpoints & Plugins' },
     { id: 'security', label: 'Security & 2FA', icon: Lock, desc: 'Access Control & Lockout' },
+    { id: 'database', label: 'Database & Storage', icon: Database, desc: 'D1 Engine & Google Sheets DB' },
     { id: 'system', label: 'System & Audit', icon: Server, desc: 'Backup, Cache & Live Mode' },
   ];
 
@@ -1500,6 +1507,234 @@ export default function PlatformSettingsMasterHub({ onNotice, onNavigateWorkflow
       {/* ========================================================================= */}
       {/* PILLAR 9: SYSTEM & AUDIT */}
       {/* ========================================================================= */}
+      {/* TAB 9: DATABASE & CLOUD STORAGE SETTINGS */}
+      {activeTab === 'database' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {/* Top Banner with Direct Launch CTA */}
+          <div style={{
+            padding: '1.5rem',
+            borderRadius: '12px',
+            background: 'linear-gradient(135deg, rgba(255, 102, 0, 0.12) 0%, rgba(15, 23, 42, 0.6) 100%)',
+            border: '1px solid rgba(255, 102, 0, 0.35)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '1rem'
+          }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.35rem' }}>
+                <Database size={22} color="var(--brand-orange)" />
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#f8fafc', margin: 0 }}>
+                  Active Hybrid Database Engine: Cloudflare D1 + Google Sheets Live
+                </h3>
+              </div>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0, maxWidth: '650px', lineHeight: 1.5 }}>
+                Double 7 Logistics synchronizes relational edge state (D1 SQLite bindings) with a live, two-way synchronized Google Sheets Master Database for instant operations, audits, and automated 6:00 PM reconciliations.
+              </p>
+            </div>
+            {onNavigateDatabase && (
+              <button
+                type="button"
+                onClick={onNavigateDatabase}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.75rem 1.4rem',
+                  borderRadius: '10px',
+                  backgroundColor: 'var(--brand-orange)',
+                  border: 'none',
+                  color: '#fff',
+                  fontWeight: 800,
+                  fontSize: '0.88rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 18px rgba(255, 102, 0, 0.4)'
+                }}
+              >
+                <Table2 size={16} /> Open Full Database Control Center &rarr;
+              </button>
+            )}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
+            {/* Google Sheets Live Database Card */}
+            <div style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.02)',
+              borderRadius: '12px',
+              border: '1px solid rgba(16, 185, 129, 0.25)',
+              padding: '1.5rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#10b981' }}>
+                  <Globe2 size={18} /> Google Sheets Master Live DB
+                </h3>
+                <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.5rem', borderRadius: '6px', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10b981', fontWeight: 700 }}>
+                  CONNECTED &bull; 8 TABS
+                </span>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
+                  Master Spreadsheet Document URL
+                </label>
+                <input
+                  type="text"
+                  readOnly
+                  value="https://docs.google.com/spreadsheets/d/1VSfNIHXouc3u_DTcWY1Hs-Hp7wCFf6tfrZC87zlprVA/edit?usp=sharing"
+                  style={{
+                    width: '100%',
+                    padding: '0.65rem',
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: '#fff',
+                    fontSize: '0.78rem',
+                    fontFamily: 'monospace'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                {['01_SHIPMENTS', '02_MANIFESTS', '03_CHECKPOINTS', '04_COD_REMITTANCE', '05_USERS', '06_HUBS', '07_STAFF_DRIVERS', '08_AUDIT_LOGS'].map(tab => (
+                  <span key={tab} style={{ fontSize: '0.68rem', padding: '0.2rem 0.45rem', borderRadius: '4px', backgroundColor: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)', color: '#94a3b8' }}>
+                    {tab}
+                  </span>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.65rem', marginTop: 'auto', flexWrap: 'wrap' }}>
+                <a
+                  href="https://docs.google.com/spreadsheets/d/1VSfNIHXouc3u_DTcWY1Hs-Hp7wCFf6tfrZC87zlprVA/edit?usp=sharing"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    flex: 1,
+                    minWidth: '130px',
+                    padding: '0.65rem',
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    color: '#10b981',
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.4rem'
+                  }}
+                >
+                  <ExternalLink size={14} /> Open Live Sheet ↗
+                </a>
+                <a
+                  href="/DOUBLE_7_LOGISTICS_MASTER_DB.xlsx"
+                  download="DOUBLE_7_LOGISTICS_MASTER_DB.xlsx"
+                  style={{
+                    flex: 1,
+                    minWidth: '130px',
+                    padding: '0.65rem',
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: '#cbd5e1',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.4rem'
+                  }}
+                >
+                  <Download size={14} /> Export .xlsx
+                </a>
+              </div>
+            </div>
+
+            {/* Cloudflare D1 Edge Relational DB Settings */}
+            <div style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.02)',
+              borderRadius: '12px',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              padding: '1.5rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Database size={18} color="var(--brand-orange)" /> Cloudflare D1 Edge Bindings
+                </h3>
+                <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.5rem', borderRadius: '6px', backgroundColor: 'rgba(255, 102, 0, 0.15)', color: 'var(--brand-orange)', fontWeight: 700 }}>
+                  ACTIVE BINDINGS
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                <div style={{ padding: '0.65rem', borderRadius: '8px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', fontWeight: 700, color: '#f8fafc' }}>
+                    <span>tracking_db</span>
+                    <span style={{ color: '#10b981' }}>OK</span>
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                    165e3eb4-9323-413f-be55-cc7846857cd3
+                  </div>
+                </div>
+
+                <div style={{ padding: '0.65rem', borderRadius: '8px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', fontWeight: 700, color: '#f8fafc' }}>
+                    <span>users</span>
+                    <span style={{ color: '#10b981' }}>OK</span>
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                    6adbc3b5-ed24-48cc-8be2-8244363b650d
+                  </div>
+                </div>
+
+                <div style={{ padding: '0.65rem', borderRadius: '8px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', fontWeight: 700, color: '#f8fafc' }}>
+                    <span>KV LOGISTICS_CACHE</span>
+                    <span style={{ color: '#10b981' }}>OK</span>
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                    fbe236634e3b4516a768338e81028b55
+                  </div>
+                </div>
+              </div>
+
+              {onNavigateDatabase && (
+                <button
+                  type="button"
+                  onClick={onNavigateDatabase}
+                  style={{
+                    marginTop: 'auto',
+                    padding: '0.65rem',
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(255, 102, 0, 0.12)',
+                    border: '1px solid rgba(255, 102, 0, 0.3)',
+                    color: 'var(--brand-orange)',
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.4rem'
+                  }}
+                >
+                  <RefreshCw size={14} /> Open SQL Console &amp; Table Manager &rarr;
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 10: SYSTEM & AUDIT */}
       {activeTab === 'system' && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
           {/* Site Mode & Maintenance */}

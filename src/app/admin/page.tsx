@@ -49,7 +49,9 @@ import {
   History,
   Sparkles,
   SlidersHorizontal,
-  LogOut
+  LogOut,
+  ExternalLink,
+  Download
 } from 'lucide-react';
 import {
   getShipments,
@@ -88,6 +90,7 @@ import AdminToolsSuite from '../../components/admin/AdminToolsSuite';
 import TrackingWorkflowEditor from '../../components/admin/TrackingWorkflowEditor';
 import BranchManifestManager from '../../components/manifest/BranchManifestManager';
 import PlatformSettingsMasterHub from '../../components/admin/PlatformSettingsMasterHub';
+import DatabaseControlCenter from '../../components/admin/DatabaseControlCenter';
 
 type AdminSection =
   | 'overview'
@@ -96,6 +99,7 @@ type AdminSection =
   | 'settings'
   | 'shipments'
   | 'cod'
+  | 'database'
   | 'edge'
   | 'email'
   | 'workflow'
@@ -380,7 +384,7 @@ export default function AdminControlPanel() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const secParam = params.get('section');
-      if (secParam && ['overview', 'shipments', 'cod', 'users', 'roles', 'settings', 'edge', 'email', 'workflow', 'tracking_workflow', 'manifest', 'audit'].includes(secParam)) {
+      if (secParam && ['overview', 'shipments', 'cod', 'users', 'roles', 'settings', 'database', 'edge', 'email', 'workflow', 'tracking_workflow', 'manifest', 'audit'].includes(secParam)) {
         setActiveSection(secParam as AdminSection);
       }
     }
@@ -850,6 +854,33 @@ export default function AdminControlPanel() {
                 </button>
 
                 <button
+                  onClick={() => setActiveSection('database')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
+                    fontWeight: activeSection === 'database' ? 700 : 500,
+                    backgroundColor: activeSection === 'database' ? 'rgba(255, 102, 0, 0.18)' : 'transparent',
+                    color: activeSection === 'database' ? '#fff' : 'var(--text-secondary)',
+                    textAlign: 'left'
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <Database size={18} color={activeSection === 'database' ? 'var(--brand-orange)' : '#f59e0b'} />
+                    Database &amp; Cloud Storage
+                  </span>
+                  <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: 'rgba(255, 102, 0, 0.18)', color: 'var(--brand-orange)', fontWeight: 800 }}>
+                    D1 + Sheets
+                  </span>
+                </button>
+
+                <button
                   onClick={() => setActiveSection('settings')}
                   style={{
                     display: 'flex',
@@ -881,6 +912,32 @@ export default function AdminControlPanel() {
                 System & Logs
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <button
+                  onClick={() => setActiveSection('database')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
+                    fontWeight: activeSection === 'database' ? 700 : 500,
+                    backgroundColor: activeSection === 'database' ? 'rgba(255, 102, 0, 0.18)' : 'transparent',
+                    color: activeSection === 'database' ? '#fff' : 'var(--text-secondary)',
+                    textAlign: 'left'
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <Database size={18} color={activeSection === 'database' ? 'var(--brand-orange)' : 'currentColor'} />
+                    Database Controls &amp; Settings
+                  </span>
+                  <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: 'rgba(255, 102, 0, 0.15)', color: 'var(--brand-orange)', fontWeight: 700 }}>
+                    D1
+                  </span>
+                </button>
                 <button
                   onClick={() => setActiveSection('edge')}
                   style={{
@@ -1105,6 +1162,7 @@ export default function AdminControlPanel() {
               { id: 'tracking_workflow', label: 'Workflow', icon: SlidersHorizontal },
               { id: 'manifest', label: 'Branch Manifest', icon: Boxes },
               { id: 'roles', label: 'Roles Matrix', icon: ShieldCheck },
+              { id: 'database', label: 'Database D1', icon: Database },
               { id: 'edge', label: 'Edge Diagnostics', icon: Activity },
               { id: 'workflow', label: 'Architecture', icon: Layers },
               { id: 'audit', label: `Security (${auditLogs.length})`, icon: History },
@@ -1211,6 +1269,28 @@ export default function AdminControlPanel() {
                   <option value="merchant" style={{ backgroundColor: '#0a0f1d' }}>Merchant Consignor</option>
                 </select>
               </div>
+
+              {/* Direct DB Settings Quick Switcher */}
+              <button
+                onClick={() => setActiveSection('database')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  padding: '0.45rem 0.85rem',
+                  borderRadius: '8px',
+                  backgroundColor: activeSection === 'database' ? 'rgba(255, 102, 0, 0.25)' : 'rgba(255, 255, 255, 0.04)',
+                  border: activeSection === 'database' ? '1px solid var(--brand-orange)' : '1px solid rgba(255, 102, 0, 0.35)',
+                  color: activeSection === 'database' ? '#fff' : '#ff8c38',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <Database size={14} color="var(--brand-orange)" />
+                DB Settings &amp; Sheets
+              </button>
 
               {/* Trigger 6 PM Reset Button */}
               <button
@@ -1869,6 +1949,7 @@ export default function AdminControlPanel() {
               <PlatformSettingsMasterHub
                 onNotice={notify}
                 onNavigateWorkflow={() => setActiveSection('tracking_workflow')}
+                onNavigateDatabase={() => setActiveSection('database')}
               />
             )}
 
@@ -2099,13 +2180,34 @@ export default function AdminControlPanel() {
             {/* ========================================================================= */}
             {activeSection === 'edge' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div>
-                  <h1 style={{ fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '0.35rem' }}>
-                    Cloudflare Edge Telemetry & Operational Reset
-                  </h1>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                    Live bindings status, D1 databases health, KV edge cache, and manual trigger for the 6:00 PM daily operational reset.
-                  </p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div>
+                    <h1 style={{ fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '0.35rem' }}>
+                      Cloudflare Edge Telemetry & Operational Reset
+                    </h1>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                      Live bindings status, D1 databases health, KV edge cache, and manual trigger for the 6:00 PM daily operational reset.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setActiveSection('database')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.65rem 1.25rem',
+                      borderRadius: '8px',
+                      backgroundColor: 'rgba(255, 102, 0, 0.15)',
+                      border: '1px solid rgba(255, 102, 0, 0.4)',
+                      color: '#ff8c38',
+                      fontWeight: 700,
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 16px rgba(255, 102, 0, 0.25)'
+                    }}
+                  >
+                    <Database size={16} /> Open Database Controls &amp; Settings &rarr;
+                  </button>
                 </div>
 
                 {/* Big Reset Action Banner */}
@@ -2203,7 +2305,44 @@ export default function AdminControlPanel() {
                       ID: 165e3eb4-9323-413f-be55-cc7846857cd3
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                      Holds 61 domestic consignments & checkpoint telemetry.
+                      Holds domestic consignments, waybills &amp; checkpoint telemetry.
+                    </div>
+                    <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <button
+                        onClick={() => setActiveSection('database')}
+                        style={{
+                          padding: '0.35rem 0.65rem',
+                          borderRadius: '6px',
+                          backgroundColor: 'rgba(255, 102, 0, 0.15)',
+                          border: '1px solid rgba(255, 102, 0, 0.3)',
+                          color: '#ff8c38',
+                          fontSize: '0.72rem',
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        ⚙️ DB Settings
+                      </button>
+                      <a
+                        href="https://docs.google.com/spreadsheets/d/1VSfNIHXouc3u_DTcWY1Hs-Hp7wCFf6tfrZC87zlprVA/edit?usp=sharing"
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          padding: '0.35rem 0.65rem',
+                          borderRadius: '6px',
+                          backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                          border: '1px solid rgba(16, 185, 129, 0.3)',
+                          color: '#10b981',
+                          fontSize: '0.72rem',
+                          fontWeight: 700,
+                          textDecoration: 'none',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.25rem'
+                        }}
+                      >
+                        <ExternalLink size={11} /> Google Sheet ↗
+                      </a>
                     </div>
                   </div>
 
@@ -2216,7 +2355,24 @@ export default function AdminControlPanel() {
                       ID: 6adbc3b5-ed24-48cc-8be2-8244363b650d
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                      Holds {usersList.length} authenticated accounts with passwords & roles.
+                      Holds {usersList.length} authenticated accounts with passwords &amp; roles.
+                    </div>
+                    <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        onClick={() => setActiveSection('database')}
+                        style={{
+                          padding: '0.35rem 0.65rem',
+                          borderRadius: '6px',
+                          backgroundColor: 'rgba(255, 102, 0, 0.15)',
+                          border: '1px solid rgba(255, 102, 0, 0.3)',
+                          color: '#ff8c38',
+                          fontSize: '0.72rem',
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        ⚙️ Users Schema &amp; SQL
+                      </button>
                     </div>
                   </div>
 
@@ -2229,11 +2385,180 @@ export default function AdminControlPanel() {
                       ID: fbe236634e3b4516a768338e81028b55
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                      Sub-10ms edge caching for website settings & rate tables.
+                      Sub-10ms edge caching for website settings &amp; rate tables.
+                    </div>
+                    <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        onClick={() => setActiveSection('database')}
+                        style={{
+                          padding: '0.35rem 0.65rem',
+                          borderRadius: '6px',
+                          backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                          border: '1px solid rgba(59, 130, 246, 0.3)',
+                          color: '#60a5fa',
+                          fontSize: '0.72rem',
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        ⚙️ Storage &amp; Cache Settings
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Database Settings & Google Sheets Master Hub Quick Panel */}
+                <div style={{
+                  padding: '1.75rem',
+                  borderRadius: '14px',
+                  background: 'linear-gradient(135deg, rgba(255, 102, 0, 0.12) 0%, rgba(15, 23, 42, 0.75) 100%)',
+                  border: '1px solid rgba(255, 102, 0, 0.4)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1.25rem',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{
+                        width: '42px',
+                        height: '42px',
+                        borderRadius: '10px',
+                        backgroundColor: 'rgba(255, 102, 0, 0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px solid rgba(255, 102, 0, 0.4)'
+                      }}>
+                        <Database size={22} color="var(--brand-orange)" />
+                      </div>
+                      <div>
+                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#f8fafc', margin: 0 }}>
+                          Database Settings &amp; Master Cloud Storage Hub
+                        </h2>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.84rem', margin: '0.2rem 0 0 0' }}>
+                          Manage Cloudflare D1 SQL schemas, 8-table relational data, and live 2-way Google Sheets DB sync.
+                        </p>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+                      <button
+                        onClick={() => setActiveSection('database')}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          padding: '0.75rem 1.35rem',
+                          borderRadius: '10px',
+                          backgroundColor: 'var(--brand-orange)',
+                          border: 'none',
+                          color: '#fff',
+                          fontWeight: 800,
+                          fontSize: '0.88rem',
+                          cursor: 'pointer',
+                          boxShadow: '0 4px 18px rgba(255, 102, 0, 0.4)'
+                        }}
+                      >
+                        <SettingsIcon size={16} /> Open Full Database Settings &rarr;
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1rem' }}>
+                    <div style={{ padding: '1rem', borderRadius: '10px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                      <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700 }}>Google Sheets Master DB</div>
+                      <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#10b981', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <span>DOUBLE 7 LOGISTICS DB</span>
+                        <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: 'rgba(16, 185, 129, 0.2)', color: '#10b981' }}>8 Tabs Live</span>
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
+                        Shipments, manifests, hubs, drivers, COD &amp; audit trails.
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                        <a
+                          href="https://docs.google.com/spreadsheets/d/1VSfNIHXouc3u_DTcWY1Hs-Hp7wCFf6tfrZC87zlprVA/edit?usp=sharing"
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            color: '#10b981',
+                            padding: '0.35rem 0.65rem',
+                            borderRadius: '6px',
+                            backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                            textDecoration: 'none',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.3rem'
+                          }}
+                        >
+                          <ExternalLink size={13} /> Open Sheet ↗
+                        </a>
+                        <a
+                          href="/DOUBLE_7_LOGISTICS_MASTER_DB.xlsx"
+                          download="DOUBLE_7_LOGISTICS_MASTER_DB.xlsx"
+                          style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            color: '#cbd5e1',
+                            padding: '0.35rem 0.65rem',
+                            borderRadius: '6px',
+                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            textDecoration: 'none',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.3rem'
+                          }}
+                        >
+                          <Download size={13} /> .xlsx
+                        </a>
+                      </div>
+                    </div>
+
+                    <div style={{ padding: '1rem', borderRadius: '10px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                      <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700 }}>Relational Table Engine</div>
+                      <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', marginTop: '0.25rem' }}>
+                        8 Core Normalized Schemas
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
+                        Full D1 tables inspector, SQL query diagnostic console, and integrity checks.
+                      </div>
+                      <div style={{ marginTop: '0.75rem' }}>
+                        <button
+                          onClick={() => setActiveSection('database')}
+                          style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            color: 'var(--brand-orange)',
+                            padding: '0.35rem 0.65rem',
+                            borderRadius: '6px',
+                            backgroundColor: 'rgba(255, 102, 0, 0.12)',
+                            border: '1px solid rgba(255, 102, 0, 0.3)',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.3rem'
+                          }}
+                        >
+                          <Database size={13} /> View Tables &amp; SQL Console &rarr;
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* SECTION: DATABASE CONTROL & STORAGE SETTINGS (SUPER ADMIN) */}
+            {/* ========================================================================= */}
+            {activeSection === 'database' && (
+              <DatabaseControlCenter
+                currentUser={currentUser}
+                onNotify={notify}
+              />
             )}
 
             {/* ========================================================================= */}

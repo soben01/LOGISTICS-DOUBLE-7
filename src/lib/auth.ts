@@ -595,12 +595,12 @@ export function getMatchingPortal(userOrRole: User | 'merchant' | 'admin' | 'bra
 export function resolveMatchedRedirect(user: User, redirectParam?: string | null): string {
   // Landing page after login
   if (!redirectParam || redirectParam.startsWith('/login') || redirectParam === '/') {
-    return user.role === 'branch' ? '/manifest' : '/dashboard';
+    return user.role === 'branch' ? '/manifest' : (user.role === 'admin' ? '/admin' : '/dashboard');
   }
 
   // Must be relative root path
   if (!redirectParam.startsWith('/')) {
-    return user.role === 'branch' ? '/manifest' : '/dashboard';
+    return user.role === 'branch' ? '/manifest' : (user.role === 'admin' ? '/admin' : '/dashboard');
   }
 
   if (user.role === 'branch') {

@@ -51,6 +51,9 @@ import {
 } from '../../lib/cod';
 import { SYSTEM_PERMISSIONS, ROLE_PRESETS } from '../../lib/permissions';
 import { calculateDomesticFreightRate, createShipment } from '../../lib/store';
+import ExcelImportModal from '../shipping/ExcelImportModal';
+import { downloadExcelTemplate } from '../../lib/excelImport';
+import { FileSpreadsheet } from 'lucide-react';
 
 interface Props {
   onNotice?: (msg: string) => void;
@@ -71,6 +74,7 @@ export default function MerchantToolsSuite({ onNotice, initialTool = 'staff' }: 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [subStaff, setSubStaff] = useState<SubUser[]>([]);
   const [codRecords, setCodRecords] = useState<CodOrderRecord[]>([]);
+  const [showExcelModal, setShowExcelModal] = useState(false);
 
   // Staff creation state
   const [staffName, setStaffName] = useState('');
@@ -803,14 +807,46 @@ export default function MerchantToolsSuite({ onNotice, initialTool = 'staff' }: 
                 Generate batch consignments with 1-click or paste multi-order manifests for instant thermal waybill printing.
               </p>
             </div>
+          </div>
+
+          {/* Top Actions Bar */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => setShowExcelModal(true)}
+                className="btn btn-primary btn-sm"
+                style={{
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  borderColor: '#059669',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  fontWeight: 700
+                }}
+              >
+                <FileSpreadsheet size={15} />
+                <span>Upload Excel (.xlsx / .csv)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => downloadExcelTemplate('xlsx')}
+                className="btn btn-outline btn-sm"
+                style={{ fontSize: '0.76rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+              >
+                <Download size={13} color="var(--brand-cyan)" />
+                <span>Sample Template (.xlsx)</span>
+              </button>
+            </div>
 
             <button
               type="button"
               onClick={handleGenerateBatchConsignments}
-              className="btn btn-primary btn-sm"
+              className="btn btn-secondary btn-sm"
             >
               <Plus size={14} />
-              <span>Simulate 3-Parcel Batch Booking</span>
+              <span>Simulate 3-Parcel Demo Batch</span>
             </button>
           </div>
 
@@ -1276,6 +1312,14 @@ print("Tracking ID:", response.json().get("trackingId"))`
           </div>
         </div>
       )}
+      {/* Excel Import Modal */}
+      <ExcelImportModal
+        isOpen={showExcelModal}
+        onClose={() => setShowExcelModal(false)}
+        onImportComplete={(cnt) => {
+          triggerAlert(`✓ Successfully imported and staged ${cnt} consignments!`);
+        }}
+      />
     </div>
   );
 }

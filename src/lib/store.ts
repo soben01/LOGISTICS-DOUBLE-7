@@ -9,10 +9,16 @@ export interface Checkpoint {
 
 export interface Shipment {
   id: string;
+  bookingNo?: string;
+  trackingNo?: string;
+  parcelNo?: string;
+  merchant?: string;
+  remarks?: string;
+  consignee?: string;
   service: string;
   serviceCode: 'EXP' | 'CARGO' | 'RUSH' | 'INTL' | 'AIR' | 'SEA' | 'FUL';
   isInternational?: boolean;
-  status: 'In Transit' | 'Out for Delivery' | 'Customs Cleared' | 'Delivered' | 'Pending Pickup' | 'Exception' | 'Label Generated' | 'Shipment Dispatched' | 'Origin Hub Inwarded' | 'Courier Assigned' | 'Regional Sort Complete' | 'Order Placed' | 'Reattempt Scheduled' | 'Return Initiated' | 'Returned to Merchant';
+  status: 'In Transit' | 'Out for Delivery' | 'Customs Cleared' | 'Delivered' | 'Pending Pickup' | 'Exception' | 'Label Generated' | 'Shipment Dispatched' | 'Origin Hub Inwarded' | 'Courier Assigned' | 'Regional Sort Complete' | 'Order Placed' | 'Reattempt Scheduled' | 'Return Initiated' | 'Returned to Merchant' | 'Booked' | 'Picked Up' | 'Customs' | 'Returned';
   deliveryAttempts?: number;
   origin: {
     city: string;
@@ -23,6 +29,7 @@ export interface Shipment {
   destination: {
     city: string;
     province?: string;
+    state?: string;
     country?: string;
     hub: string;
     areaCode?: string;
@@ -32,12 +39,18 @@ export interface Shipment {
     name: string;
     company: string;
     phone: string;
+    email?: string;
   };
   recipient: {
     name: string;
     company: string;
     address: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    postalCode?: string;
     phone: string;
+    email?: string;
   };
   cargo: {
     pieces: number;
@@ -58,6 +71,7 @@ export interface Shipment {
     estimatedArrival: string;
     temperatureCelsius?: number;
     currentSpeedKmh?: number;
+    assignedVehicle?: string;
   };
   checkpoints: Checkpoint[];
   proofOfDelivery?: {
@@ -163,34 +177,49 @@ export function normalizeD1Shipment(raw: any): Shipment {
 
   return {
     id: raw.tracking_number || details.number || `D7-D1-${raw.id}`,
-    service: 'Double 7 Nepal Express',
+    bookingNo: raw.booking_no || details.booking_no || raw.tracking_number || details.number,
+    trackingNo: raw.tracking_number || details.number,
+    parcelNo: raw.parcel_no || details.parcel_no || '',
+    merchant: raw.merchant || details.merchant || 'Double 7 Merchant',
+    service: raw.service_type || 'Double 7 Nepal Express',
     serviceCode: 'EXP',
     status: status,
+    remarks: raw.remarks || details.remarks || '',
     origin: {
-      city: 'Kathmandu',
+      city: raw.origin || details.origin || 'Kathmandu',
       hub: 'Kathmandu Mega-Hub (KTM-01)'
     },
     destination: {
-      city: destCity,
+      city: raw.city || destCity,
+      province: raw.province || details.province || '',
+      state: raw.province || details.state || '',
+      country: raw.country || details.country || 'Nepal',
+      postalCode: raw.postal_code || details.postal_code || '',
       hub: `${destCity} Regional Hub`
     },
     sender: {
-      name: 'Central Merchant Dispatch',
-      company: 'Double 7 Logistics Command HQ',
+      name: raw.sender_name || raw.merchant || 'Central Merchant Dispatch',
+      company: raw.merchant || 'Double 7 Logistics Command HQ',
       phone: '+977 1 4411000'
     },
     recipient: {
-      name: raw.consignee_name || details.consignee_name || 'Verified Consignee',
+      name: raw.consignee_name || raw.recipient_name || details.consignee_name || 'Verified Consignee',
       company: details.consignee_company || '',
-      address: details.destination_address || `${destCity} Main Road, Ward 4`,
-      phone: raw.consignee_contact || details.consignee_contact || '+977 98000 00000'
+      address: raw.consignee_address || details.destination_address || `${destCity} Main Road`,
+      city: raw.city || destCity,
+      state: raw.province || details.state || '',
+      country: raw.country || details.country || 'Nepal',
+      postalCode: raw.postal_code || details.postal_code || '',
+      phone: raw.consignee_phone || raw.consignee_contact || details.consignee_contact || '+977 98000 00000',
+      email: raw.consignee_email || details.consignee_email || ''
     },
     cargo: {
-      pieces: Number(details.pieces || 1),
-      weightKg: Number(details.weight || details.weightKg || 2.5),
-      description: details.contents || details.description || 'Commercial Merchandise Parcel',
-      declaredValueNpr: Number(details.declared_value || 4500)
+      pieces: Number(raw.pieces || details.pieces || 1),
+      weightKg: Number(raw.weight_kg || details.weight || details.weightKg || 2.5),
+      description: raw.cargo_description || details.contents || details.description || 'Commercial Merchandise Parcel',
+      declaredValueNpr: Number(raw.cod_amount || details.declared_value || 4500)
     },
+    codAmount: Number(raw.cod_amount || 0),
     telemetry: {
       transportVehicle: 'BA 2 KHA 8841 (Express E-Van)',
       estimatedArrival: 'Guaranteed 24H SLA',
@@ -239,7 +268,99 @@ export async function getAllCombinedBookings(): Promise<Shipment[]> {
 export function getShipmentById(id: string): Shipment | undefined {
   const shipments = getShipments();
   const cleanId = id.trim().toUpperCase();
-  return shipments.find(s => s.id.toUpperCase() === cleanId);
+  const cleanDigits = cleanId.replace(/\D/g, '');
+  return shipments.find(s => {
+    if (s.id.toUpperCase() === cleanId) return true;
+    if (s.bookingNo && s.bookingNo.toUpperCase() === cleanId) return true;
+    if (s.trackingNo && s.trackingNo.toUpperCase() === cleanId) return true;
+    if (s.parcelNo && s.parcelNo.toUpperCase() === cleanId) return true;
+    if (cleanDigits.length >= 6) {
+      if (s.recipient?.phone && s.recipient.phone.replace(/\D/g, '').includes(cleanDigits)) return true;
+      if (s.sender?.phone && s.sender.phone.replace(/\D/g, '').includes(cleanDigits)) return true;
+    }
+    return false;
+  });
+}
+
+export async function bulkCreateShipments(items: Partial<Shipment>[]): Promise<{ added: number; skipped: number; shipments: Shipment[] }> {
+  const current = getShipments();
+  const now = new Date().toLocaleString('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  const createdList: Shipment[] = [];
+  let added = 0;
+  let skipped = 0;
+
+  for (const data of items) {
+    const trackingId = (data.id || data.bookingNo || `D7-${Math.floor(1000 + Math.random() * 9000)}-${data.serviceCode || 'EXP'}`).trim();
+    const code = data.serviceCode || 'EXP';
+    const booking = (data.bookingNo || trackingId).trim();
+    const parcel = (data.parcelNo || '').trim();
+
+    const newShipment: Shipment = {
+      id: trackingId,
+      bookingNo: booking,
+      trackingNo: trackingId,
+      parcelNo: parcel,
+      merchant: data.merchant || data.sender?.name || 'Double 7 Merchant',
+      service: data.service || 'Double 7 Nepal Express',
+      serviceCode: code,
+      status: (data.status as any) || 'Booked',
+      remarks: data.remarks || '',
+      origin: data.origin || { city: 'Kathmandu', province: 'Bagmati Province', hub: 'Kathmandu Central Hub' },
+      destination: data.destination || { city: 'Pokhara', province: 'Gandaki Province', hub: 'Pokhara Regional Hub' },
+      sender: data.sender || { name: data.merchant || 'Verified Merchant', company: 'Nepal Business', phone: '+977 98000 00000' },
+      recipient: data.recipient || { name: 'Customer Receiver', company: 'Personal', address: 'City Road', phone: '+977 98000 00000' },
+      cargo: data.cargo || { pieces: 1, weightKg: 2.0, volumeCbm: 0.01, description: 'E-Commerce Consignment', declaredValueNpr: data.codAmount || 5000 },
+      codAmount: data.codAmount || 0,
+      telemetry: data.telemetry || {
+        transportVehicle: 'D7 Swift Fleet Unit',
+        waybillNumber: `AWB-D7-${trackingId}`,
+        trackingRoute: `${data.origin?.city || 'Kathmandu'} to ${data.destination?.city || 'Pokhara'} Express Corridor`,
+        estimatedArrival: 'Next Business Day (by 17:00 NPT)',
+      },
+      checkpoints: data.checkpoints && data.checkpoints.length > 0 ? data.checkpoints : [
+        {
+          id: `cp-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          timestamp: now,
+          status: (data.status as any) || 'Order Placed',
+          location: `${data.origin?.city || 'Kathmandu'} Dispatch Center`,
+          description: data.remarks || 'Consignment registered via bulk import. Digital waybill issued.',
+          isCompleted: true,
+        },
+      ],
+    };
+
+    createdList.push(newShipment);
+    added++;
+  }
+
+  // De-duplicate against current list by id and bookingNo
+  const existingIds = new Set(current.map(s => s.id.toUpperCase()));
+  const filteredNew = createdList.filter(s => !existingIds.has(s.id.toUpperCase()));
+  const updated = [...filteredNew, ...current];
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  }
+
+  // Asynchronously sync to Cloudflare D1
+  if (typeof window !== 'undefined' && createdList.length > 0) {
+    try {
+      fetch('/api/shipments/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shipments: createdList }),
+      }).catch(() => {});
+    } catch {}
+  }
+
+  return { added: filteredNew.length, skipped: createdList.length - filteredNew.length, shipments: filteredNew };
 }
 
 export function createShipment(data: Partial<Shipment>): Shipment {

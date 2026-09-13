@@ -101,6 +101,15 @@ export interface WebsiteSettings {
   dataRetentionDays: number;
   liveAuditLogEnabled: boolean;
 
+  // 10. Database Control & Storage Settings
+  databaseEngine: 'd1_edge' | 'hybrid_local';
+  databaseQueryLimit: number;
+  databaseAutoIndexing: boolean;
+  databaseCascadeDeletes: boolean;
+  databaseAutoBackup: boolean;
+  databaseRetentionDays: number;
+  databaseTelemetryLatencyMaxMs: number;
+
   lastUpdated: string;
   updatedBy: string;
 }
@@ -212,6 +221,15 @@ export const DEFAULT_WEBSITE_SETTINGS: WebsiteSettings = {
   },
   dataRetentionDays: 365,
   liveAuditLogEnabled: true,
+
+  // 10. Database Control & Storage Settings
+  databaseEngine: 'd1_edge',
+  databaseQueryLimit: 100,
+  databaseAutoIndexing: true,
+  databaseCascadeDeletes: true,
+  databaseAutoBackup: true,
+  databaseRetentionDays: 90,
+  databaseTelemetryLatencyMaxMs: 50,
 
   lastUpdated: new Date().toISOString(),
   updatedBy: 'Super Admin (Command HQ)',

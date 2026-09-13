@@ -42,6 +42,9 @@ import {
   evaluateDeliveryFailure
 } from '../../lib/workflow';
 import { getWebsiteSettings } from '../../lib/settings';
+import ExcelImportModal from '../../components/shipping/ExcelImportModal';
+import { exportShipmentsToExcel } from '../../lib/excelImport';
+import { FileSpreadsheet } from 'lucide-react';
 
 export default function AllBookingsPage() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -56,6 +59,7 @@ export default function AllBookingsPage() {
   const [bulkPrintingShipments, setBulkPrintingShipments] = useState<Shipment[] | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [printFeedback, setPrintFeedback] = useState<string | null>(null);
+  const [showImportModal, setShowImportModal] = useState(false);
   const router = useRouter();
 
   // Quick edit status modal state
@@ -201,15 +205,20 @@ export default function AllBookingsPage() {
 
   // Filter logic
   const filteredShipments = shipments.filter(s => {
-    const matchesSearch =
-      s.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.recipient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.recipient.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.sender.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.sender.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.destination.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.origin.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.cargo.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const term = searchTerm.toLowerCase().trim();
+    const matchesSearch = !term ||
+      s.id.toLowerCase().includes(term) ||
+      (s.bookingNo && s.bookingNo.toLowerCase().includes(term)) ||
+      (s.parcelNo && s.parcelNo.toLowerCase().includes(term)) ||
+      (s.merchant && s.merchant.toLowerCase().includes(term)) ||
+      (s.remarks && s.remarks.toLowerCase().includes(term)) ||
+      s.recipient.name.toLowerCase().includes(term) ||
+      s.recipient.phone.toLowerCase().includes(term) ||
+      s.sender.name.toLowerCase().includes(term) ||
+      s.sender.company.toLowerCase().includes(term) ||
+      s.destination.city.toLowerCase().includes(term) ||
+      s.origin.city.toLowerCase().includes(term) ||
+      s.cargo.description.toLowerCase().includes(term);
 
     const matchesStatus = statusFilter === 'ALL' || s.status.toUpperCase() === statusFilter.toUpperCase();
     const matchesHub = hubFilter === 'ALL' || s.destination.city.toUpperCase() === hubFilter.toUpperCase() || s.origin.city.toUpperCase() === hubFilter.toUpperCase();
@@ -219,6 +228,16 @@ export default function AllBookingsPage() {
 
   const getStatusBadge = (status: Shipment['status']) => {
     switch (status) {
+      case 'Booked':
+        return <span className="badge badge-subtle" style={{ color: '#38bdf8', borderColor: 'rgba(56,189,248,0.4)', background: 'rgba(56,189,248,0.08)' }}>Booked</span>;
+      case 'Picked Up':
+        return <span className="badge badge-cyan">Picked Up</span>;
+      case 'Customs':
+      case 'Customs Cleared':
+        return <span className="badge badge-cyan">Customs Cleared</span>;
+      case 'Returned':
+      case 'Returned to Merchant':
+        return <span className="badge badge-red">Returned</span>;
       case 'Label Generated':
         return <span className="badge badge-purple">Label Generated</span>;
       case 'Shipment Dispatched':
@@ -283,7 +302,7 @@ export default function AllBookingsPage() {
             </p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
             <button
               onClick={loadBookings}
               className="btn btn-secondary btn-sm"
@@ -294,13 +313,53 @@ export default function AllBookingsPage() {
             </button>
 
             <button
-              onClick={handleExportCSV}
-              className="btn btn-outline btn-sm"
-              title="Download CSV Manifest"
+              type="button"
+              onClick={() => setShowImportModal(true)}
+              className="btn btn-sm"
+              style={{
+                background: 'rgba(16, 185, 129, 0.15)',
+                color: '#10b981',
+                border: '1px solid rgba(16, 185, 129, 0.35)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                fontWeight: 700
+              }}
+              title="Bulk import shipments from Excel (.xlsx) or CSV"
             >
-              <Download size={14} />
-              <span>Export CSV</span>
+              <FileSpreadsheet size={14} />
+              <span>Import Excel / CSV</span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => exportShipmentsToExcel(filteredShipments)}
+              className="btn btn-outline btn-sm"
+              title="Download Excel (.xlsx) Manifest"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+            >
+              <Download size={14} color="#10b981" />
+              <span>Export .XLSX</span>
+            </button>
+
+            <a
+              href="https://docs.google.com/spreadsheets/d/1VSfNIHXouc3u_DTcWY1Hs-Hp7wCFf6tfrZC87zlprVA/edit?usp=sharing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-outline btn-sm"
+              title="Open DOUBLE 7 LOGISTICS DB Google Sheet"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                borderColor: 'rgba(16, 185, 129, 0.4)',
+                color: '#34d399',
+                backgroundColor: 'rgba(16, 185, 129, 0.08)'
+              }}
+            >
+              <ExternalLink size={14} />
+              <span>Google Sheet DB</span>
+            </a>
 
             <Link href="/book" className="btn btn-primary btn-sm">
               <Plus size={14} />
@@ -616,21 +675,24 @@ export default function AllBookingsPage() {
                           <button
                             type="button"
                             onClick={() => handleCopy(s.id)}
-                            title="Copy AWB #"
-                            style={{
-                              background: 'transparent',
-                              border: 'none',
-                              color: copiedId === s.id ? 'var(--brand-emerald)' : 'var(--text-muted)',
-                              cursor: 'pointer',
-                              padding: '0.2rem',
-                              display: 'flex'
-                            }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px' }}
+                            title="Copy ID"
                           >
-                            {copiedId === s.id ? <Check size={12} /> : <Copy size={12} />}
+                            {copiedId === s.id ? <Check size={13} color="var(--brand-emerald)" /> : <Copy size={13} />}
                           </button>
                         </div>
+                        {s.bookingNo && s.bookingNo !== s.id && (
+                          <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontFamily: 'var(--font-mono)', marginTop: '0.15rem' }}>
+                            Booking: <strong style={{ color: '#e2e8f0' }}>{s.bookingNo}</strong>
+                          </div>
+                        )}
+                        {s.parcelNo && (
+                          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                            Parcel: {s.parcelNo}
+                          </div>
+                        )}
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
-                          {s.checkpoints[0]?.timestamp || '2026-08-27'}
+                          {s.service}
                         </div>
                       </td>
 
@@ -956,6 +1018,17 @@ export default function AllBookingsPage() {
             onPrinted={handleLabelsPrinted}
           />
         )}
+
+        {/* Bulk Excel / CSV Import Modal */}
+        <ExcelImportModal
+          isOpen={showImportModal}
+          onClose={() => setShowImportModal(false)}
+          onImportComplete={(count) => {
+            loadBookings();
+            setPrintFeedback(`✓ Successfully imported ${count} consignment(s) from spreadsheet!`);
+            setTimeout(() => setPrintFeedback(null), 6000);
+          }}
+        />
       </div>
 
       <style jsx global>{`

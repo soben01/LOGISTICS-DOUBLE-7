@@ -37,18 +37,10 @@ import {
   Activity,
   Calendar
 } from 'lucide-react';
-import { getShipmentById, getShipments, fetchD1Tracking, Shipment, Checkpoint } from '../../lib/store';
+import { getShipmentById, getShipments, fetchD1Tracking, normalizeD1Shipment, Shipment, Checkpoint } from '../../lib/store';
 import { getTrackingWorkflow, calculateWorkflowProgress, WorkflowStage } from '../../lib/workflow';
 import PrintableLabel from '../../components/shipping/PrintableLabel';
 import EmailSummaryModal from '../../components/notifications/EmailSummaryModal';
-import TrackingCorridorRadar from '../../components/shipping/TrackingCorridorRadar';
-import {
-  RoadCondition,
-  getRoadCondition,
-  getShipmentRoadCondition,
-  calculateDelayedTime,
-  adjustWaypointTime
-} from '../../lib/roadConditions';
 
 function TrackContent() {
   const searchParams = useSearchParams();
@@ -63,23 +55,6 @@ function TrackContent() {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [workflowStages, setWorkflowStages] = useState<WorkflowStage[]>([]);
-  const [roadCondition, setRoadCondition] = useState<RoadCondition>(() => getRoadCondition('open'));
-
-  useEffect(() => {
-    if (currentShipment) {
-      setRoadCondition(getShipmentRoadCondition(currentShipment.id));
-    }
-  }, [currentShipment?.id]);
-
-  useEffect(() => {
-    const handleRoadUpdate = (e: any) => {
-      if (currentShipment && e.detail?.shipmentId === currentShipment.id && e.detail?.condition) {
-        setRoadCondition(e.detail.condition);
-      }
-    };
-    window.addEventListener('road-condition-updated', handleRoadUpdate);
-    return () => window.removeEventListener('road-condition-updated', handleRoadUpdate);
-  }, [currentShipment?.id]);
 
   useEffect(() => {
     setWorkflowStages(getTrackingWorkflow().filter(s => s.enabled));
@@ -103,51 +78,7 @@ function TrackContent() {
         fetchD1Tracking(queryId).then((d1Record) => {
           if (!isMounted) return;
           if (d1Record) {
-            const adapted: Shipment = {
-              id: d1Record.tracking_number,
-              service: d1Record.carrier ? `Carrier: ${d1Record.carrier}` : 'Double 7 Express (Cloudflare D1)',
-              serviceCode: 'EXP',
-              status: (d1Record.status === 'Delivered' ? 'Delivered' : 'In Transit') as any,
-              origin: {
-                city: 'Central Dispatch Hub',
-                hub: 'National Logistics Hub',
-              },
-              destination: {
-                city: d1Record.consignee_name ? d1Record.consignee_name.split(' ').slice(-1)[0] : 'Destination Terminal',
-                hub: 'Local Destination Delivery Center',
-              },
-              sender: {
-                name: 'Double 7 Logistics Command',
-                company: 'Double 7 Dispatch Terminal',
-                phone: '+977 1 4411000',
-              },
-              recipient: {
-                name: d1Record.consignee_name || 'Consignee Recipient',
-                company: d1Record.consignee_name || 'Consignee Recipient',
-                address: d1Record.consignee_name || 'Delivery Address on File',
-                phone: d1Record.consignee_contact || 'Registered on File',
-              },
-              cargo: {
-                pieces: 1,
-                weightKg: 2.0,
-                volumeCbm: 0.015,
-                description: d1Record.latest_event || 'Verified Consignment Cargo',
-              },
-              telemetry: {
-                waybillNumber: d1Record.tracking_number,
-                estimatedArrival: d1Record.status === 'Delivered' ? 'Delivered' : 'In Transit via Corridor',
-              },
-              checkpoints: [
-                {
-                  id: `chk-d1-${d1Record.id}`,
-                  timestamp: d1Record.created_at || 'Recorded in Cloudflare D1',
-                  status: (d1Record.status === 'Delivered' ? 'Delivered' : 'In Transit') as any,
-                  location: 'Cloudflare D1 Network Telemetry Gateway',
-                  description: d1Record.latest_event || `Current Status: ${d1Record.status}`,
-                  isCompleted: true,
-                },
-              ],
-            };
+            const adapted: Shipment = normalizeD1Shipment(d1Record);
             setCurrentShipment(adapted);
             setNotFound(false);
           } else {
@@ -284,7 +215,7 @@ function TrackContent() {
               />
               <input
                 type="text"
-                placeholder="Enter Consignment or AWB # (e.g. CP002994035NP or D7-XXXXXXXX)"
+                placeholder="Enter Booking No, Tracking AWB, or Parcel # (e.g. P250009404758, D7-8821-EXP)"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="input-field"
@@ -552,7 +483,7 @@ function TrackContent() {
                   borderRadius: 'var(--radius-md)',
                   padding: '1.5rem',
                   border: '1px solid var(--border-subtle)',
-                  marginBottom: '1.5rem',
+                  marginBottom: 0,
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
@@ -641,48 +572,6 @@ function TrackContent() {
                     </div>
                   </div>
                 </div>
-
-                {/* Interactive Live Highway Corridor Radar Map */}
-                <TrackingCorridorRadar
-                  shipment={currentShipment}
-                  onRoadConditionChange={setRoadCondition}
-                  activeCondition={roadCondition}
-                />
-
-                {/* Guaranteed SLA Strip — Dynamically adjusts if road condition delay changes */}
-                {(() => {
-                  const baseArrivalText = currentShipment.telemetry.estimatedArrival || 'Today by 17:00 NPT (Guaranteed 24H SLA)';
-                  const delayedSLA = calculateDelayedTime(baseArrivalText, roadCondition.delayMinutes, roadCondition);
-
-                  return (
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '1rem 1.4rem',
-                      background: delayedSLA.isDelayed ? `${roadCondition.color}14` : 'rgba(255, 102, 0, 0.04)',
-                      border: `1px solid ${delayedSLA.isDelayed ? roadCondition.color + '55' : 'rgba(255, 102, 0, 0.2)'}`,
-                      borderRadius: 'var(--radius-md)',
-                      fontSize: '0.9rem',
-                      flexWrap: 'wrap',
-                      gap: '0.6rem',
-                      transition: 'all 0.3s ease'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)' }}>
-                        <Clock size={16} color={delayedSLA.isDelayed ? roadCondition.color : 'var(--brand-amber)'} />
-                        <span>Guaranteed Arrival Service SLA:</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                        <strong style={{ color: delayedSLA.isDelayed ? '#ffffff' : '#ffffff', fontFamily: 'var(--font-mono)', fontSize: '0.96rem' }}>
-                          {delayedSLA.arrivalString}
-                        </strong>
-                        <span className={`badge ${delayedSLA.badgeClass}`} style={{ fontSize: '0.68rem', padding: '0.15rem 0.45rem' }}>
-                          {delayedSLA.badgeText}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })()}
               </div>
 
               {/* Waypoints & Checkpoint Telemetry Timeline */}
@@ -859,7 +748,7 @@ function TrackContent() {
                                 </strong>
                               </div>
                               <span style={{ fontSize: '0.78rem', color: 'var(--brand-cyan)', fontFamily: 'var(--font-mono)' }}>
-                                {adjustWaypointTime('Est. Today ~15:45 NPT', roadCondition.delayMinutes)}
+                                Est. Today ~15:45 NPT
                               </span>
                             </div>
                             <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.3rem', lineHeight: '1.45' }}>
@@ -901,7 +790,7 @@ function TrackContent() {
                                 </strong>
                               </div>
                               <span style={{ fontSize: '0.78rem', color: 'var(--brand-amber)', fontFamily: 'var(--font-mono)' }}>
-                                {adjustWaypointTime('Est. Today ~16:30 NPT', roadCondition.delayMinutes)}
+                                Est. Today ~16:30 NPT
                               </span>
                             </div>
                             <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.3rem', lineHeight: '1.45' }}>
@@ -943,7 +832,7 @@ function TrackContent() {
                                 </strong>
                               </div>
                               <span style={{ fontSize: '0.78rem', color: 'var(--brand-emerald)', fontFamily: 'var(--font-mono)' }}>
-                                {adjustWaypointTime('Target: Today 17:00 NPT', roadCondition.delayMinutes)}
+                                Target: Today 17:00 NPT
                               </span>
                             </div>
                             <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.3rem', lineHeight: '1.45' }}>

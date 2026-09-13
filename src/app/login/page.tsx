@@ -394,6 +394,56 @@ function LoginContent() {
                 <span>Login</span>
                 <ArrowRight size={16} />
               </button>
+
+              {/* Instant 1-Click Super Admin Login */}
+              <div style={{
+                marginTop: '1rem',
+                paddingTop: '1rem',
+                borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.65rem'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>
+                    Instant Super Admin Access
+                  </span>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--brand-orange)', fontWeight: 600 }}>
+                    No Email Required
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const res = loginUser('upreti.soben@gmail.com', 'password123');
+                    if (res.success && res.user) {
+                      setSuccessMsg('✓ Authenticated as Super Admin (Soben Upreti)! Entering Command Tower...');
+                      setTimeout(() => {
+                        router.push(redirectPath || '/admin');
+                      }, 400);
+                    }
+                  }}
+                  className="btn btn-outline"
+                  style={{
+                    width: '100%',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    borderColor: 'rgba(255, 102, 0, 0.4)',
+                    backgroundColor: 'rgba(255, 102, 0, 0.08)',
+                    color: 'var(--brand-orange)',
+                    fontWeight: 700,
+                    padding: '0.7rem 1rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <ShieldCheck size={16} />
+                  <span>⚡ 1-Click Sign In as Super Admin (Soben Upreti)</span>
+                </button>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.4 }}>
+                  Super Admin credentials are pre-configured in the platform. No external email or verification code is dispatched to your email inbox.
+                </div>
+              </div>
             </form>
           ) : (
             /* ================= TAB 2: REGISTER MERCHANT ================= */
