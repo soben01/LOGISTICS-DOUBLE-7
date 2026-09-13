@@ -17,7 +17,14 @@ export interface ManifestItem {
   addedAt: string;
 }
 
-export type ManifestStatus = 'Draft' | 'Pending Approval' | 'Printed' | 'Approved & Dispatched';
+export type ManifestStatus =
+  | 'Draft'
+  | 'Pending Approval'
+  | 'Approved'
+  | 'Approved & Dispatched'
+  | 'Rejected'
+  | 'Received'
+  | 'Printed';
 
 export interface NepalHub {
   code: string;
@@ -37,6 +44,13 @@ export const NEPAL_HUBS: NepalHub[] = [
   { code: 'NPJ-01', name: 'Nepalgunj Regional Hub (NPJ-01)', city: 'Nepalgunj', region: 'Bheri / Karnali Gateway', prefix: 'NPJ' },
   { code: 'DHN-01', name: 'Dhangadhi Terminal (DHN-01)', city: 'Dhangadhi', region: 'Sudurpashchim Gateway', prefix: 'DHN' },
 ];
+
+export interface ManifestHistoryEntry {
+  timestamp: string;
+  action: string;
+  actor: string;
+  notes?: string;
+}
 
 export interface BranchManifest {
   id: string;
@@ -59,11 +73,17 @@ export interface BranchManifest {
   createdAt: string;
   generatedAt?: string;
   printedAt?: string;
+  approvedAt?: string;
+  approvedBy?: string;
   dispatchedAt?: string;
   dispatchedBy?: string;
-  approvedBy?: string;
-  approvedAt?: string;
+  receivedAt?: string;
+  receivedBy?: string;
+  rejectionReason?: string;
+  rejectedBy?: string;
+  rejectedAt?: string;
   notes?: string;
+  history?: ManifestHistoryEntry[];
 }
 
 const MANIFESTS_STORAGE_KEY = 'double7_branch_manifests_v2';
@@ -109,10 +129,10 @@ export function updateBranchManifest(updated: BranchManifest): { success: boolea
     return { success: false, error: 'Manifest not found in registry.' };
   }
   const existing = current[index];
-  if (existing.status === 'Approved & Dispatched' || existing.isLocked) {
+  if (existing.status === 'Approved & Dispatched' || existing.status === 'Approved' || existing.status === 'Received' || existing.isLocked) {
     return {
       success: false,
-      error: 'CRITICAL SECURITY: This manifest is already Verified & Dispatched. It is permanently locked and cannot be edited.'
+      error: 'CRITICAL SECURITY: This manifest is Approved / Dispatched. It is permanently locked and cannot be edited.'
     };
   }
 
@@ -121,12 +141,21 @@ export function updateBranchManifest(updated: BranchManifest): { success: boolea
   const totalWeightKg = Math.round(updated.items.reduce((sum, item) => sum + (item.weightKg || 0), 0) * 10) / 10;
   const totalCodNpr = updated.items.reduce((sum, item) => sum + (item.codAmount || 0), 0);
 
+  const history = updated.history || existing.history || [];
+  history.push({
+    timestamp: new Date().toISOString(),
+    action: 'Manifest Updated',
+    actor: 'Hub Dispatch Officer',
+    notes: `Updated items count: ${updated.items.length}`
+  });
+
   current[index] = {
     ...updated,
     totalShipments: updated.items.length,
     totalPieces,
     totalWeightKg,
     totalCodNpr,
+    history
   };
 
   localStorage.setItem(MANIFESTS_STORAGE_KEY, JSON.stringify(current));
@@ -139,8 +168,8 @@ export function deleteBranchManifest(id: string): { success: boolean; error?: st
   const current = getBranchManifests();
   const target = current.find(m => m.id === id);
   if (!target) return { success: false, error: 'Manifest not found.' };
-  if (target.status === 'Approved & Dispatched' || target.isLocked) {
-    return { success: false, error: 'Cannot delete an Approved & Dispatched manifest. It is permanently archived.' };
+  if (target.status === 'Approved & Dispatched' || target.status === 'Approved' || target.status === 'Received' || target.isLocked) {
+    return { success: false, error: 'Cannot delete an Approved/Dispatched manifest. It is permanently locked.' };
   }
   const filtered = current.filter(m => m.id !== id);
   localStorage.setItem(MANIFESTS_STORAGE_KEY, JSON.stringify(filtered));
@@ -165,6 +194,7 @@ export function createBranchManifest(params: {
   items: ManifestItem[];
   status?: ManifestStatus;
   notes?: string;
+  createdBy?: string;
 }): BranchManifest {
   const now = new Date();
   const dateStr = now.toISOString().split('T')[0].replace(/-/g, '');
@@ -175,6 +205,16 @@ export function createBranchManifest(params: {
   const totalPieces = params.items.reduce((sum, item) => sum + (item.pieces || 1), 0);
   const totalWeightKg = Math.round(params.items.reduce((sum, item) => sum + (item.weightKg || 0), 0) * 10) / 10;
   const totalCodNpr = params.items.reduce((sum, item) => sum + (item.codAmount || 0), 0);
+
+  const initialStatus = params.status || 'Pending Approval';
+  const history: ManifestHistoryEntry[] = [
+    {
+      timestamp: now.toISOString(),
+      action: initialStatus === 'Draft' ? 'Created Draft' : 'Submitted for Approval',
+      actor: params.createdBy || `${params.branchCode} Hub Officer`,
+      notes: `Staged with ${params.items.length} consignments`
+    }
+  ];
 
   const newManifest: BranchManifest = {
     id,
@@ -192,26 +232,83 @@ export function createBranchManifest(params: {
     totalPieces,
     totalWeightKg,
     totalCodNpr,
-    status: params.status || 'Pending Approval',
+    status: initialStatus,
     isLocked: false,
     createdAt: now.toISOString(),
     generatedAt: now.toISOString(),
     notes: params.notes,
+    history
   };
 
   saveBranchManifest(newManifest);
   return newManifest;
 }
 
-export function markManifestPrinted(id: string): BranchManifest | null {
-  const manifest = getManifestById(id);
-  if (!manifest) return null;
-  if (manifest.status !== 'Approved & Dispatched') {
-    manifest.status = 'Printed';
+/**
+ * Super Admin Approves the Manifest (Locks it from Hub edits, ready for linehaul dispatch).
+ */
+export function approveManifest(
+  manifestId: string,
+  approvedBy?: string,
+  notes?: string
+): { success: boolean; manifest?: BranchManifest; error?: string } {
+  const manifests = getBranchManifests();
+  const manifest = manifests.find(m => m.id.toLowerCase() === manifestId.toLowerCase() || m.manifestNumber.toLowerCase() === manifestId.toLowerCase());
+  if (!manifest) return { success: false, error: 'Manifest not found.' };
+
+  if (manifest.status === 'Approved & Dispatched' || manifest.status === 'Received') {
+    return { success: false, error: 'Manifest is already dispatched.' };
   }
-  manifest.printedAt = new Date().toISOString();
+
+  const now = new Date().toISOString();
+  manifest.status = 'Approved';
+  manifest.isLocked = true;
+  manifest.approvedAt = now;
+  manifest.approvedBy = approvedBy || 'Super Admin';
+  manifest.history = manifest.history || [];
+  manifest.history.push({
+    timestamp: now,
+    action: 'Admin Approved',
+    actor: manifest.approvedBy,
+    notes: notes || 'Manifest verified and locked. Ready for vehicle departure.'
+  });
+
   saveBranchManifest(manifest);
-  return manifest;
+  return { success: true, manifest };
+}
+
+/**
+ * Super Admin Rejects the Manifest with Reason (Returns to Hub for correction, unlocks).
+ */
+export function rejectManifest(
+  manifestId: string,
+  rejectedBy: string,
+  reason: string
+): { success: boolean; manifest?: BranchManifest; error?: string } {
+  const manifests = getBranchManifests();
+  const manifest = manifests.find(m => m.id.toLowerCase() === manifestId.toLowerCase() || m.manifestNumber.toLowerCase() === manifestId.toLowerCase());
+  if (!manifest) return { success: false, error: 'Manifest not found.' };
+
+  if (manifest.status === 'Approved & Dispatched' || manifest.status === 'Received') {
+    return { success: false, error: 'Cannot reject an already dispatched manifest.' };
+  }
+
+  const now = new Date().toISOString();
+  manifest.status = 'Rejected';
+  manifest.isLocked = false; // Hub can now edit and fix
+  manifest.rejectedAt = now;
+  manifest.rejectedBy = rejectedBy || 'Super Admin';
+  manifest.rejectionReason = reason;
+  manifest.history = manifest.history || [];
+  manifest.history.push({
+    timestamp: now,
+    action: 'Admin Rejected',
+    actor: rejectedBy,
+    notes: `Reason: ${reason}`
+  });
+
+  saveBranchManifest(manifest);
+  return { success: true, manifest };
 }
 
 /**
@@ -228,7 +325,7 @@ export function approveAndDispatchManifest(
     return { success: false, updatedCount: 0, error: 'Manifest not found in registry.' };
   }
 
-  if (manifest.status === 'Approved & Dispatched' || manifest.isLocked) {
+  if (manifest.status === 'Approved & Dispatched' || manifest.status === 'Received') {
     return { success: false, updatedCount: 0, error: 'This manifest is already verified, dispatched, and locked.' };
   }
 
@@ -240,9 +337,17 @@ export function approveAndDispatchManifest(
   manifest.status = 'Approved & Dispatched';
   manifest.isLocked = true;
   manifest.dispatchedAt = now;
-  manifest.approvedAt = now;
+  manifest.approvedAt = manifest.approvedAt || now;
   manifest.dispatchedBy = approvedBy || 'Authorized Branch Officer';
-  manifest.approvedBy = approvedBy || 'HQ Operations Controller';
+  manifest.approvedBy = manifest.approvedBy || approvedBy || 'HQ Operations Controller';
+
+  manifest.history = manifest.history || [];
+  manifest.history.push({
+    timestamp: now,
+    action: 'Dispatched & Sealed',
+    actor: manifest.dispatchedBy,
+    notes: `Departed on vehicle ${manifest.linehaulVehicle}. Seal #${manifest.sealNumber}`
+  });
 
   let updatedCount = 0;
   // Update every shipment in this manifest to 'Shipment Dispatched'
@@ -261,6 +366,57 @@ export function approveAndDispatchManifest(
   }
 
   return { success: true, manifest, updatedCount };
+}
+
+/**
+ * Destination Hub confirms receiving the incoming manifest.
+ */
+export function receiveManifestAtDestination(
+  manifestId: string,
+  receivedBy: string,
+  notes?: string
+): { success: boolean; manifest?: BranchManifest; error?: string } {
+  const manifests = getBranchManifests();
+  const manifest = manifests.find(m => m.id.toLowerCase() === manifestId.toLowerCase() || m.manifestNumber.toLowerCase() === manifestId.toLowerCase());
+  if (!manifest) return { success: false, error: 'Manifest not found.' };
+
+  const now = new Date().toISOString();
+  manifest.status = 'Received';
+  manifest.isLocked = true;
+  manifest.receivedAt = now;
+  manifest.receivedBy = receivedBy || 'Destination Hub Inward Officer';
+
+  manifest.history = manifest.history || [];
+  manifest.history.push({
+    timestamp: now,
+    action: 'Received at Destination Hub',
+    actor: manifest.receivedBy,
+    notes: notes || 'Seal verified intact, package count verified.'
+  });
+
+  // Update all shipments to Hub Received at the destination hub
+  manifest.items.forEach(item => {
+    item.status = 'Hub Received';
+    const note = `Received at destination hub (${manifest.destinationHub}) from Manifest ${manifest.manifestNumber}. Verified by ${manifest.receivedBy}.`;
+    updateShipmentStatus(item.bookingId, 'Hub Received', manifest.destinationCity, note);
+  });
+
+  saveBranchManifest(manifest);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('manifest-updated'));
+    window.dispatchEvent(new Event('shipments-updated'));
+    window.dispatchEvent(new Event('storage'));
+  }
+
+  return { success: true, manifest };
+}
+
+export function markManifestPrinted(id: string): BranchManifest | null {
+  const manifest = getManifestById(id);
+  if (!manifest) return null;
+  manifest.printedAt = new Date().toISOString();
+  saveBranchManifest(manifest);
+  return manifest;
 }
 
 /**
