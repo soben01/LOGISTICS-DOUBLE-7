@@ -440,8 +440,63 @@ function LoginContent() {
                   <ShieldCheck size={16} />
                   <span>⚡ 1-Click Sign In as Super Admin (Soben Upreti)</span>
                 </button>
+
+                {/* 1-Click Station Operator Access */}
+                <div style={{
+                  marginTop: '0.75rem',
+                  paddingTop: '0.75rem',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>
+                      Branch Station Operator Login
+                    </span>
+                    <span style={{ fontSize: '0.7rem', color: '#c084fc', fontWeight: 600 }}>
+                      Scoped to Branch Code
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                    {[
+                      { code: 'PKR-01', name: 'Pokhara Hub', email: 'pkr.branch@double7.com.np' },
+                      { code: 'BRT-01', name: 'Biratnagar Hub', email: 'brt.branch@double7.com.np' },
+                      { code: 'KTM-01', name: 'Kathmandu Hub', email: 'ktm.branch@double7.com.np' },
+                      { code: 'BTW-01', name: 'Butwal Hub', email: 'btw.branch@double7.com.np' }
+                    ].map(st => (
+                      <button
+                        key={st.code}
+                        type="button"
+                        onClick={() => {
+                          const res = loginUser(st.email, 'branch123');
+                          if (res.success && res.user) {
+                            setSuccessMsg(`✓ Authenticated as ${st.name} Operator (${st.code})! Entering Station Dispatch Console...`);
+                            setTimeout(() => {
+                              router.push('/manifest');
+                            }, 400);
+                          }
+                        }}
+                        className="btn btn-secondary btn-sm"
+                        style={{
+                          justifyContent: 'center',
+                          padding: '0.5rem 0.65rem',
+                          fontSize: '0.78rem',
+                          borderColor: 'rgba(168, 85, 247, 0.3)',
+                          backgroundColor: 'rgba(168, 85, 247, 0.06)',
+                          color: '#c084fc'
+                        }}
+                      >
+                        <Building size={13} />
+                        <span>{st.name} ({st.code})</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.4 }}>
-                  Super Admin credentials are pre-configured in the platform. No external email or verification code is dispatched to your email inbox.
+                  Credentials are pre-configured in the platform. Select Super Admin for nationwide oversight, or a Branch Station to test branch code isolation.
                 </div>
               </div>
             </form>

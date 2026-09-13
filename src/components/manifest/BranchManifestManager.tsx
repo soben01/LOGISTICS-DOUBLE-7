@@ -37,9 +37,10 @@ import {
   CornerDownLeft,
   Clock,
   ClipboardList,
-  Ban
+  Ban,
+  Shield
 } from 'lucide-react';
-import { User, getCurrentUser } from '../../lib/auth';
+import { User, getCurrentUser, isHqAdmin } from '../../lib/auth';
 import { getShipments, updateShipmentStatus, Shipment } from '../../lib/store';
 import {
   BranchManifest,
@@ -70,7 +71,10 @@ export default function BranchManifestManager({ user }: Props) {
   const [manifests, setManifests] = useState<BranchManifest[]>([]);
   const [activeTab, setActiveTab] = useState<'create' | 'dispatched_manifests' | 'incoming_receiving' | 'dispatched_shipments'>('create');
   
-  // Hub Selection & Switching
+  // Super Admin Simulated Branch (allows Super Admin to test branch scoping view)
+  const [adminSimulatedBranch, setAdminSimulatedBranch] = useState<string | null>(null);
+
+  // Hub Selection & Operating Hub
   const [selectedHubCode, setSelectedHubCode] = useState<string>('KTM-01');
   const [branchOrigin, setBranchOrigin] = useState('Kathmandu Mega-Hub (KTM-01)');
   const [branchCode, setBranchCode] = useState('KTM-01');
@@ -113,6 +117,11 @@ export default function BranchManifestManager({ user }: Props) {
   const [showEligibleDrawer, setShowEligibleDrawer] = useState(false);
   const [allShipments, setAllShipments] = useState<Shipment[]>([]);
 
+  // Determine permissions
+  const isHqOrSuperAdmin = isHqAdmin(currentUser);
+  const isBranchUser = !isHqOrSuperAdmin || Boolean(adminSimulatedBranch);
+  const effectiveBranchCode = adminSimulatedBranch || (currentUser?.branchCode && currentUser.branchCode !== 'HQ' && currentUser.branchCode !== 'ALL' ? currentUser.branchCode : selectedHubCode);
+
   const reloadData = () => {
     const list = getBranchManifests('ALL');
     setManifests(list);
@@ -123,12 +132,17 @@ export default function BranchManifestManager({ user }: Props) {
     const u = currentUser || getCurrentUser();
     if (u) {
       setCurrentUser(u);
-      if (u.branchCode) {
-        const found = NEPAL_HUBS.find(h => h.code === u.branchCode);
+      if (u.branchCode && u.branchCode !== 'HQ' && u.branchCode !== 'ALL') {
+        const found = NEPAL_HUBS.find(h => h.code.toUpperCase() === u.branchCode?.toUpperCase());
         if (found) {
           setSelectedHubCode(found.code);
           setBranchCode(found.code);
           setBranchOrigin(found.name);
+          const otherHubs = NEPAL_HUBS.filter(h => h.code !== found.code);
+          if (otherHubs.length > 0) {
+            setDestinationHub(otherHubs[0].name);
+            setDestinationCity(otherHubs[0].city);
+          }
         }
       }
     }
@@ -150,8 +164,12 @@ export default function BranchManifestManager({ user }: Props) {
     }
   }, []);
 
-  // Handle Switching Origin Hub
+  // Handle Switching Origin Hub (Only allowed for Super Admin / Admin HQ)
   const handleSwitchHub = (hubCode: string) => {
+    if (isBranchUser && !adminSimulatedBranch) {
+      alert('Access Restricted: Branch operators are locked to their station code.');
+      return;
+    }
     setSelectedHubCode(hubCode);
     const hub = NEPAL_HUBS.find(h => h.code === hubCode);
     if (hub) {
@@ -165,11 +183,32 @@ export default function BranchManifestManager({ user }: Props) {
         setDestinationCity(otherHubs[0].city);
       }
     }
-    // If editing a manifest from another hub, ask to cancel
     if (editingManifestId) {
       if (confirm('Switching hubs will exit manifest edit mode. Discard current changes?')) {
         handleCancelEdit();
       }
+    }
+  };
+
+  // Super Admin view simulator switcher
+  const handleSimulateStation = (code: string | null) => {
+    setAdminSimulatedBranch(code);
+    if (code) {
+      const hub = NEPAL_HUBS.find(h => h.code === code);
+      if (hub) {
+        setSelectedHubCode(hub.code);
+        setBranchCode(hub.code);
+        setBranchOrigin(hub.name);
+        const otherHubs = NEPAL_HUBS.filter(h => h.code !== hub.code);
+        if (otherHubs.length > 0) {
+          setDestinationHub(otherHubs[0].name);
+          setDestinationCity(otherHubs[0].city);
+        }
+      }
+    } else {
+      setSelectedHubCode('KTM-01');
+      setBranchCode('KTM-01');
+      setBranchOrigin('Kathmandu Mega-Hub (KTM-01)');
     }
   };
 
@@ -188,7 +227,6 @@ export default function BranchManifestManager({ user }: Props) {
       return;
     }
 
-    // Check if already staged
     if (stagedItems.some(i => i.bookingId.toUpperCase() === targetId)) {
       setInputFeedback({ type: 'error', message: `Booking ${targetId} is already added in this manifest.` });
       return;
@@ -239,7 +277,6 @@ export default function BranchManifestManager({ user }: Props) {
     }
 
     if (editingManifestId) {
-      // Update existing manifest
       const existing = manifests.find(m => m.id === editingManifestId);
       if (!existing) {
         alert('Error: Original manifest not found.');
@@ -253,7 +290,7 @@ export default function BranchManifestManager({ user }: Props) {
       const updated: BranchManifest = {
         ...existing,
         branchOrigin,
-        branchCode,
+        branchCode: effectiveBranchCode,
         destinationHub,
         destinationCity,
         linehaulVehicle,
@@ -271,16 +308,15 @@ export default function BranchManifestManager({ user }: Props) {
         return;
       }
 
-      setActionSuccessNotice(`✓ Manifest ${existing.manifestNumber} updated and ${statusToSet === 'Pending Approval' ? 'submitted for admin approval' : 'saved'}.`);
+      setActionSuccessNotice(`✓ Manifest ${existing.manifestNumber} updated and ${statusToSet === 'Pending Approval' ? 'submitted for Admin approval' : 'saved as Draft'}.`);
       handleCancelEdit();
       reloadData();
       setActiveTab('dispatched_manifests');
       setTimeout(() => setActionSuccessNotice(null), 6000);
     } else {
-      // Create fresh manifest
       const manifest = createBranchManifest({
         branchOrigin,
-        branchCode,
+        branchCode: effectiveBranchCode,
         destinationHub,
         destinationCity,
         linehaulVehicle,
@@ -290,7 +326,7 @@ export default function BranchManifestManager({ user }: Props) {
         items: stagedItems,
         status: statusToSet,
         notes: manifestNotes,
-        createdBy: currentUser?.name || `${branchCode} Hub Officer`,
+        createdBy: currentUser?.name || `${effectiveBranchCode} Hub Officer`,
       });
 
       setStagedItems([]);
@@ -306,10 +342,10 @@ export default function BranchManifestManager({ user }: Props) {
     }
   };
 
-  // Start Editing an Existing Manifest (Only if NOT Locked)
+  // Start Editing an Existing Manifest
   const handleStartEdit = (manifest: BranchManifest) => {
     if (manifest.status === 'Approved & Dispatched' || manifest.status === 'Approved' || manifest.status === 'Received' || manifest.isLocked) {
-      alert('🔒 IMMUTABLE MANIFEST: This manifest has been verified and locked by Admin. Handover records and container seals cannot be altered.');
+      alert('🔒 IMMUTABLE MANIFEST: This manifest has been verified and locked. Handover records and container seals cannot be altered.');
       return;
     }
 
@@ -347,25 +383,33 @@ export default function BranchManifestManager({ user }: Props) {
     window.print();
   };
 
-  // Admin Approves Manifest (Locks from Hub edits, ready for linehaul departure)
+  // Super Admin Approves Manifest
   const handleAdminApproveOnly = (manifestId: string) => {
+    if (isBranchUser) {
+      alert('Access Denied: Only Super Admin and HQ Operations can approve linehaul manifests.');
+      return;
+    }
     const res = approveManifest(manifestId, currentUser?.name || 'Super Admin');
     if (!res.success) {
       alert(res.error || 'Failed to approve manifest.');
       return;
     }
     reloadData();
-    setActionSuccessNotice(`✓ Manifest ${res.manifest?.manifestNumber} APPROVED by Admin. Manifest is now locked from hub edits and queued for dispatch.`);
+    setActionSuccessNotice(`✓ Manifest ${res.manifest?.manifestNumber} APPROVED by Admin. Manifest is locked from hub edits and queued for vehicle dispatch.`);
     setTimeout(() => setActionSuccessNotice(null), 7000);
   };
 
-  // Open Rejection Modal
+  // Super Admin Opens Rejection Modal
   const handleOpenRejectModal = (manifest: BranchManifest) => {
+    if (isBranchUser) {
+      alert('Access Denied: Only Super Admin and HQ Operations can reject linehaul manifests.');
+      return;
+    }
     setRejectModalManifest(manifest);
     setRejectionReason('');
   };
 
-  // Confirm Rejection & Return to Hub
+  // Super Admin Confirms Rejection & Returns to Hub
   const handleConfirmReject = () => {
     if (!rejectModalManifest) return;
     if (!rejectionReason.trim()) {
@@ -384,8 +428,12 @@ export default function BranchManifestManager({ user }: Props) {
     setTimeout(() => setActionSuccessNotice(null), 7000);
   };
 
-  // Execute Dispatch & Lock
+  // Super Admin Executes Dispatch & Lock
   const handleExecuteApprovalAndDispatch = (manifestId: string) => {
+    if (isBranchUser) {
+      alert('Access Denied: Only Super Admin and authorized HQ dispatchers can verify and seal linehaul departures.');
+      return;
+    }
     const res = approveAndDispatchManifest(manifestId, currentUser?.name || 'HQ Operations Admin');
     if (!res.success) {
       alert(res.error || 'Failed to approve dispatch.');
@@ -415,7 +463,7 @@ export default function BranchManifestManager({ user }: Props) {
     if (!receivingModalManifest) return;
     const res = receiveManifestAtDestination(
       receivingModalManifest.id,
-      currentUser?.name || `${selectedHubCode} Receiving Desk`,
+      currentUser?.name || `${effectiveBranchCode} Receiving Desk`,
       receivingRemarks.trim()
     );
     if (!res.success) {
@@ -425,7 +473,7 @@ export default function BranchManifestManager({ user }: Props) {
     setReceivingModalManifest(null);
     reloadData();
     setActionSuccessNotice(
-      `📥 Manifest ${res.manifest?.manifestNumber} RECEIVED at ${selectedHubCode}! Updated all ${res.manifest?.items.length} consignment(s) to "Hub Received".`
+      `📥 Manifest ${res.manifest?.manifestNumber} RECEIVED at ${effectiveBranchCode}! Updated all ${res.manifest?.items.length} consignment(s) to "Hub Received".`
     );
     setTimeout(() => setActionSuccessNotice(null), 8000);
   };
@@ -435,18 +483,18 @@ export default function BranchManifestManager({ user }: Props) {
   const totalStagedWeight = Math.round(stagedItems.reduce((acc, i) => acc + (i.weightKg || 0), 0) * 10) / 10;
   const totalStagedCod = stagedItems.reduce((acc, i) => acc + (i.codAmount || 0), 0);
 
-  // Filtered shipments for 'dispatched_shipments' tab
-  const dispatchedShipments = allShipments.filter(s => s.status === 'Shipment Dispatched' || s.status === 'In Transit');
-
-  // Eligible shipments to quick add
+  // Eligible shipments to quick add (scoped to branch for branch users)
   const eligibleShipments = allShipments.filter(
     s =>
       !stagedItems.some(i => i.bookingId.toUpperCase() === s.id.toUpperCase()) &&
       (s.status === 'Order Placed' || s.status === 'Label Generated' || s.status === 'Origin Hub Inwarded' || s.status === 'Pending Pickup' || s.status === 'Hub Received')
   );
 
-  // Incoming manifests for the current hub
-  const activeHubObj = NEPAL_HUBS.find(h => h.code === selectedHubCode);
+  // Active incoming destination hub object
+  const activeHubObj = NEPAL_HUBS.find(h => h.code.toUpperCase() === effectiveBranchCode.toUpperCase());
+
+  // Incoming manifests for the receiving hub
+  // Branch users ONLY see manifests destined for their branch!
   const incomingManifests = manifests.filter(m => {
     if (!activeHubObj) return false;
     const dest = m.destinationHub.toLowerCase();
@@ -457,10 +505,18 @@ export default function BranchManifestManager({ user }: Props) {
   });
   const incomingAwaitingCount = incomingManifests.filter(m => m.status === 'Approved & Dispatched').length;
 
-  // Filtered Archive Manifests
+  // ================= CRITICAL SCOPING RULE =================
+  // Branch users can ONLY view their own branch's manifests!
+  // Only Super Admin and HQ can view ALL manifests nationwide.
   const filteredManifests = manifests.filter(m => {
-    if (archiveHubFilter !== 'ALL' && m.branchCode.toUpperCase() !== archiveHubFilter.toUpperCase()) {
-      return false;
+    if (isBranchUser) {
+      if (m.branchCode.toUpperCase() !== effectiveBranchCode.toUpperCase()) {
+        return false;
+      }
+    } else {
+      if (archiveHubFilter !== 'ALL' && m.branchCode.toUpperCase() !== archiveHubFilter.toUpperCase()) {
+        return false;
+      }
     }
     if (archiveStatusFilter === 'DRAFT' && m.status !== 'Draft') {
       return false;
@@ -483,27 +539,48 @@ export default function BranchManifestManager({ user }: Props) {
     return true;
   });
 
-  const draftCount = manifests.filter(m => m.status === 'Draft').length;
-  const pendingApprovalCount = manifests.filter(m => m.status === 'Pending Approval' || m.status === 'Printed').length;
-  const approvedCount = manifests.filter(m => m.status === 'Approved').length;
-  const dispatchedCount = manifests.filter(m => m.status === 'Approved & Dispatched').length;
-  const rejectedCount = manifests.filter(m => m.status === 'Rejected').length;
-  const receivedCount = manifests.filter(m => m.status === 'Received').length;
+  // Count metrics scoped to current permission view
+  const scopedBaseList = manifests.filter(m => isBranchUser ? m.branchCode.toUpperCase() === effectiveBranchCode.toUpperCase() : true);
+  const totalScopedCount = scopedBaseList.length;
+  const draftCount = scopedBaseList.filter(m => m.status === 'Draft').length;
+  const pendingApprovalCount = scopedBaseList.filter(m => m.status === 'Pending Approval' || m.status === 'Printed').length;
+  const approvedCount = scopedBaseList.filter(m => m.status === 'Approved').length;
+  const dispatchedCount = scopedBaseList.filter(m => m.status === 'Approved & Dispatched').length;
+  const rejectedCount = scopedBaseList.filter(m => m.status === 'Rejected').length;
+  const receivedCount = scopedBaseList.filter(m => m.status === 'Received').length;
+
+  // Dispatched shipments filtered
+  const dispatchedShipments = allShipments.filter(s => {
+    const isDisp = s.status === 'Shipment Dispatched' || s.status === 'In Transit';
+    if (!isDisp) return false;
+    if (isBranchUser) {
+      const city = activeHubObj?.city?.toLowerCase() || '';
+      return (
+        s.origin.hub?.toUpperCase() === effectiveBranchCode.toUpperCase() ||
+        s.destination.hub?.toUpperCase() === effectiveBranchCode.toUpperCase() ||
+        s.origin.city?.toLowerCase() === city ||
+        s.destination.city?.toLowerCase() === city
+      );
+    }
+    return true;
+  });
 
   const currentEditingManifest = editingManifestId ? manifests.find(m => m.id === editingManifestId) : null;
 
   return (
     <div style={{ padding: '2.5rem 0 6rem 0' }}>
       <div className="container">
-        {/* ================= 1. MULTI-HUB CONTEXT & CONTROLS BANNER ================= */}
+        {/* ================= 1. CONTEXT & CONTROLS BANNER ================= */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: '1.25rem',
-          background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.14) 0%, rgba(10, 15, 29, 0.96) 100%)',
-          border: '1px solid rgba(168, 85, 247, 0.3)',
+          background: isBranchUser
+            ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(10, 15, 29, 0.96) 100%)'
+            : 'linear-gradient(135deg, rgba(168, 85, 247, 0.14) 0%, rgba(10, 15, 29, 0.96) 100%)',
+          border: `1px solid ${isBranchUser ? 'rgba(59, 130, 246, 0.35)' : 'rgba(168, 85, 247, 0.3)'}`,
           borderRadius: '16px',
           padding: '1.5rem',
           marginBottom: '2rem'
@@ -513,73 +590,151 @@ export default function BranchManifestManager({ user }: Props) {
               width: '56px',
               height: '56px',
               borderRadius: '14px',
-              background: 'rgba(168, 85, 247, 0.22)',
-              border: '1px solid rgba(168, 85, 247, 0.45)',
+              background: isBranchUser ? 'rgba(59, 130, 246, 0.22)' : 'rgba(168, 85, 247, 0.22)',
+              border: `1px solid ${isBranchUser ? 'rgba(59, 130, 246, 0.45)' : 'rgba(168, 85, 247, 0.45)'}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#c084fc',
-              boxShadow: '0 8px 24px rgba(168, 85, 247, 0.25)'
+              color: isBranchUser ? '#60a5fa' : '#c084fc',
+              boxShadow: isBranchUser ? '0 8px 24px rgba(59, 130, 246, 0.25)' : '0 8px 24px rgba(168, 85, 247, 0.25)'
             }}>
-              <Boxes size={30} />
+              {isBranchUser ? <Building size={30} /> : <Boxes size={30} />}
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <span className="badge badge-purple" style={{ fontWeight: 800 }}>
-                  <MapPin size={11} /> {branchCode}
+                <span className={isBranchUser ? 'badge badge-blue' : 'badge badge-purple'} style={{ fontWeight: 800 }}>
+                  <MapPin size={11} /> {effectiveBranchCode}
                 </span>
-                <span className="badge badge-subtle">
-                  MULTI-HUB LINEHAUL CONSOLE
-                </span>
-                <span className="badge badge-orange">
-                  <ShieldCheck size={11} /> Central Admin Approval &amp; Permanent Lock
-                </span>
+                
+                {isBranchUser ? (
+                  <span className="badge badge-amber" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontWeight: 800 }}>
+                    <Lock size={11} /> STATION RESTRICTED ACCESS ({effectiveBranchCode})
+                  </span>
+                ) : (
+                  <span className="badge badge-orange" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontWeight: 800 }}>
+                    <ShieldCheck size={11} /> COMMAND HQ SUPER ADMIN (NATIONWIDE OVERSIGHT)
+                  </span>
+                )}
+                
+                {adminSimulatedBranch && (
+                  <span className="badge badge-subtle" style={{ background: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', fontWeight: 700 }}>
+                    Testing Mode: Simulating {adminSimulatedBranch} View
+                  </span>
+                )}
               </div>
+
               <h1 style={{ fontSize: '1.85rem', fontWeight: 800, margin: '0.35rem 0 0.15rem 0', letterSpacing: '-0.02em' }}>
                 {branchOrigin}
               </h1>
+
               <p style={{ margin: 0, fontSize: '0.86rem', color: 'var(--text-secondary)' }}>
-                Multi-hub dispatch console: Staging &rarr; Admin Review &rarr; Approval &rarr; Immutable Dispatch Lock &rarr; Destination Hub Receiving.
+                {isBranchUser ? (
+                  <span>
+                    Station dispatch console for <strong>{effectiveBranchCode}</strong>. Manifests are strictly isolated to your branch. Approvals are controlled centrally by Command HQ.
+                  </span>
+                ) : (
+                  <span>
+                    Central Super Admin Command Tower. Inspect, review, approve, reject, or dispatch manifests nationwide across all Nepal hubs.
+                  </span>
+                )}
               </p>
             </div>
           </div>
 
-          {/* Right: Operating Hub Switcher & Quick Links */}
+          {/* Right Controls: Station Lock or Hub Switcher */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', alignItems: 'flex-end' }}>
-            {/* Hub Selector */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.6rem',
-              background: 'rgba(255, 255, 255, 0.07)',
-              padding: '0.45rem 0.85rem',
-              borderRadius: '10px',
-              border: '1px solid rgba(255, 255, 255, 0.15)'
-            }}>
-              <Building size={16} color="#c084fc" />
-              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase' }}>
-                Active Hub:
-              </span>
-              <select
-                value={selectedHubCode}
-                onChange={(e) => handleSwitchHub(e.target.value)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#ffffff',
-                  fontWeight: 800,
-                  fontSize: '0.86rem',
-                  cursor: 'pointer',
-                  outline: 'none'
-                }}
-              >
-                {NEPAL_HUBS.map(hub => (
-                  <option key={hub.code} value={hub.code} style={{ background: '#0a0f1d', color: '#ffffff' }}>
-                    {hub.name}
-                  </option>
+            {/* If Branch Operator: Show Locked Station Indicator */}
+            {isBranchUser && !adminSimulatedBranch ? (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.6rem',
+                background: 'rgba(59, 130, 246, 0.12)',
+                padding: '0.45rem 0.85rem',
+                borderRadius: '10px',
+                border: '1px solid rgba(59, 130, 246, 0.35)'
+              }}>
+                <Lock size={15} color="#60a5fa" />
+                <span style={{ fontSize: '0.74rem', color: '#93c5fd', fontWeight: 800, textTransform: 'uppercase' }}>
+                  Operating Station:
+                </span>
+                <span style={{ color: '#ffffff', fontWeight: 800, fontSize: '0.86rem' }}>
+                  {effectiveBranchCode} (Locked to User Account)
+                </span>
+              </div>
+            ) : (
+              /* Super Admin Hub Switcher */
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.6rem',
+                background: 'rgba(255, 255, 255, 0.07)',
+                padding: '0.45rem 0.85rem',
+                borderRadius: '10px',
+                border: '1px solid rgba(255, 255, 255, 0.15)'
+              }}>
+                <Building size={16} color="#c084fc" />
+                <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase' }}>
+                  Active Operating Hub:
+                </span>
+                <select
+                  value={selectedHubCode}
+                  onChange={(e) => handleSwitchHub(e.target.value)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#ffffff',
+                    fontWeight: 800,
+                    fontSize: '0.86rem',
+                    cursor: 'pointer',
+                    outline: 'none'
+                  }}
+                >
+                  {NEPAL_HUBS.map(hub => (
+                    <option key={hub.code} value={hub.code} style={{ background: '#0a0f1d', color: '#ffffff' }}>
+                      {hub.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Admin Station View Simulator (Quick testing for Super Admins) */}
+            {isHqOrSuperAdmin && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                fontSize: '0.74rem',
+                background: 'rgba(0, 0, 0, 0.35)',
+                padding: '0.3rem 0.6rem',
+                borderRadius: '8px',
+                border: '1px solid rgba(255, 255, 255, 0.08)'
+              }}>
+                <span style={{ color: 'var(--text-muted)', fontWeight: 700 }}>Simulate Station:</span>
+                <button
+                  type="button"
+                  onClick={() => handleSimulateStation(null)}
+                  className={`btn btn-sm ${!adminSimulatedBranch ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ fontSize: '0.68rem', padding: '0.15rem 0.4rem', borderRadius: '4px' }}
+                  title="View all manifests nationwide as Super Admin"
+                >
+                  👑 HQ (All)
+                </button>
+                {['PKR-01', 'BRT-01', 'KTM-01', 'BTW-01'].map(code => (
+                  <button
+                    key={code}
+                    type="button"
+                    onClick={() => handleSimulateStation(code)}
+                    className={`btn btn-sm ${adminSimulatedBranch === code ? 'btn-primary' : 'btn-secondary'}`}
+                    style={{ fontSize: '0.68rem', padding: '0.15rem 0.4rem', borderRadius: '4px' }}
+                    title={`Simulate what ${code} Station Operator sees`}
+                  >
+                    {code}
+                  </button>
                 ))}
-              </select>
-            </div>
+              </div>
+            )}
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <button
@@ -633,7 +788,7 @@ export default function BranchManifestManager({ user }: Props) {
             style={{ borderRadius: '10px' }}
           >
             {editingManifestId ? <Edit3 size={14} /> : <Plus size={14} />}
-            <span>{editingManifestId ? 'Editing Staged Manifest' : 'New Manifest / Staging'}</span>
+            <span>{editingManifestId ? 'Editing Staged Manifest' : `+ New Manifest (${effectiveBranchCode})`}</span>
             {stagedItems.length > 0 && (
               <span style={{
                 background: '#ffffff',
@@ -656,7 +811,7 @@ export default function BranchManifestManager({ user }: Props) {
             style={{ borderRadius: '10px' }}
           >
             <ShieldCheck size={14} />
-            <span>All Manifests &amp; Approval Queue</span>
+            <span>{isBranchUser ? `My Station Manifests (${effectiveBranchCode})` : 'All Manifests & Approval Queue'}</span>
             {pendingApprovalCount > 0 && (
               <span style={{
                 background: '#f59e0b',
@@ -705,7 +860,7 @@ export default function BranchManifestManager({ user }: Props) {
             style={{ borderRadius: '10px' }}
           >
             <Inbox size={14} />
-            <span>Incoming Manifests (Receiving Desk)</span>
+            <span>{isBranchUser ? `Incoming Manifests for ${effectiveBranchCode}` : 'Incoming Receiving Desk'}</span>
             {incomingAwaitingCount > 0 && (
               <span style={{
                 background: 'rgba(239, 68, 68, 0.25)',
@@ -728,7 +883,7 @@ export default function BranchManifestManager({ user }: Props) {
             style={{ borderRadius: '10px' }}
           >
             <Layers size={14} />
-            <span>Linehaul Transit Consignments</span>
+            <span>{isBranchUser ? `${effectiveBranchCode} Linehaul Transit` : 'Linehaul Transit Consignments'}</span>
             <span style={{
               background: 'rgba(255, 102, 0, 0.2)',
               color: 'var(--brand-orange)',
@@ -773,7 +928,7 @@ export default function BranchManifestManager({ user }: Props) {
                       </div>
                     )}
                     <div style={{ fontSize: '0.78rem', color: '#cbd5e1', marginTop: '0.2rem' }}>
-                      Make adjustments below and click &quot;Update &amp; Resubmit for Approval&quot; to send back to Admin.
+                      Make adjustments below and click &quot;Update &amp; Resubmit for Approval&quot; to send back to Command HQ.
                     </div>
                   </div>
                 </div>
@@ -923,19 +1078,38 @@ export default function BranchManifestManager({ user }: Props) {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
                 {/* Origin Departure Hub */}
                 <div className="input-group">
-                  <label className="input-label">Origin Departure Hub</label>
-                  <select
-                    value={selectedHubCode}
-                    onChange={(e) => handleSwitchHub(e.target.value)}
-                    className="input-field"
-                    style={{ fontWeight: 700, color: '#c084fc' }}
-                  >
-                    {NEPAL_HUBS.map(hub => (
-                      <option key={hub.code} value={hub.code}>
-                        {hub.name}
-                      </option>
-                    ))}
-                  </select>
+                  <label className="input-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    Origin Departure Hub {isBranchUser && <Lock size={12} color="#60a5fa" />}
+                  </label>
+                  {isBranchUser ? (
+                    <div style={{
+                      padding: '0.65rem 1rem',
+                      borderRadius: '8px',
+                      background: 'rgba(59, 130, 246, 0.1)',
+                      border: '1px solid rgba(59, 130, 246, 0.3)',
+                      color: '#93c5fd',
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}>
+                      <Building size={16} />
+                      <span>{branchOrigin} ({effectiveBranchCode})</span>
+                    </div>
+                  ) : (
+                    <select
+                      value={selectedHubCode}
+                      onChange={(e) => handleSwitchHub(e.target.value)}
+                      className="input-field"
+                      style={{ fontWeight: 700, color: '#c084fc' }}
+                    >
+                      {NEPAL_HUBS.map(hub => (
+                        <option key={hub.code} value={hub.code}>
+                          {hub.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
 
                 {/* Destination Gateway Hub */}
@@ -947,7 +1121,7 @@ export default function BranchManifestManager({ user }: Props) {
                     className="input-field"
                     style={{ fontWeight: 700 }}
                   >
-                    {NEPAL_HUBS.filter(h => h.code !== selectedHubCode).map(hub => (
+                    {NEPAL_HUBS.filter(h => h.code !== effectiveBranchCode).map(hub => (
                       <option key={hub.code} value={hub.name}>
                         {hub.name}
                       </option>
@@ -1149,7 +1323,6 @@ export default function BranchManifestManager({ user }: Props) {
                   </div>
 
                   <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                    {/* Save as Draft */}
                     <button
                       type="button"
                       onClick={() => handleSaveManifest('Draft')}
@@ -1158,7 +1331,6 @@ export default function BranchManifestManager({ user }: Props) {
                       Save as Draft
                     </button>
 
-                    {/* Submit for Approval */}
                     <button
                       type="button"
                       onClick={() => handleSaveManifest('Pending Approval')}
@@ -1186,34 +1358,62 @@ export default function BranchManifestManager({ user }: Props) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <ShieldCheck size={20} color="#34d399" /> Multi-Hub Central Manifest &amp; Approval Engine
+                  <ShieldCheck size={20} color={isBranchUser ? '#60a5fa' : '#34d399'} />
+                  {isBranchUser
+                    ? `My Station Manifests (${effectiveBranchCode} Outbound Queue)`
+                    : 'Multi-Hub Central Manifest & Approval Engine (Nationwide View)'}
                 </h3>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0 0' }}>
-                  Central Super Admin review for all Nepal hubs. Admins inspect consignments, approve, reject with reason, or dispatch. Dispatched manifests are permanently locked.
+                  {isBranchUser ? (
+                    <span>
+                      Manifests created by station <strong>{effectiveBranchCode}</strong>. Manifests awaiting approval are verified and authorized centrally by Command HQ.
+                    </span>
+                  ) : (
+                    <span>
+                      Central Super Admin review for all Nepal hubs. Admins inspect consignments, approve, reject with reason, or dispatch. Dispatched manifests are permanently locked.
+                    </span>
+                  )}
                 </p>
               </div>
 
               {/* Filters */}
               <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                {/* Hub Filter */}
-                <select
-                  value={archiveHubFilter}
-                  onChange={(e) => setArchiveHubFilter(e.target.value)}
-                  className="input-field"
-                  style={{ width: 'auto', fontSize: '0.84rem', padding: '0.45rem 0.85rem' }}
-                >
-                  <option value="ALL">All Hubs (Nationwide View)</option>
-                  {NEPAL_HUBS.map(hub => (
-                    <option key={hub.code} value={hub.code}>
-                      {hub.code} - {hub.city}
-                    </option>
-                  ))}
-                </select>
+                {/* Hub Filter: Only Super Admin can switch origin hubs; Branch users are locked to their own station */}
+                {isBranchUser ? (
+                  <div style={{
+                    fontSize: '0.8rem',
+                    fontWeight: 800,
+                    color: '#93c5fd',
+                    background: 'rgba(59, 130, 246, 0.12)',
+                    padding: '0.45rem 0.85rem',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem'
+                  }}>
+                    <Lock size={12} /> Station Outbound: {effectiveBranchCode} Only
+                  </div>
+                ) : (
+                  <select
+                    value={archiveHubFilter}
+                    onChange={(e) => setArchiveHubFilter(e.target.value)}
+                    className="input-field"
+                    style={{ width: 'auto', fontSize: '0.84rem', padding: '0.45rem 0.85rem' }}
+                  >
+                    <option value="ALL">All Hubs (Nationwide View)</option>
+                    {NEPAL_HUBS.map(hub => (
+                      <option key={hub.code} value={hub.code}>
+                        {hub.code} - {hub.city}
+                      </option>
+                    ))}
+                  </select>
+                )}
 
                 {/* Status Filter */}
                 <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
                   {[
-                    { id: 'ALL', label: `All (${manifests.length})` },
+                    { id: 'ALL', label: `All (${totalScopedCount})` },
                     { id: 'PENDING', label: `Pending (${pendingApprovalCount})` },
                     { id: 'APPROVED', label: `Approved (${approvedCount})` },
                     { id: 'DISPATCHED', label: `Dispatched 🔒 (${dispatchedCount})` },
@@ -1240,7 +1440,9 @@ export default function BranchManifestManager({ user }: Props) {
                 <Boxes size={40} style={{ opacity: 0.3, margin: '0 auto 0.75rem auto' }} />
                 <div style={{ fontSize: '1rem', fontWeight: 600, color: '#ffffff' }}>No Manifests Matching Filter</div>
                 <p style={{ fontSize: '0.84rem', maxWidth: '400px', margin: '0.25rem auto 1rem auto' }}>
-                  Use &quot;New Manifest / Staging&quot; tab to stage and submit a manifest.
+                  {isBranchUser
+                    ? `No manifests for station ${effectiveBranchCode} under this filter.`
+                    : `Use "New Manifest / Staging" tab to stage and submit a manifest.`}
                 </p>
               </div>
             ) : (
@@ -1254,12 +1456,13 @@ export default function BranchManifestManager({ user }: Props) {
                       <th style={{ padding: '0.75rem' }}>Shipments</th>
                       <th style={{ padding: '0.75rem' }}>Weight &amp; COD</th>
                       <th style={{ padding: '0.75rem' }}>Status &amp; Lock</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'right' }}>Admin / Hub Actions</th>
+                      <th style={{ padding: '0.75rem', textAlign: 'right' }}>
+                        {isBranchUser ? 'Station Actions' : 'Admin Actions'}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredManifests.map((m) => {
-                      const isLocked = m.status === 'Approved & Dispatched' || m.status === 'Approved' || m.status === 'Received' || m.isLocked;
                       const isDispatched = m.status === 'Approved & Dispatched';
                       const isReceived = m.status === 'Received';
                       const isPending = m.status === 'Pending Approval' || m.status === 'Printed';
@@ -1365,7 +1568,7 @@ export default function BranchManifestManager({ user }: Props) {
                                   <AlertCircle size={11} /> Pending Approval
                                 </span>
                                 <span style={{ fontSize: '0.68rem', color: '#fbbf24' }}>
-                                  Awaiting Super Admin Review
+                                  {isBranchUser ? 'Awaiting Command HQ Approval' : 'Awaiting Super Admin Review'}
                                 </span>
                               </div>
                             ) : isRejected ? (
@@ -1385,7 +1588,7 @@ export default function BranchManifestManager({ user }: Props) {
                           {/* Actions Column */}
                           <td style={{ padding: '0.75rem', textAlign: 'right' }}>
                             <div style={{ display: 'inline-flex', gap: '0.45rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                              {/* View / Print Handover Sheet */}
+                              {/* Inspect / View / Print */}
                               <button
                                 type="button"
                                 onClick={() => {
@@ -1398,158 +1601,228 @@ export default function BranchManifestManager({ user }: Props) {
                                 <Eye size={13} /> Inspect
                               </button>
 
-                              {/* PENDING APPROVAL ACTIONS */}
-                              {isPending && (
+                              {/* ACTIONS FOR BRANCH USERS (Only edit drafts/rejected, submit) */}
+                              {isBranchUser ? (
                                 <>
-                                  {/* Edit (if hub wants to tweak before approval) */}
-                                  <button
-                                    type="button"
-                                    onClick={() => handleStartEdit(m)}
-                                    className="btn btn-secondary btn-sm"
-                                    style={{ borderColor: 'rgba(168, 85, 247, 0.4)', color: '#c084fc' }}
-                                    title="Edit Manifest Staging & Cargo"
-                                  >
-                                    <Edit3 size={13} /> Edit
-                                  </button>
+                                  {isDraft && (
+                                    <>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleStartEdit(m)}
+                                        className="btn btn-secondary btn-sm"
+                                      >
+                                        <Edit3 size={13} /> Edit
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const res = updateBranchManifest({ ...m, status: 'Pending Approval' });
+                                          if (res.success) {
+                                            reloadData();
+                                            setActionSuccessNotice(`✓ Manifest ${m.manifestNumber} submitted for Admin Approval.`);
+                                            setTimeout(() => setActionSuccessNotice(null), 5000);
+                                          }
+                                        }}
+                                        className="btn btn-primary btn-sm"
+                                        style={{ background: '#a855f7', borderColor: '#9333ea' }}
+                                      >
+                                        <Send size={13} /> Submit
+                                      </button>
+                                    </>
+                                  )}
 
-                                  {/* Approve Only (locks manifest) */}
-                                  <button
-                                    type="button"
-                                    onClick={() => handleAdminApproveOnly(m.id)}
-                                    className="btn btn-sm"
-                                    style={{
-                                      background: '#3b82f6',
-                                      borderColor: '#2563eb',
-                                      color: '#ffffff',
-                                      fontWeight: 700
-                                    }}
-                                    title="Admin Approve Manifest (Lock from hub edits)"
-                                  >
-                                    <Check size={13} /> Approve
-                                  </button>
+                                  {isPending && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleStartEdit(m)}
+                                      className="btn btn-secondary btn-sm"
+                                      style={{ borderColor: 'rgba(168, 85, 247, 0.4)', color: '#c084fc' }}
+                                      title="Tweak items before Admin Approves"
+                                    >
+                                      <Edit3 size={13} /> Edit
+                                    </button>
+                                  )}
 
-                                  {/* Approve & Dispatch Modal */}
-                                  <button
-                                    type="button"
-                                    onClick={() => setConfirmDispatchModal(m)}
-                                    className="btn btn-sm"
-                                    style={{
-                                      background: '#10b981',
-                                      borderColor: '#059669',
-                                      color: '#ffffff',
-                                      fontWeight: 800,
-                                      boxShadow: '0 2px 10px rgba(16, 185, 129, 0.25)'
-                                    }}
-                                    title="Verify & Dispatch directly"
-                                  >
-                                    <Truck size={13} /> Dispatch
-                                  </button>
+                                  {isRejected && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleStartEdit(m)}
+                                      className="btn btn-primary btn-sm"
+                                      style={{ background: '#f59e0b', borderColor: '#d97706', color: '#000000', fontWeight: 800 }}
+                                      title="Fix discrepancies and resubmit"
+                                    >
+                                      <Edit3 size={13} /> Fix &amp; Resubmit
+                                    </button>
+                                  )}
 
-                                  {/* Reject with Reason */}
-                                  <button
-                                    type="button"
-                                    onClick={() => handleOpenRejectModal(m)}
-                                    className="btn btn-secondary btn-sm"
-                                    style={{ borderColor: 'rgba(239, 68, 68, 0.4)', color: '#f87171' }}
-                                    title="Reject Manifest with required correction notes"
-                                  >
-                                    <Ban size={13} /> Reject
-                                  </button>
+                                  {(isApproved || isDispatched || isReceived) && (
+                                    <div
+                                      title="Locked: Dispatched manifests are sealed."
+                                      style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '0.25rem',
+                                        padding: '0.35rem 0.55rem',
+                                        borderRadius: '6px',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                        color: 'var(--text-muted)',
+                                        fontSize: '0.75rem',
+                                        cursor: 'not-allowed'
+                                      }}
+                                    >
+                                      <Lock size={11} color="#10b981" />
+                                      <span>Locked</span>
+                                    </div>
+                                  )}
                                 </>
-                              )}
-
-                              {/* APPROVED ACTIONS (Awaiting Departure) */}
-                              {isApproved && (
-                                <button
-                                  type="button"
-                                  onClick={() => setConfirmDispatchModal(m)}
-                                  className="btn btn-sm"
-                                  style={{
-                                    background: '#10b981',
-                                    borderColor: '#059669',
-                                    color: '#ffffff',
-                                    fontWeight: 800,
-                                  }}
-                                  title="Confirm departure and seal vehicle"
-                                >
-                                  <Truck size={13} /> Confirm Dispatch 🔒
-                                </button>
-                              )}
-
-                              {/* REJECTED ACTIONS (Hub can fix & resubmit) */}
-                              {isRejected && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleStartEdit(m)}
-                                  className="btn btn-primary btn-sm"
-                                  style={{ background: '#f59e0b', borderColor: '#d97706', color: '#000000', fontWeight: 800 }}
-                                  title="Fix discrepancies and resubmit"
-                                >
-                                  <Edit3 size={13} /> Fix &amp; Resubmit
-                                </button>
-                              )}
-
-                              {/* DRAFT ACTIONS */}
-                              {isDraft && (
+                              ) : (
+                                /* ACTIONS FOR SUPER ADMIN / HQ (Approve, Reject, Dispatch) */
                                 <>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleStartEdit(m)}
-                                    className="btn btn-secondary btn-sm"
-                                  >
-                                    <Edit3 size={13} /> Edit
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const res = updateBranchManifest({ ...m, status: 'Pending Approval' });
-                                      if (res.success) {
-                                        reloadData();
-                                        setActionSuccessNotice(`✓ Manifest ${m.manifestNumber} submitted for Admin Approval.`);
-                                        setTimeout(() => setActionSuccessNotice(null), 5000);
-                                      }
-                                    }}
-                                    className="btn btn-primary btn-sm"
-                                    style={{ background: '#a855f7', borderColor: '#9333ea' }}
-                                  >
-                                    <Send size={13} /> Submit
-                                  </button>
+                                  {isPending && (
+                                    <>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleStartEdit(m)}
+                                        className="btn btn-secondary btn-sm"
+                                        style={{ borderColor: 'rgba(168, 85, 247, 0.4)', color: '#c084fc' }}
+                                        title="Edit Manifest Staging"
+                                      >
+                                        <Edit3 size={13} /> Edit
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        onClick={() => handleAdminApproveOnly(m.id)}
+                                        className="btn btn-sm"
+                                        style={{
+                                          background: '#3b82f6',
+                                          borderColor: '#2563eb',
+                                          color: '#ffffff',
+                                          fontWeight: 700
+                                        }}
+                                        title="Admin Approve Manifest (Lock from hub edits)"
+                                      >
+                                        <Check size={13} /> Approve
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        onClick={() => setConfirmDispatchModal(m)}
+                                        className="btn btn-sm"
+                                        style={{
+                                          background: '#10b981',
+                                          borderColor: '#059669',
+                                          color: '#ffffff',
+                                          fontWeight: 800,
+                                          boxShadow: '0 2px 10px rgba(16, 185, 129, 0.25)'
+                                        }}
+                                        title="Verify & Dispatch directly"
+                                      >
+                                        <Truck size={13} /> Dispatch
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        onClick={() => handleOpenRejectModal(m)}
+                                        className="btn btn-secondary btn-sm"
+                                        style={{ borderColor: 'rgba(239, 68, 68, 0.4)', color: '#f87171' }}
+                                        title="Reject Manifest with required corrections"
+                                      >
+                                        <Ban size={13} /> Reject
+                                      </button>
+                                    </>
+                                  )}
+
+                                  {isApproved && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setConfirmDispatchModal(m)}
+                                      className="btn btn-sm"
+                                      style={{
+                                        background: '#10b981',
+                                        borderColor: '#059669',
+                                        color: '#ffffff',
+                                        fontWeight: 800,
+                                      }}
+                                      title="Confirm departure and seal vehicle"
+                                    >
+                                      <Truck size={13} /> Confirm Dispatch 🔒
+                                    </button>
+                                  )}
+
+                                  {isRejected && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleStartEdit(m)}
+                                      className="btn btn-primary btn-sm"
+                                      style={{ background: '#f59e0b', borderColor: '#d97706', color: '#000000', fontWeight: 800 }}
+                                      title="Fix and resubmit"
+                                    >
+                                      <Edit3 size={13} /> Edit &amp; Resubmit
+                                    </button>
+                                  )}
+
+                                  {isDraft && (
+                                    <>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleStartEdit(m)}
+                                        className="btn btn-secondary btn-sm"
+                                      >
+                                        <Edit3 size={13} /> Edit
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const res = updateBranchManifest({ ...m, status: 'Pending Approval' });
+                                          if (res.success) {
+                                            reloadData();
+                                            setActionSuccessNotice(`✓ Manifest ${m.manifestNumber} submitted for Admin Approval.`);
+                                            setTimeout(() => setActionSuccessNotice(null), 5000);
+                                          }
+                                        }}
+                                        className="btn btn-primary btn-sm"
+                                        style={{ background: '#a855f7', borderColor: '#9333ea' }}
+                                      >
+                                        <Send size={13} /> Submit
+                                      </button>
+                                    </>
+                                  )}
+
+                                  {isDispatched && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenReceiveModal(m)}
+                                      className="btn btn-secondary btn-sm"
+                                      style={{ borderColor: 'rgba(52, 211, 153, 0.4)', color: '#34d399' }}
+                                      title="Receive this manifest at destination hub"
+                                    >
+                                      <Inbox size={13} /> Receive
+                                    </button>
+                                  )}
+
+                                  {(isDispatched || isReceived) && (
+                                    <div
+                                      title="Locked: Sealed against edits."
+                                      style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '0.25rem',
+                                        padding: '0.35rem 0.55rem',
+                                        borderRadius: '6px',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                        color: 'var(--text-muted)',
+                                        fontSize: '0.75rem',
+                                        cursor: 'not-allowed'
+                                      }}
+                                    >
+                                      <Lock size={11} color="#10b981" />
+                                      <span>Locked</span>
+                                    </div>
+                                  )}
                                 </>
-                              )}
-
-                              {/* DISPATCHED ACTIONS */}
-                              {isDispatched && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleOpenReceiveModal(m)}
-                                  className="btn btn-secondary btn-sm"
-                                  style={{ borderColor: 'rgba(52, 211, 153, 0.4)', color: '#34d399' }}
-                                  title="Receive this manifest at destination hub"
-                                >
-                                  <Inbox size={13} /> Receive
-                                </button>
-                              )}
-
-                              {/* When Locked permanently */}
-                              {(isDispatched || isReceived) && (
-                                <div
-                                  title="Locked: Handover records and container seals are permanently sealed."
-                                  style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '0.25rem',
-                                    padding: '0.35rem 0.55rem',
-                                    borderRadius: '6px',
-                                    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                                    color: 'var(--text-muted)',
-                                    fontSize: '0.75rem',
-                                    cursor: 'not-allowed'
-                                  }}
-                                >
-                                  <Lock size={11} color="#10b981" />
-                                  <span>Locked</span>
-                                </div>
                               )}
                             </div>
                           </td>
@@ -1569,16 +1842,19 @@ export default function BranchManifestManager({ user }: Props) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Inbox size={20} color="#38bdf8" /> Destination Hub Receiving Desk: {branchOrigin}
+                  <Inbox size={20} color="#38bdf8" />
+                  {isBranchUser
+                    ? `Incoming Linehauls Destined for ${branchOrigin} (${effectiveBranchCode})`
+                    : `Destination Hub Receiving Desk: ${branchOrigin}`}
                 </h3>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0 0' }}>
-                  Inspect incoming linehaul manifests arriving at <strong>{selectedHubCode}</strong>. Verify security seal, cross-check package count, and confirm receipt into local sorting.
+                  Inspect incoming linehaul manifests arriving at <strong>{effectiveBranchCode}</strong>. Verify security seal, cross-check package count, and confirm receipt into local sorting.
                 </p>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span className="badge badge-purple" style={{ fontWeight: 800 }}>
-                  Dest Hub: {selectedHubCode}
+                  Dest Station: {effectiveBranchCode}
                 </span>
               </div>
             </div>
@@ -1588,7 +1864,7 @@ export default function BranchManifestManager({ user }: Props) {
                 <Inbox size={40} style={{ opacity: 0.3, margin: '0 auto 0.75rem auto' }} />
                 <div style={{ fontSize: '1rem', fontWeight: 600, color: '#ffffff' }}>No Incoming Linehaul Manifests</div>
                 <p style={{ fontSize: '0.84rem', maxWidth: '440px', margin: '0.25rem auto 1rem auto' }}>
-                  No manifests currently routed to {branchOrigin}. When another hub dispatches to {selectedHubCode}, it will appear here for arrival verification.
+                  No manifests currently routed to {branchOrigin}. When another hub dispatches to {effectiveBranchCode}, it will appear here for arrival verification.
                 </p>
               </div>
             ) : (
@@ -1729,10 +2005,15 @@ export default function BranchManifestManager({ user }: Props) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Layers size={18} color="var(--brand-orange)" /> Linehaul Transit Consignments ({dispatchedShipments.length})
+                  <Layers size={18} color="var(--brand-orange)" />
+                  {isBranchUser
+                    ? `${effectiveBranchCode} Linehaul Transit Consignments (${dispatchedShipments.length})`
+                    : `Nationwide Linehaul Transit Consignments (${dispatchedShipments.length})`}
                 </h3>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0 0' }}>
-                  All individual consignments currently approved and active on linehaul transit routes across Nepal.
+                  {isBranchUser
+                    ? `Active consignments in transit originating from or arriving to ${effectiveBranchCode}.`
+                    : 'All individual consignments currently approved and active on linehaul transit routes across Nepal.'}
                 </p>
               </div>
 
@@ -1743,7 +2024,7 @@ export default function BranchManifestManager({ user }: Props) {
 
             {dispatchedShipments.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                No consignments currently in Shipment Dispatched status.
+                No consignments currently in Shipment Dispatched status for this station.
               </div>
             ) : (
               <div style={{ overflowX: 'auto' }}>
@@ -1801,7 +2082,7 @@ export default function BranchManifestManager({ user }: Props) {
         )}
 
         {/* ================= MODAL 1: ADMIN REJECTION REASON MODAL ================= */}
-        {rejectModalManifest && (
+        {rejectModalManifest && !isBranchUser && (
           <div style={{
             position: 'fixed',
             inset: 0,
@@ -1837,7 +2118,7 @@ export default function BranchManifestManager({ user }: Props) {
               </div>
 
               <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                Enter the reason for rejection (e.g. weight mismatch, missing invoice, incorrect driver assigned). The hub user will be notified to edit and resubmit.
+                Enter the reason for rejection (e.g. weight mismatch, missing invoice, incorrect driver assigned). The station operator will be notified to edit and resubmit.
               </p>
 
               <div style={{ marginBottom: '1.5rem' }}>
@@ -1877,7 +2158,7 @@ export default function BranchManifestManager({ user }: Props) {
         )}
 
         {/* ================= MODAL 2: CONFIRM DISPATCH & LOCK ================= */}
-        {confirmDispatchModal && (
+        {confirmDispatchModal && !isBranchUser && (
           <div style={{
             position: 'fixed',
             inset: 0,
@@ -2005,7 +2286,7 @@ export default function BranchManifestManager({ user }: Props) {
                     Confirm Manifest Arrival &amp; Inward
                   </h3>
                   <div style={{ fontSize: '0.8rem', color: '#38bdf8', fontWeight: 700 }}>
-                    {receivingModalManifest.manifestNumber} • From: {receivingModalManifest.branchCode}
+                    {receivingModalManifest.manifestNumber} • From: {receivingModalManifest.branchCode} &rarr; At: {effectiveBranchCode}
                   </div>
                 </div>
               </div>
@@ -2154,8 +2435,8 @@ export default function BranchManifestManager({ user }: Props) {
                     <Printer size={15} /> Print Out Manifest
                   </button>
 
-                  {/* APPROVE BUTTON (If pending) */}
-                  {(activeManifest.status === 'Pending Approval' || activeManifest.status === 'Draft' || activeManifest.status === 'Printed') && (
+                  {/* APPROVE BUTTON (Only available to Super Admin) */}
+                  {!isBranchUser && (activeManifest.status === 'Pending Approval' || activeManifest.status === 'Draft' || activeManifest.status === 'Printed') && (
                     <button
                       type="button"
                       onClick={() => setConfirmDispatchModal(activeManifest)}
@@ -2383,7 +2664,7 @@ export default function BranchManifestManager({ user }: Props) {
                     <div style={{ textAlign: 'center' }}>
                       <div style={{ height: '40px', borderBottom: '1px dotted #666666', marginBottom: '0.4rem' }}></div>
                       <div style={{ fontSize: '0.75rem', fontWeight: 800 }}>DISPATCHING OFFICER</div>
-                      <div style={{ fontSize: '0.68rem', color: '#666666' }}>Double 7 Origin Hub</div>
+                      <div style={{ fontSize: '0.68rem', color: '#666666' }}>Double 7 Origin Hub ({activeManifest.branchCode})</div>
                     </div>
 
                     <div style={{ textAlign: 'center' }}>

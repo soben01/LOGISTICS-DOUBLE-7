@@ -40,6 +40,118 @@ export const DEFAULT_USERS: User[] = [
     totalShipments: 0,
     createdAt: '2026-09-08',
   },
+  {
+    id: 'usr-branch-ktm',
+    name: 'Kathmandu Station Controller',
+    email: 'ktm.branch@double7.com.np',
+    company: 'Kathmandu Mega-Hub (KTM-01)',
+    phone: '+977 1 4411001',
+    role: 'branch',
+    branchCode: 'KTM-01',
+    subRole: 'Station Dispatch Officer',
+    status: 'active',
+    codBalanceNpr: 0,
+    totalShipments: 0,
+    createdAt: '2026-09-13',
+  },
+  {
+    id: 'usr-branch-pkr',
+    name: 'Pokhara Station Controller',
+    email: 'pkr.branch@double7.com.np',
+    company: 'Pokhara Regional Sort Hub (PKR-01)',
+    phone: '+977 61 521000',
+    role: 'branch',
+    branchCode: 'PKR-01',
+    subRole: 'Station Dispatch Officer',
+    status: 'active',
+    codBalanceNpr: 0,
+    totalShipments: 0,
+    createdAt: '2026-09-13',
+  },
+  {
+    id: 'usr-branch-brt',
+    name: 'Biratnagar Station Controller',
+    email: 'brt.branch@double7.com.np',
+    company: 'Biratnagar Hub (BRT-01)',
+    phone: '+977 21 471000',
+    role: 'branch',
+    branchCode: 'BRT-01',
+    subRole: 'Station Dispatch Officer',
+    status: 'active',
+    codBalanceNpr: 0,
+    totalShipments: 0,
+    createdAt: '2026-09-13',
+  },
+  {
+    id: 'usr-branch-btw',
+    name: 'Butwal Station Controller',
+    email: 'btw.branch@double7.com.np',
+    company: 'Butwal Cross-Dock Hub (BTW-01)',
+    phone: '+977 71 541000',
+    role: 'branch',
+    branchCode: 'BTW-01',
+    subRole: 'Station Dispatch Officer',
+    status: 'active',
+    codBalanceNpr: 0,
+    totalShipments: 0,
+    createdAt: '2026-09-13',
+  },
+  {
+    id: 'usr-branch-brg',
+    name: 'Birgunj Station Controller',
+    email: 'brg.branch@double7.com.np',
+    company: 'Birgunj Port Gateway (BRG-01)',
+    phone: '+977 51 522000',
+    role: 'branch',
+    branchCode: 'BRG-01',
+    subRole: 'Station Dispatch Officer',
+    status: 'active',
+    codBalanceNpr: 0,
+    totalShipments: 0,
+    createdAt: '2026-09-13',
+  },
+  {
+    id: 'usr-branch-cht',
+    name: 'Chitwan Station Controller',
+    email: 'cht.branch@double7.com.np',
+    company: 'Chitwan Narayangarh Hub (CHT-01)',
+    phone: '+977 56 520000',
+    role: 'branch',
+    branchCode: 'CHT-01',
+    subRole: 'Station Dispatch Officer',
+    status: 'active',
+    codBalanceNpr: 0,
+    totalShipments: 0,
+    createdAt: '2026-09-13',
+  },
+  {
+    id: 'usr-branch-npj',
+    name: 'Nepalgunj Station Controller',
+    email: 'npj.branch@double7.com.np',
+    company: 'Nepalgunj Regional Hub (NPJ-01)',
+    phone: '+977 81 520000',
+    role: 'branch',
+    branchCode: 'NPJ-01',
+    subRole: 'Station Dispatch Officer',
+    status: 'active',
+    codBalanceNpr: 0,
+    totalShipments: 0,
+    createdAt: '2026-09-13',
+  },
+  {
+    id: 'usr-branch-dhn',
+    name: 'Dhangadhi Station Controller',
+    email: 'dhn.branch@double7.com.np',
+    company: 'Dhangadhi Terminal (DHN-01)',
+    phone: '+977 91 520000',
+    role: 'branch',
+    branchCode: 'DHN-01',
+    subRole: 'Station Dispatch Officer',
+    status: 'active',
+    codBalanceNpr: 0,
+    totalShipments: 0,
+    createdAt: '2026-09-13',
+  },
 ];
 
 export function getUsers(): User[] {
@@ -61,14 +173,12 @@ export function getUsers(): User[] {
       localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(DEFAULT_USERS));
       return DEFAULT_USERS;
     }
-    // Filter out legacy demo accounts
-    parsed = parsed.filter(u =>
-      !['merchant@double7.np', 'branch.ktm@double7.com.np', 'branch.pkr@double7.com.np', 'branch.brt@double7.com.np', 'dispatch@sobinupreti.com.np', 'anil@double7.com.np'].includes(u.email.toLowerCase())
-    );
-    // Ensure Super Admin is always present
-    if (!parsed.some(p => p.email.toLowerCase() === DEFAULT_USERS[0].email.toLowerCase())) {
-      parsed.unshift(DEFAULT_USERS[0]);
-    }
+    // Ensure all default users (Super Admin & branch accounts) are present
+    DEFAULT_USERS.forEach(def => {
+      if (!parsed.some(p => p.email.toLowerCase() === def.email.toLowerCase())) {
+        parsed.push(def);
+      }
+    });
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(parsed));
     return parsed;
   } catch {
@@ -115,19 +225,69 @@ export function loginUser(email: string, password?: string, subRole?: string): {
     }
   }
 
-  // 2. Corporate auto-provision for Double 7 team (@double7.com.np, @double7.com, @sobinupreti.com.np)
-  if (!user) {
+    const isBranchEmail =
+      normalizedEmail.includes('branch') ||
+      normalizedEmail.includes('hub');
+
     const isCorporateAdmin =
-      normalizedEmail.endsWith('@double7.com.np') ||
-      normalizedEmail.endsWith('@double7.com') ||
-      normalizedEmail.endsWith('@sobinupreti.com.np') ||
-      normalizedEmail === 'upreti.soben@gmail.com';
+      !isBranchEmail && (
+        normalizedEmail.endsWith('@double7.com.np') ||
+        normalizedEmail.endsWith('@double7.com') ||
+        normalizedEmail.endsWith('@sobinupreti.com.np') ||
+        normalizedEmail === 'upreti.soben@gmail.com'
+      );
 
     const isMerchantDomain =
       normalizedEmail.endsWith('@merchant.np') ||
       normalizedEmail.endsWith('@merchant.com');
 
-    if (isCorporateAdmin || isMerchantDomain) {
+    if (isBranchEmail) {
+      // Auto-detect which Nepal hub by city or prefix
+      let hubCode = 'KTM-01';
+      let hubName = 'Kathmandu Mega-Hub (KTM-01)';
+      if (normalizedEmail.includes('pkr') || normalizedEmail.includes('pokhara')) {
+        hubCode = 'PKR-01';
+        hubName = 'Pokhara Regional Sort Hub (PKR-01)';
+      } else if (normalizedEmail.includes('brt') || normalizedEmail.includes('biratnagar')) {
+        hubCode = 'BRT-01';
+        hubName = 'Biratnagar Hub (BRT-01)';
+      } else if (normalizedEmail.includes('btw') || normalizedEmail.includes('butwal')) {
+        hubCode = 'BTW-01';
+        hubName = 'Butwal Cross-Dock Hub (BTW-01)';
+      } else if (normalizedEmail.includes('brg') || normalizedEmail.includes('birgunj')) {
+        hubCode = 'BRG-01';
+        hubName = 'Birgunj Port Gateway (BRG-01)';
+      } else if (normalizedEmail.includes('cht') || normalizedEmail.includes('chitwan')) {
+        hubCode = 'CHT-01';
+        hubName = 'Chitwan Narayangarh Hub (CHT-01)';
+      } else if (normalizedEmail.includes('npj') || normalizedEmail.includes('nepalgunj')) {
+        hubCode = 'NPJ-01';
+        hubName = 'Nepalgunj Regional Hub (NPJ-01)';
+      } else if (normalizedEmail.includes('dhn') || normalizedEmail.includes('dhangadhi')) {
+        hubCode = 'DHN-01';
+        hubName = 'Dhangadhi Terminal (DHN-01)';
+      }
+
+      user = {
+        id: `usr-branch-${hubCode.toLowerCase()}`,
+        name: `${hubCode} Station Controller`,
+        email: normalizedEmail,
+        company: hubName,
+        phone: '+977 1 4411000',
+        role: 'branch',
+        branchCode: hubCode,
+        subRole: 'Station Dispatch Officer',
+        status: 'active',
+        codBalanceNpr: 0,
+        totalShipments: 0,
+        createdAt: new Date().toISOString().split('T')[0],
+      };
+
+      const updatedUsers = [...users, user];
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(updatedUsers));
+      }
+    } else if (isCorporateAdmin || isMerchantDomain) {
       const rawName = normalizedEmail.split('@')[0].replace(/[._-]/g, ' ');
       const name = rawName.charAt(0).toUpperCase() + rawName.slice(1);
       user = {
@@ -149,7 +309,6 @@ export function loginUser(email: string, password?: string, subRole?: string): {
         localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(updatedUsers));
       }
     }
-  }
 
   if (!user) {
     return {
@@ -327,12 +486,33 @@ export function isSuperAdmin(user: User | null | undefined): boolean {
   return (
     subRole.includes('super admin') ||
     subRole.includes('executive') ||
+    subRole.includes('command hq') ||
     email === 'soben@double7.com' ||
     email === 'anil@double7.com' ||
     email === 'anil@double7.com.np' ||
     email === 'upreti.soben@gmail.com' ||
     !user.subRole
   );
+}
+
+/**
+ * Checks if user has Super Admin or Central Command HQ credentials (access to ALL branch manifests)
+ */
+export function isHqAdmin(user: User | null | undefined): boolean {
+  if (!user) return false;
+  if (user.role === 'admin') return true;
+  if (user.branchCode === 'HQ' || user.branchCode === 'ALL') return true;
+  const subRole = (user.subRole || '').toLowerCase();
+  if (
+    subRole.includes('hq') ||
+    subRole.includes('super admin') ||
+    subRole.includes('command') ||
+    subRole.includes('central') ||
+    subRole.includes('executive')
+  ) {
+    return true;
+  }
+  return false;
 }
 
 export function updateUserRole(id: string, role: 'merchant' | 'admin' | 'branch', subRole?: string, permissions?: string[]): boolean {
