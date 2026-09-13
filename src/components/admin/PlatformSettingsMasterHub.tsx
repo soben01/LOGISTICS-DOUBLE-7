@@ -430,7 +430,7 @@ export default function PlatformSettingsMasterHub({ onNotice, onNavigateWorkflow
       {/* PILLAR 1: GENERAL & BRAND IDENTITY */}
       {/* ========================================================================= */}
       {activeTab === 'general' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
+        <div className="animate-smooth-fade" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
           {/* Card 1: Brand & Gateway */}
           <div style={{
             backgroundColor: 'rgba(255, 255, 255, 0.02)',
@@ -564,7 +564,7 @@ export default function PlatformSettingsMasterHub({ onNotice, onNavigateWorkflow
       {/* PILLAR 2: USERS & ROLES - PERMISSION BUILDER MATRIX */}
       {/* ========================================================================= */}
       {activeTab === 'users_roles' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div className="animate-smooth-fade" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {/* Section A: Role Hierarchy & Signup Policies */}
           <div style={{
             backgroundColor: 'rgba(255, 255, 255, 0.02)',
@@ -995,7 +995,7 @@ export default function PlatformSettingsMasterHub({ onNotice, onNavigateWorkflow
       {/* PILLAR 4: PRICING & TARIFFS */}
       {/* ========================================================================= */}
       {activeTab === 'pricing' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
+        <div className="animate-smooth-fade" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
           {/* Base Tariffs */}
           <div style={{
             backgroundColor: 'rgba(255, 255, 255, 0.02)',
@@ -1107,7 +1107,7 @@ export default function PlatformSettingsMasterHub({ onNotice, onNavigateWorkflow
       {/* PILLAR 5: FINANCE & COD SETTLEMENT */}
       {/* ========================================================================= */}
       {activeTab === 'finance' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
+        <div className="animate-smooth-fade" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
           <div style={{
             backgroundColor: 'rgba(255, 255, 255, 0.02)',
             borderRadius: '12px',
@@ -1228,7 +1228,7 @@ export default function PlatformSettingsMasterHub({ onNotice, onNavigateWorkflow
       {/* PILLAR 6: MULTI-CHANNEL NOTIFICATIONS */}
       {/* ========================================================================= */}
       {activeTab === 'notifications' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
+        <div className="animate-smooth-fade" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
           {/* SMS & WhatsApp */}
           <div style={{
             backgroundColor: 'rgba(255, 255, 255, 0.02)',
@@ -1342,7 +1342,7 @@ export default function PlatformSettingsMasterHub({ onNotice, onNavigateWorkflow
       {/* PILLAR 7: API & WEBHOOKS */}
       {/* ========================================================================= */}
       {activeTab === 'integrations' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
+        <div className="animate-smooth-fade" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
           {/* API Keys */}
           <div style={{
             backgroundColor: 'rgba(255, 255, 255, 0.02)',
@@ -1461,7 +1461,7 @@ export default function PlatformSettingsMasterHub({ onNotice, onNavigateWorkflow
       {/* PILLAR 8: SECURITY & 2FA */}
       {/* ========================================================================= */}
       {activeTab === 'security' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
+        <div className="animate-smooth-fade" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
           <div style={{
             backgroundColor: 'rgba(255, 255, 255, 0.02)',
             borderRadius: '12px',
@@ -1553,7 +1553,7 @@ export default function PlatformSettingsMasterHub({ onNotice, onNavigateWorkflow
       {/* ========================================================================= */}
       {/* TAB 9: DATABASE & CLOUD STORAGE SETTINGS */}
       {activeTab === 'database' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <div className="animate-smooth-fade" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* Top Banner with Direct Launch CTA */}
           <div style={{
             padding: '1.5rem',
@@ -1601,7 +1601,7 @@ export default function PlatformSettingsMasterHub({ onNotice, onNavigateWorkflow
             )}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
+          <div className="animate-smooth-fade" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
             {/* Google Sheets Live Database Card */}
             <div style={{
               backgroundColor: 'rgba(255, 255, 255, 0.02)',
@@ -1780,7 +1780,7 @@ export default function PlatformSettingsMasterHub({ onNotice, onNavigateWorkflow
 
       {/* TAB 10: SYSTEM & AUDIT */}
       {activeTab === 'system' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
+        <div className="animate-smooth-fade" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
           {/* Site Mode & Maintenance */}
           <div style={{
             backgroundColor: 'rgba(255, 255, 255, 0.02)',

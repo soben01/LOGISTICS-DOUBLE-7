@@ -1367,7 +1367,7 @@ export default function AdminControlPanel() {
             {/* SECTION 1: OVERVIEW */}
             {/* ========================================================================= */}
             {activeSection === 'overview' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div className="animate-smooth-fade" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                 <div>
                   <h1 style={{ fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '0.5rem' }}>
                     Super Admin Operations Tower
@@ -1597,7 +1597,7 @@ export default function AdminControlPanel() {
             {/* SECTION 2: USERS & MERCHANTS DIRECTORY (SUPER ADMIN) */}
             {/* ========================================================================= */}
             {activeSection === 'users' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div className="animate-smooth-fade" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                   <div>
                     <h1 style={{ fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '0.35rem' }}>
@@ -1868,7 +1868,7 @@ export default function AdminControlPanel() {
             {/* SECTION 3: ROLE & PERMISSION MATRIX */}
             {/* ========================================================================= */}
             {activeSection === 'roles' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div className="animate-smooth-fade" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 <div>
                   <h1 style={{ fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '0.35rem' }}>
                     Role & Permissions Matrix Engine
@@ -1946,18 +1946,20 @@ export default function AdminControlPanel() {
             {/* SECTION 4: WEBSITE & SYSTEM SETTINGS (SUPER ADMIN) */}
             {/* ========================================================================= */}
             {activeSection === 'settings' && (
-              <PlatformSettingsMasterHub
-                onNotice={notify}
-                onNavigateWorkflow={() => setActiveSection('tracking_workflow')}
-                onNavigateDatabase={() => setActiveSection('database')}
-              />
+              <div className="animate-smooth-fade">
+                <PlatformSettingsMasterHub
+                  onNotice={notify}
+                  onNavigateWorkflow={() => setActiveSection('tracking_workflow')}
+                  onNavigateDatabase={() => setActiveSection('database')}
+                />
+              </div>
             )}
 
             {/* ========================================================================= */}
             {/* SECTION 5: MASTER CONSIGNMENTS */}
             {/* ========================================================================= */}
             {activeSection === 'shipments' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div className="animate-smooth-fade" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                   <div>
                     <h1 style={{ fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '0.35rem' }}>
@@ -2100,7 +2102,7 @@ export default function AdminControlPanel() {
             {/* SECTION 6: COD TREASURY & REMITTANCES */}
             {/* ========================================================================= */}
             {activeSection === 'cod' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div className="animate-smooth-fade" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 <div>
                   <h1 style={{ fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '0.35rem' }}>
                     COD Treasury & Merchant Payouts
@@ -2179,7 +2181,7 @@ export default function AdminControlPanel() {
             {/* SECTION 7: EDGE TELEMETRY & 6 PM RESET */}
             {/* ========================================================================= */}
             {activeSection === 'edge' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div className="animate-smooth-fade" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                   <div>
                     <h1 style={{ fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '0.35rem' }}>
@@ -2555,31 +2557,37 @@ export default function AdminControlPanel() {
             {/* SECTION: DATABASE CONTROL & STORAGE SETTINGS (SUPER ADMIN) */}
             {/* ========================================================================= */}
             {activeSection === 'database' && (
-              <DatabaseControlCenter
-                currentUser={currentUser}
-                onNotify={notify}
-              />
+              <div className="animate-smooth-fade">
+                <DatabaseControlCenter
+                  currentUser={currentUser}
+                  onNotify={notify}
+                />
+              </div>
             )}
 
             {/* ========================================================================= */}
             {/* SECTION 8: TRACKING STATUS WORKFLOW (SUPER ADMIN EDITABLE) */}
             {/* ========================================================================= */}
             {activeSection === 'tracking_workflow' && (
-              <TrackingWorkflowEditor isSuperAdmin={currentUser?.role === 'admin'} />
+              <div className="animate-smooth-fade">
+                <TrackingWorkflowEditor isSuperAdmin={currentUser?.role === 'admin'} />
+              </div>
             )}
 
             {/* ========================================================================= */}
             {/* SECTION 8B: BRANCH MANIFEST & LINEHAUL DISPATCH MANAGEMENT */}
             {/* ========================================================================= */}
             {activeSection === 'manifest' && (
-              <BranchManifestManager user={currentUser} />
+              <div className="animate-smooth-fade">
+                <BranchManifestManager user={currentUser} />
+              </div>
             )}
 
             {/* ========================================================================= */}
             {/* SECTION 8B: WORKFLOW ARCHITECTURE & COD FLOW */}
             {/* ========================================================================= */}
             {activeSection === 'workflow' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div className="animate-smooth-fade" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 <AccountStructureAndCodWorkflow />
               </div>
             )}
@@ -2588,7 +2596,7 @@ export default function AdminControlPanel() {
             {/* SECTION 9: CLOUDFLARE EMAIL ROUTING & VERIFIED SENDING */}
             {/* ========================================================================= */}
             {activeSection === 'email' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div className="animate-smooth-fade" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
@@ -2899,7 +2907,7 @@ export default function AdminControlPanel() {
             {/* SECTION 9: SECURITY AUDIT TRAIL */}
             {/* ========================================================================= */}
             {activeSection === 'audit' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div className="animate-smooth-fade" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 <div>
                   <h1 style={{ fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '0.35rem' }}>
                     Security & Administrative Audit Trail
