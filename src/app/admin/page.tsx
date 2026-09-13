@@ -60,9 +60,12 @@ import {
   assignShipmentVehicle,
   addCustomCheckpoint,
   getWaitlistSubscribers,
+  resetDemoShipments,
   Shipment,
   Checkpoint
 } from '../../lib/store';
+import { resetCodDemoData } from '../../lib/cod';
+import { resetBranchManifests } from '../../lib/manifest';
 import {
   getUsers,
   getCurrentUser,
@@ -418,23 +421,30 @@ export default function AdminControlPanel() {
   // Handle Platform Fresh Start & Launch Reset
   const [resettingPlatform, setResettingPlatform] = useState(false);
   const handlePlatformFreshStart = async () => {
-    if (!window.confirm('⚠️ Are you sure you want to perform a Platform Fresh Start? This will reset all test mock records, initialize fresh D1 database tables, and prepare Double 7 Logistics for official production launch.')) {
+    if (!window.confirm('⚠️ Are you sure you want to perform a Platform Fresh Start? This will reset all test mock records to 0, initialize fresh empty D1 database tables, and prepare Double 7 Logistics for official production launch.')) {
       return;
     }
     setResettingPlatform(true);
     try {
       if (typeof window !== 'undefined') {
+        const savedUser = localStorage.getItem('double7_current_user_prod_v2');
         localStorage.clear();
+        if (savedUser) {
+          localStorage.setItem('double7_current_user_prod_v2', savedUser);
+        }
       }
+      resetDemoShipments();
+      resetCodDemoData();
+      resetBranchManifests();
       const res = await fetch('/api/admin/reset-platform', { method: 'POST' });
       const data = (await res.json()) as any;
-      notify(data.message || 'Platform successfully reset to launch zero-state!');
-      addAudit('Platform Fresh Start', 'Production Launch Zero-State', 'Purged test mock data, initialized clean D1 database schemas, and flushed operational caches.');
+      notify(data.message || 'Platform successfully reset to 0-data launch zero-state!');
+      addAudit('Platform Fresh Start', 'Production Launch Zero-State', 'Purged all mock data, initialized 0-value clean D1 database schemas, and flushed operational caches.');
       setTimeout(() => {
         window.location.reload();
       }, 1000);
     } catch {
-      notify('Platform reset completed locally.');
+      notify('Platform reset completed locally to 0.');
       setTimeout(() => {
         window.location.reload();
       }, 1000);

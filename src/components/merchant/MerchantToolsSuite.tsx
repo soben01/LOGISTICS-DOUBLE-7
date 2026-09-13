@@ -601,7 +601,7 @@ export default function MerchantToolsSuite({ onNotice, initialTool = 'staff' }: 
             }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>AVAILABLE RECONCILED COD</span>
               <div style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)', fontWeight: 900, color: '#ffffff', fontFamily: 'var(--font-mono)', margin: '0.3rem 0' }}>
-                Rs. {(currentUser?.codBalanceNpr || 24500).toLocaleString()} NPR
+                Rs. {(currentUser?.codBalanceNpr ?? 0).toLocaleString()} NPR
               </div>
               <div style={{ fontSize: '0.75rem', color: '#10b981' }}>
                 100% Hub safe verified &bull; Ready for instant bank transfer

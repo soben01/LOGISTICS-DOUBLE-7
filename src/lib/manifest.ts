@@ -190,3 +190,12 @@ export function lookupShipmentForManifest(bookingId: string): Shipment | null {
   const found = shipments.find(s => s.id.toUpperCase() === cleanId || s.telemetry.waybillNumber?.toUpperCase() === cleanId);
   return found || null;
 }
+
+export function resetBranchManifests(): BranchManifest[] {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(MANIFESTS_STORAGE_KEY, JSON.stringify(DEFAULT_BRANCH_MANIFESTS));
+    localStorage.removeItem('double7_branch_manifests_v1');
+    window.dispatchEvent(new Event('manifest-updated'));
+  }
+  return DEFAULT_BRANCH_MANIFESTS;
+}

@@ -2107,6 +2107,29 @@ export default {
         const sheetUrl = 'https://docs.google.com/spreadsheets/d/1VSfNIHXouc3u_DTcWY1Hs-Hp7wCFf6tfrZC87zlprVA/edit?usp=sharing';
         const sheetTitle = 'DOUBLE 7 LOGISTICS DB';
 
+        let shipCount = 0;
+        let trkCount = 0;
+        let manCount = 0;
+        let cdCount = 0;
+        let payCount = 0;
+        let usrCount = 0;
+        try {
+          const [s, t, m, c, p, u] = await Promise.allSettled([
+            env.DB.prepare('SELECT count(*) as count FROM shipments').first<{ count: number }>(),
+            env.DB.prepare('SELECT count(*) as count FROM tracking_events').first<{ count: number }>(),
+            env.DB.prepare('SELECT count(*) as count FROM branch_manifests').first<{ count: number }>(),
+            env.DB.prepare('SELECT count(*) as count FROM cod_records').first<{ count: number }>(),
+            env.DB.prepare('SELECT count(*) as count FROM payout_requests').first<{ count: number }>(),
+            env.USERS_DB.prepare('SELECT count(*) as count FROM users').first<{ count: number }>()
+          ]);
+          if (s.status === 'fulfilled') shipCount = s.value?.count || 0;
+          if (t.status === 'fulfilled') trkCount = t.value?.count || 0;
+          if (m.status === 'fulfilled') manCount = m.value?.count || 0;
+          if (c.status === 'fulfilled') cdCount = c.value?.count || 0;
+          if (p.status === 'fulfilled') payCount = p.value?.count || 0;
+          if (u.status === 'fulfilled') usrCount = u.value?.count || 0;
+        } catch {}
+
         if (request.method === 'POST') {
           // Trigger instant sync push / pull
           return new Response(JSON.stringify({
@@ -2115,7 +2138,7 @@ export default {
             timestamp: new Date().toISOString(),
             sheetUrl,
             tablesSynced: 8,
-            recordsProcessed: 68
+            recordsProcessed: shipCount + trkCount + manCount + cdCount
           }), {
             headers: CORS_HEADERS
           });
@@ -2132,13 +2155,13 @@ export default {
           webhookEndpoint: 'https://double7logistics.com/api/webhooks/google-sheets',
           masterWorkbookDownload: '/DOUBLE_7_LOGISTICS_MASTER_DB.xlsx',
           sheets: [
-            { id: 'shipments', title: 'Shipments & Consignments', count: 61, status: 'synced', columns: 22 },
-            { id: 'tracking_events', title: 'Tracking Telemetry & Events', count: 24, status: 'synced', columns: 9 },
-            { id: 'branch_manifests', title: 'Branch Manifests & Linehaul', count: 5, status: 'synced', columns: 13 },
-            { id: 'cod_records', title: 'COD Reconciliation Ledger', count: 12, status: 'synced', columns: 13 },
-            { id: 'payout_requests', title: 'Merchant Payouts & Banking', count: 5, status: 'synced', columns: 12 },
+            { id: 'shipments', title: 'Shipments & Consignments', count: shipCount, status: 'synced', columns: 22 },
+            { id: 'tracking_events', title: 'Tracking Telemetry & Events', count: trkCount, status: 'synced', columns: 9 },
+            { id: 'branch_manifests', title: 'Branch Manifests & Linehaul', count: manCount, status: 'synced', columns: 13 },
+            { id: 'cod_records', title: 'COD Reconciliation Ledger', count: cdCount, status: 'synced', columns: 13 },
+            { id: 'payout_requests', title: 'Merchant Payouts & Banking', count: payCount, status: 'synced', columns: 12 },
             { id: 'network_hubs', title: 'Network Hubs & Branches', count: 8, status: 'synced', columns: 10 },
-            { id: 'staff_users', title: 'Staff, Users & Drivers', count: 10, status: 'synced', columns: 10 },
+            { id: 'staff_users', title: 'Staff, Users & Drivers', count: usrCount, status: 'synced', columns: 10 },
             { id: 'system_settings', title: 'System Settings & D1 Sync Engine', count: 8, status: 'synced', columns: 5 }
           ],
           appsScriptCode: `/**
@@ -2374,6 +2397,7 @@ function onEdit(e) {
             try { await env.DB.prepare('DELETE FROM branch_manifests').run(); } catch {}
             try { await env.DB.prepare('DELETE FROM cod_records').run(); } catch {}
             try { await env.DB.prepare('DELETE FROM payout_requests').run(); } catch {}
+            try { await env.DB.prepare('DELETE FROM waitlist_subscribers').run(); } catch {}
           }
         } catch {
           // Non-blocking schema check

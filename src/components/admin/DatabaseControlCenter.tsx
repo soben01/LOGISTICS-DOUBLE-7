@@ -50,7 +50,7 @@ const DEFAULT_TABLES: TableMeta[] = [
     database: 'tracking_db',
     purpose: 'Consignments, Excel bulk bookings & waybills',
     primaryKey: 'id (INTEGER)',
-    count: 61,
+    count: 0,
     indexes: ['idx_shipments_booking', 'idx_shipments_parcel', 'idx_shipments_tracking', 'idx_shipments_phone', 'idx_shipments_merchant', 'idx_shipments_status'],
     status: 'online'
   },
@@ -59,7 +59,7 @@ const DEFAULT_TABLES: TableMeta[] = [
     database: 'tracking_db',
     purpose: 'Live scan events, hub arrivals & checkpoints',
     primaryKey: 'id (INTEGER)',
-    count: 24,
+    count: 0,
     indexes: ['idx_events_shipment', 'idx_events_time'],
     status: 'online'
   },
@@ -68,7 +68,7 @@ const DEFAULT_TABLES: TableMeta[] = [
     database: 'tracking_db',
     purpose: 'Branch hub linehaul dispatch manifests',
     primaryKey: 'id (TEXT)',
-    count: 5,
+    count: 0,
     indexes: ['idx_manifest_branch', 'idx_manifest_status'],
     status: 'online'
   },
@@ -77,7 +77,7 @@ const DEFAULT_TABLES: TableMeta[] = [
     database: 'tracking_db',
     purpose: 'Cash-on-delivery tracking & hub settlement',
     primaryKey: 'id (TEXT)',
-    count: 12,
+    count: 0,
     indexes: ['idx_cod_merchant', 'idx_cod_tracking', 'idx_cod_stage'],
     status: 'online'
   },
@@ -86,7 +86,7 @@ const DEFAULT_TABLES: TableMeta[] = [
     database: 'tracking_db',
     purpose: 'Merchant bank withdrawal & remittance payouts',
     primaryKey: 'id (TEXT)',
-    count: 3,
+    count: 0,
     indexes: ['idx_payout_merchant', 'idx_payout_status'],
     status: 'online'
   },
@@ -95,7 +95,7 @@ const DEFAULT_TABLES: TableMeta[] = [
     database: 'tracking_db',
     purpose: 'Public portal waitlist registrations',
     primaryKey: 'id (INTEGER)',
-    count: 8,
+    count: 0,
     indexes: ['email (UNIQUE)'],
     status: 'online'
   },
@@ -104,7 +104,7 @@ const DEFAULT_TABLES: TableMeta[] = [
     database: 'users',
     purpose: 'Command HQ Admins, Hub Staff & Shippers',
     primaryKey: 'id (TEXT)',
-    count: 6,
+    count: 0,
     indexes: ['idx_users_email', 'idx_users_role'],
     status: 'online'
   },
@@ -113,7 +113,7 @@ const DEFAULT_TABLES: TableMeta[] = [
     database: 'users',
     purpose: 'Staff operators & compliance audit assistants',
     primaryKey: 'id (INTEGER)',
-    count: 2,
+    count: 0,
     indexes: ['idx_sub_users_parent'],
     status: 'online'
   }
@@ -487,7 +487,7 @@ function onEdit(e) {
             </span>
           </div>
           <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#ffffff' }}>
-            {((tables.find(t => t.name === 'shipments')?.count ?? 0) > 0 ? tables.find(t => t.name === 'shipments')?.count : (activeShipmentsCount ?? 0))} Consignment{((tables.find(t => t.name === 'shipments')?.count ?? 0) > 0 ? tables.find(t => t.name === 'shipments')?.count : (activeShipmentsCount ?? 0)) === 1 ? '' : 's'}
+            {tables.find(t => t.name === 'shipments')?.count ?? 0} Consignments
           </div>
           <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontFamily: 'monospace', marginTop: '0.35rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title="165e3eb4-9323-413f-be55-cc7846857cd3">
             UUID: 165e3eb4-9323-413f-be55-cc7846857cd3
@@ -504,7 +504,7 @@ function onEdit(e) {
             </span>
           </div>
           <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#ffffff' }}>
-            {tables.find(t => t.name === 'users')?.count || 2} Accounts
+            {tables.find(t => t.name === 'users')?.count ?? 0} Accounts
           </div>
           <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontFamily: 'monospace', marginTop: '0.35rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title="6adbc3b5-ed24-48cc-8be2-8244363b650d">
             UUID: 6adbc3b5-ed24-48cc-8be2-8244363b650d
@@ -753,13 +753,13 @@ function onEdit(e) {
           borderTop: '1px solid rgba(255, 255, 255, 0.08)'
         }}>
           {[
-            { name: 'Shipments & Consignments', icon: '📦', cols: 22, count: tables.find(t => t.name === 'shipments')?.count || 61, desc: 'Bookings, Parcels & Telemetry' },
-            { name: 'Tracking Telemetry & Events', icon: '📡', cols: 9, count: tables.find(t => t.name === 'tracking_events')?.count || 24, desc: 'Live Scans & Checkpoints' },
-            { name: 'Branch Manifests & Linehaul', icon: '🚛', cols: 13, count: tables.find(t => t.name === 'branch_manifests')?.count || 5, desc: 'Linehaul Dispatch & Cages' },
-            { name: 'COD Reconciliation Ledger', icon: '💰', cols: 13, count: tables.find(t => t.name === 'cod_records')?.count || 12, desc: 'Cash Collections & Vouchers' },
-            { name: 'Merchant Payouts & Banking', icon: '🏦', cols: 12, count: tables.find(t => t.name === 'payout_requests')?.count || 5, desc: 'Merchant Settlements' },
+            { name: 'Shipments & Consignments', icon: '📦', cols: 22, count: tables.find(t => t.name === 'shipments')?.count ?? 0, desc: 'Bookings, Parcels & Telemetry' },
+            { name: 'Tracking Telemetry & Events', icon: '📡', cols: 9, count: tables.find(t => t.name === 'tracking_events')?.count ?? 0, desc: 'Live Scans & Checkpoints' },
+            { name: 'Branch Manifests & Linehaul', icon: '🚛', cols: 13, count: tables.find(t => t.name === 'branch_manifests')?.count ?? 0, desc: 'Linehaul Dispatch & Cages' },
+            { name: 'COD Reconciliation Ledger', icon: '💰', cols: 13, count: tables.find(t => t.name === 'cod_records')?.count ?? 0, desc: 'Cash Collections & Vouchers' },
+            { name: 'Merchant Payouts & Banking', icon: '🏦', cols: 12, count: tables.find(t => t.name === 'payout_requests')?.count ?? 0, desc: 'Merchant Settlements' },
             { name: 'Network Hubs & Branches', icon: '🏢', cols: 10, count: 8, desc: '8 Hubs (KTM, PKR, BRT, etc.)' },
-            { name: 'Staff, Users & Drivers', icon: '👥', cols: 10, count: tables.find(t => t.name === 'users')?.count || 10, desc: 'Staff, Drivers & Roles' },
+            { name: 'Staff, Users & Drivers', icon: '👥', cols: 10, count: tables.find(t => t.name === 'users')?.count ?? 0, desc: 'Staff, Drivers & Roles' },
             { name: 'System Settings & D1 Sync', icon: '⚡', cols: 5, count: 8, desc: 'Edge Engine & Webhooks' }
           ].map((item, idx) => (
             <div
