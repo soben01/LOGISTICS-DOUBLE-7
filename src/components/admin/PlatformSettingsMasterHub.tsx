@@ -646,12 +646,45 @@ export default function PlatformSettingsMasterHub({ onNotice, onNavigateWorkflow
               <span className="badge badge-orange" style={{ fontSize: '0.7rem' }}>Super Admin Engine</span>
             </div>
 
+            {/* Quick Presets for Rapid Setup */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>Quick Role Presets:</span>
+              <button
+                type="button"
+                onClick={() => { setSelectedModule('Delivery'); setSelectedAction('Edit'); setSelectedScope('Assigned'); }}
+                style={{ padding: '0.3rem 0.65rem', borderRadius: '6px', fontSize: '0.74rem', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#cbd5e1', cursor: 'pointer' }}
+              >
+                🛵 Delivery Rider
+              </button>
+              <button
+                type="button"
+                onClick={() => { setSelectedModule('Shipments'); setSelectedAction('Approve'); setSelectedScope('Branch'); }}
+                style={{ padding: '0.3rem 0.65rem', borderRadius: '6px', fontSize: '0.74rem', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#cbd5e1', cursor: 'pointer' }}
+              >
+                🏢 Branch Manager
+              </button>
+              <button
+                type="button"
+                onClick={() => { setSelectedModule('Finance'); setSelectedAction('View'); setSelectedScope('Branch'); }}
+                style={{ padding: '0.3rem 0.65rem', borderRadius: '6px', fontSize: '0.74rem', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#cbd5e1', cursor: 'pointer' }}
+              >
+                💵 COD Cashier
+              </button>
+              <button
+                type="button"
+                onClick={() => { setSelectedModule('Orders'); setSelectedAction('Create'); setSelectedScope('Own Records'); }}
+                style={{ padding: '0.3rem 0.65rem', borderRadius: '6px', fontSize: '0.74rem', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#cbd5e1', cursor: 'pointer' }}
+              >
+                📦 Merchant Consignor
+              </button>
+            </div>
+
             {/* Matrix Selector Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
-              {/* Step 1: Module */}
-              <div style={{ padding: '1rem', borderRadius: '10px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--brand-orange)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
-                  1. Target Module
+              {/* Step 1: Module (Department) */}
+              <div style={{ padding: '1.1rem', borderRadius: '10px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--brand-orange)', marginBottom: '0.4rem', textTransform: 'uppercase' }}>
+                  1. Which Department? (Target Module)
                 </label>
                 <select
                   value={selectedModule}
@@ -662,15 +695,15 @@ export default function PlatformSettingsMasterHub({ onNotice, onNavigateWorkflow
                     <option key={m.id} value={m.id}>{m.label}</option>
                   ))}
                 </select>
-                <div style={{ fontSize: '0.73rem', color: 'var(--text-secondary)', marginTop: '0.4rem' }}>
-                  {PERMISSION_BUILDER_MODULES.find(m => m.id === selectedModule)?.description}
+                <div style={{ fontSize: '0.73rem', color: 'var(--text-secondary)', marginTop: '0.5rem', lineHeight: 1.4 }}>
+                  👉 <strong>Section of business:</strong> {PERMISSION_BUILDER_MODULES.find(m => m.id === selectedModule)?.description}
                 </div>
               </div>
 
               {/* Step 2: Action */}
-              <div style={{ padding: '1rem', borderRadius: '10px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#38bdf8', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
-                  2. Allowed Action
+              <div style={{ padding: '1.1rem', borderRadius: '10px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#38bdf8', marginBottom: '0.4rem', textTransform: 'uppercase' }}>
+                  2. What Can They Do? (Allowed Action)
                 </label>
                 <select
                   value={selectedAction}
@@ -681,15 +714,15 @@ export default function PlatformSettingsMasterHub({ onNotice, onNavigateWorkflow
                     <option key={a.id} value={a.id}>{a.label}</option>
                   ))}
                 </select>
-                <div style={{ fontSize: '0.73rem', color: 'var(--text-secondary)', marginTop: '0.4rem' }}>
-                  {PERMISSION_BUILDER_ACTIONS.find(a => a.id === selectedAction)?.description}
+                <div style={{ fontSize: '0.73rem', color: 'var(--text-secondary)', marginTop: '0.5rem', lineHeight: 1.4 }}>
+                  👉 <strong>Action allowed:</strong> {PERMISSION_BUILDER_ACTIONS.find(a => a.id === selectedAction)?.description}
                 </div>
               </div>
 
               {/* Step 3: Scope */}
-              <div style={{ padding: '1rem', borderRadius: '10px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#c084fc', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
-                  3. Access Scope
+              <div style={{ padding: '1.1rem', borderRadius: '10px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#c084fc', marginBottom: '0.4rem', textTransform: 'uppercase' }}>
+                  3. Where In Nepal? (Data Scope)
                 </label>
                 <select
                   value={selectedScope}
@@ -700,8 +733,8 @@ export default function PlatformSettingsMasterHub({ onNotice, onNavigateWorkflow
                     <option key={s.id} value={s.id}>{s.label}</option>
                   ))}
                 </select>
-                <div style={{ fontSize: '0.73rem', color: 'var(--text-secondary)', marginTop: '0.4rem' }}>
-                  {PERMISSION_BUILDER_SCOPES.find(s => s.id === selectedScope)?.description}
+                <div style={{ fontSize: '0.73rem', color: 'var(--text-secondary)', marginTop: '0.5rem', lineHeight: 1.4 }}>
+                  👉 <strong>Access range:</strong> {PERMISSION_BUILDER_SCOPES.find(s => s.id === selectedScope)?.description}
                 </div>
               </div>
             </div>
@@ -713,11 +746,22 @@ export default function PlatformSettingsMasterHub({ onNotice, onNavigateWorkflow
               alignItems: 'center',
               flexWrap: 'wrap',
               gap: '1rem',
-              padding: '0.85rem 1.25rem',
+              padding: '1rem 1.25rem',
               backgroundColor: 'rgba(255, 255, 255, 0.04)',
               borderRadius: '10px',
               border: '1px dashed rgba(255, 255, 255, 0.15)'
             }}>
+              <div>
+                <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700 }}>
+                  Plain English Rule Summary
+                </div>
+                <div style={{ fontSize: '0.88rem', color: '#f8fafc', marginTop: '0.2rem', fontWeight: 600 }}>
+                  This user can <span style={{ color: '#38bdf8' }}>{selectedAction}</span> inside <span style={{ color: 'var(--brand-orange)' }}>{selectedModule}</span>, strictly for <span style={{ color: '#c084fc' }}>{selectedScope}</span>.
+                </div>
+                <div style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: '#10b981', marginTop: '0.25rem' }}>
+                  System Code: {generatePermissionCode(selectedModule, selectedAction, selectedScope)}
+                </div>
+              </div>
               <div>
                 <span style={{ fontSize: '0.73rem', color: 'var(--text-secondary)' }}>Generated Permission Code:</span>
                 <div style={{ fontFamily: 'monospace', fontSize: '0.92rem', fontWeight: 700, color: '#10b981', marginTop: '0.2rem' }}>

@@ -552,11 +552,47 @@ export default function AdminToolsSuite({ onNotice }: Props) {
             <span className="badge badge-orange">RBAC Engine Active</span>
           </div>
 
+          {/* Quick Presets for Rapid Setup */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>Quick Role Presets:</span>
+            <button
+              type="button"
+              onClick={() => { setBuilderModule('Delivery'); setBuilderAction('Edit'); setBuilderScope('Assigned'); }}
+              style={{ padding: '0.3rem 0.65rem', borderRadius: '6px', fontSize: '0.74rem', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#cbd5e1', cursor: 'pointer' }}
+            >
+              🛵 Delivery Rider
+            </button>
+            <button
+              type="button"
+              onClick={() => { setBuilderModule('Shipments'); setBuilderAction('Approve'); setBuilderScope('Branch'); }}
+              style={{ padding: '0.3rem 0.65rem', borderRadius: '6px', fontSize: '0.74rem', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#cbd5e1', cursor: 'pointer' }}
+            >
+              🏢 Branch Manager
+            </button>
+            <button
+              type="button"
+              onClick={() => { setBuilderModule('Finance'); setBuilderAction('View'); setBuilderScope('Branch'); }}
+              style={{ padding: '0.3rem 0.65rem', borderRadius: '6px', fontSize: '0.74rem', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#cbd5e1', cursor: 'pointer' }}
+            >
+              💵 COD Cashier
+            </button>
+            <button
+              type="button"
+              onClick={() => { setBuilderModule('Orders'); setBuilderAction('Create'); setBuilderScope('Own Records'); }}
+              style={{ padding: '0.3rem 0.65rem', borderRadius: '6px', fontSize: '0.74rem', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#cbd5e1', cursor: 'pointer' }}
+            >
+              📦 Merchant Consignor
+            </button>
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-            <div style={{ padding: '1rem', borderRadius: '10px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--brand-orange)', marginBottom: '0.5rem' }}>
-                TARGET MODULE
-              </label>
+            {/* Step 1: Module (Department) */}
+            <div style={{ padding: '1.1rem', borderRadius: '10px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--brand-orange)', textTransform: 'uppercase' }}>
+                  1. Which Department? (Target Module)
+                </label>
+              </div>
               <select
                 value={builderModule}
                 onChange={e => setBuilderModule(e.target.value as PermissionModule)}
@@ -566,12 +602,18 @@ export default function AdminToolsSuite({ onNotice }: Props) {
                   <option key={m.id} value={m.id}>{m.label}</option>
                 ))}
               </select>
+              <div style={{ fontSize: '0.73rem', color: 'var(--text-secondary)', marginTop: '0.5rem', lineHeight: 1.4 }}>
+                👉 <strong>Section of business:</strong> {PERMISSION_BUILDER_MODULES.find(m => m.id === builderModule)?.description}
+              </div>
             </div>
 
-            <div style={{ padding: '1rem', borderRadius: '10px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#38bdf8', marginBottom: '0.5rem' }}>
-                ALLOWED ACTION
-              </label>
+            {/* Step 2: Action */}
+            <div style={{ padding: '1.1rem', borderRadius: '10px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#38bdf8', textTransform: 'uppercase' }}>
+                  2. What Can They Do? (Allowed Action)
+                </label>
+              </div>
               <select
                 value={builderAction}
                 onChange={e => setBuilderAction(e.target.value as PermissionAction)}
@@ -581,12 +623,18 @@ export default function AdminToolsSuite({ onNotice }: Props) {
                   <option key={a.id} value={a.id}>{a.label}</option>
                 ))}
               </select>
+              <div style={{ fontSize: '0.73rem', color: 'var(--text-secondary)', marginTop: '0.5rem', lineHeight: 1.4 }}>
+                👉 <strong>Action allowed:</strong> {PERMISSION_BUILDER_ACTIONS.find(a => a.id === builderAction)?.description}
+              </div>
             </div>
 
-            <div style={{ padding: '1rem', borderRadius: '10px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#c084fc', marginBottom: '0.5rem' }}>
-                DATA ACCESS SCOPE
-              </label>
+            {/* Step 3: Scope */}
+            <div style={{ padding: '1.1rem', borderRadius: '10px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#c084fc', textTransform: 'uppercase' }}>
+                  3. Where In Nepal? (Data Scope)
+                </label>
+              </div>
               <select
                 value={builderScope}
                 onChange={e => setBuilderScope(e.target.value as PermissionScope)}
@@ -596,14 +644,22 @@ export default function AdminToolsSuite({ onNotice }: Props) {
                   <option key={s.id} value={s.id}>{s.label}</option>
                 ))}
               </select>
+              <div style={{ fontSize: '0.73rem', color: 'var(--text-secondary)', marginTop: '0.5rem', lineHeight: 1.4 }}>
+                👉 <strong>Access range:</strong> {PERMISSION_BUILDER_SCOPES.find(s => s.id === builderScope)?.description}
+              </div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: 'rgba(255, 255, 255, 0.04)', borderRadius: '10px', border: '1px dashed rgba(255, 255, 255, 0.15)', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem', backgroundColor: 'rgba(255, 255, 255, 0.04)', borderRadius: '10px', border: '1px dashed rgba(255, 255, 255, 0.15)', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
             <div>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Generated Permission Code:</span>
-              <div style={{ fontFamily: 'monospace', fontSize: '0.95rem', fontWeight: 700, color: '#10b981', marginTop: '0.2rem' }}>
-                {generatePermissionCode(builderModule, builderAction, builderScope)}
+              <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700 }}>
+                Plain English Rule Summary
+              </div>
+              <div style={{ fontSize: '0.88rem', color: '#f8fafc', marginTop: '0.2rem', fontWeight: 600 }}>
+                This user can <span style={{ color: '#38bdf8' }}>{builderAction}</span> inside <span style={{ color: 'var(--brand-orange)' }}>{builderModule}</span>, strictly for <span style={{ color: '#c084fc' }}>{builderScope}</span>.
+              </div>
+              <div style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: '#10b981', marginTop: '0.25rem' }}>
+                System Code: {generatePermissionCode(builderModule, builderAction, builderScope)}
               </div>
             </div>
             <button
