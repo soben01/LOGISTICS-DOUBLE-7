@@ -60,9 +60,14 @@ export default function Navbar() {
     router.push('/');
   };
 
+  if (pathname?.startsWith('/operations')) {
+    return null;
+  }
+
   const navLinks = [
     ...(currentUser ? [
       { href: '/dashboard', label: 'Dashboard' },
+      { href: '/operations', label: 'Operations Desk' },
       { href: '/bookings', label: 'Bookings' },
       ...(currentUser.role === 'admin' || currentUser.role === 'branch' ? [
         { href: '/manifest', label: 'Manifest' }

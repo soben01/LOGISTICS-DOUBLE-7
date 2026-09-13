@@ -27,6 +27,10 @@ export default function MobileBottomNav() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showAccountSheet, setShowAccountSheet] = useState(false);
 
+  if (pathname?.startsWith('/operations')) {
+    return null;
+  }
+
   useEffect(() => {
     const checkAuth = () => {
       setCurrentUser(getCurrentUser());

@@ -803,6 +803,35 @@ export default function AdminControlPanel() {
                     </span>
                   )}
                 </button>
+
+                <Link
+                  href="/operations"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
+                    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                    color: '#34d399',
+                    textAlign: 'left',
+                    textDecoration: 'none',
+                    marginTop: '0.25rem'
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <Boxes size={18} color="#10b981" />
+                    Operations Desk
+                  </span>
+                  <span style={{ fontSize: '0.65rem', backgroundColor: '#10b981', color: '#060911', padding: '0.1rem 0.4rem', borderRadius: '6px', fontWeight: 800 }}>
+                    MULTI-ROLE
+                  </span>
+                </Link>
               </div>
             </div>
 
