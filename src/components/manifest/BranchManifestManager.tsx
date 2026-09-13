@@ -38,10 +38,20 @@ import {
   Clock,
   ClipboardList,
   Ban,
-  Shield
+  Shield,
+  Camera,
+  Package,
+  Smartphone,
+  Volume2,
+  ShieldAlert
 } from 'lucide-react';
 import { User, getCurrentUser, isHqAdmin } from '../../lib/auth';
 import { getShipments, updateShipmentStatus, Shipment } from '../../lib/store';
+import { playScanBeep, playErrorBuzz, playRouteMismatchSiren, playDispatchFanfare, playReceiveChime } from '../../lib/soundFx';
+import CameraBarcodeScannerModal from '../common/CameraBarcodeScannerModal';
+import MasterBaggingModal from './MasterBaggingModal';
+import DigitalPodModal from '../operations/DigitalPodModal';
+import { MasterBag, getMasterBags } from '../../lib/bagging';
 import {
   BranchManifest,
   ManifestItem,
@@ -116,6 +126,16 @@ export default function BranchManifestManager({ user }: Props) {
   // Quick-add drawer state
   const [showEligibleDrawer, setShowEligibleDrawer] = useState(false);
   const [allShipments, setAllShipments] = useState<Shipment[]>([]);
+
+  // Advanced Workflow States: Camera Scanner, Master Bagging, Route Mismatch & Digital POD
+  const [showCameraScanner, setShowCameraScanner] = useState(false);
+  const [showBaggingModal, setShowBaggingModal] = useState(false);
+  const [routeMismatchWarning, setRouteMismatchWarning] = useState<{
+    shipment: Shipment;
+    intendedHub: string;
+  } | null>(null);
+  const [podShipment, setPodShipment] = useState<Shipment | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   // Determine permissions
   const isHqOrSuperAdmin = isHqAdmin(currentUser);
@@ -220,26 +240,60 @@ export default function BranchManifestManager({ user }: Props) {
     }
   };
 
-  const handleAddBookingById = (idToAdd?: string) => {
+  const handleAddBookingById = (idToAdd?: string, forceOverride: boolean = false) => {
     const targetId = (idToAdd || inputBookingId).trim().toUpperCase();
     if (!targetId) {
+      if (soundEnabled) playErrorBuzz();
       setInputFeedback({ type: 'error', message: 'Please enter a booking or waybill number.' });
       return;
     }
 
     if (stagedItems.some(i => i.bookingId.toUpperCase() === targetId)) {
+      if (soundEnabled) playErrorBuzz();
       setInputFeedback({ type: 'error', message: `Booking ${targetId} is already added in this manifest.` });
       return;
     }
 
     const shipment = lookupShipmentForManifest(targetId);
     if (!shipment) {
+      if (soundEnabled) playErrorBuzz();
       setInputFeedback({
         type: 'error',
         message: `Booking #${targetId} not found in consignment registry. Please verify the number.`
       });
       return;
     }
+
+    // Route Mismatch Sentinel
+    if (!forceOverride) {
+      const destHubNorm = destinationHub.toLowerCase();
+      const destCityNorm = destinationCity.toLowerCase();
+      const shipDestHubNorm = (shipment.destination.hub || '').toLowerCase();
+      const shipDestCityNorm = (shipment.destination.city || '').toLowerCase();
+
+      const isMatchingRoute =
+        destHubNorm.includes(shipDestCityNorm) ||
+        shipDestHubNorm.includes(destCityNorm) ||
+        (destHubNorm.includes('ktm') && (shipDestHubNorm.includes('ktm') || shipDestCityNorm.includes('kathmandu'))) ||
+        (destHubNorm.includes('pkr') && (shipDestHubNorm.includes('pkr') || shipDestCityNorm.includes('pokhara'))) ||
+        (destHubNorm.includes('brt') && (shipDestHubNorm.includes('brt') || shipDestCityNorm.includes('biratnagar'))) ||
+        (destHubNorm.includes('btw') && (shipDestHubNorm.includes('btw') || shipDestCityNorm.includes('butwal'))) ||
+        (destHubNorm.includes('brg') && (shipDestHubNorm.includes('brg') || shipDestCityNorm.includes('birgunj'))) ||
+        (destHubNorm.includes('cht') && (shipDestHubNorm.includes('cht') || shipDestCityNorm.includes('chitwan') || shipDestCityNorm.includes('bharatpur'))) ||
+        (destHubNorm.includes('npj') && (shipDestHubNorm.includes('npj') || shipDestCityNorm.includes('nepalgunj'))) ||
+        (destHubNorm.includes('dhn') && (shipDestHubNorm.includes('dhn') || shipDestCityNorm.includes('dhangadhi')));
+
+      if (!isMatchingRoute) {
+        if (soundEnabled) playRouteMismatchSiren();
+        setRouteMismatchWarning({
+          shipment,
+          intendedHub: destinationHub
+        });
+        return;
+      }
+    }
+
+    if (soundEnabled) playScanBeep(1600, 0.08);
 
     const newItem: ManifestItem = {
       bookingId: shipment.id,
@@ -263,6 +317,42 @@ export default function BranchManifestManager({ user }: Props) {
       message: `✓ Added ${shipment.id} (${shipment.cargo.pieces} Pkgs, ${shipment.cargo.weightKg} KG, Dest: ${shipment.destination.city})`
     });
     setTimeout(() => setInputFeedback(null), 4000);
+  };
+
+  const handleAttachMasterBagToManifest = (bag: MasterBag) => {
+    if (soundEnabled) playScanBeep(1800, 0.1);
+    const addedItems: ManifestItem[] = [];
+
+    bag.itemBookingIds.forEach(id => {
+      if (stagedItems.some(i => i.bookingId.toUpperCase() === id.toUpperCase())) return;
+      const shipment = lookupShipmentForManifest(id);
+      if (shipment) {
+        addedItems.push({
+          bookingId: shipment.id,
+          consigneeName: `${shipment.recipient.name} [Bag ${bag.bagNumber}]`,
+          consigneePhone: shipment.recipient.phone,
+          destinationCity: shipment.destination.city,
+          destinationHub: shipment.destination.hub,
+          pieces: shipment.cargo.pieces,
+          weightKg: shipment.cargo.weightKg,
+          service: shipment.service,
+          serviceCode: shipment.serviceCode,
+          codAmount: shipment.codAmount || 0,
+          status: shipment.status,
+          addedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        });
+      }
+    });
+
+    if (addedItems.length > 0) {
+      setStagedItems(prev => [...addedItems, ...prev]);
+      setShowBaggingModal(false);
+      setInputFeedback({
+        type: 'success',
+        message: `🎒 Master Bag #${bag.bagNumber} (Seal #${bag.sealNumber}) loaded into manifest! (+${addedItems.length} consignments, ${bag.totalWeightKg} KG)`
+      });
+      setTimeout(() => setInputFeedback(null), 5000);
+    }
   };
 
   const handleRemoveStagedItem = (bookingId: string) => {
@@ -441,6 +531,7 @@ export default function BranchManifestManager({ user }: Props) {
     }
 
     setConfirmDispatchModal(null);
+    if (soundEnabled) playDispatchFanfare();
     reloadData();
     if (activeManifest && activeManifest.id === manifestId && res.manifest) {
       setActiveManifest(res.manifest);
@@ -471,6 +562,7 @@ export default function BranchManifestManager({ user }: Props) {
       return;
     }
     setReceivingModalManifest(null);
+    if (soundEnabled) playReceiveChime();
     reloadData();
     setActionSuccessNotice(
       `📥 Manifest ${res.manifest?.manifestNumber} RECEIVED at ${effectiveBranchCode}! Updated all ${res.manifest?.items.length} consignment(s) to "Hub Received".`
@@ -955,14 +1047,50 @@ export default function BranchManifestManager({ user }: Props) {
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setShowEligibleDrawer(!showEligibleDrawer)}
-                  className="btn btn-secondary btn-sm"
-                  style={{ borderColor: 'rgba(168, 85, 247, 0.4)', color: '#c084fc' }}
-                >
-                  <Search size={14} /> Browse Available Bookings ({eligibleShipments.length})
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSoundEnabled(!soundEnabled);
+                      if (!soundEnabled) playScanBeep(1600, 0.08);
+                    }}
+                    className="btn btn-secondary btn-sm"
+                    style={{
+                      borderColor: soundEnabled ? 'rgba(52, 211, 153, 0.4)' : 'rgba(255, 255, 255, 0.1)',
+                      color: soundEnabled ? '#34d399' : 'var(--text-muted)'
+                    }}
+                    title="Toggle logistics audio feedback beeps and sirens"
+                  >
+                    <Volume2 size={14} /> {soundEnabled ? '🔊 Sound: ON' : '🔈 Sound: OFF'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowCameraScanner(true)}
+                    className="btn btn-secondary btn-sm"
+                    style={{ borderColor: 'rgba(56, 189, 248, 0.4)', color: '#38bdf8' }}
+                  >
+                    <Camera size={14} /> 📷 Camera Scanner
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowBaggingModal(true)}
+                    className="btn btn-secondary btn-sm"
+                    style={{ borderColor: 'rgba(168, 85, 247, 0.4)', color: '#c084fc' }}
+                  >
+                    <Package size={14} /> 🎒 Pack Master Bag
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowEligibleDrawer(!showEligibleDrawer)}
+                    className="btn btn-secondary btn-sm"
+                    style={{ borderColor: 'rgba(255, 255, 255, 0.2)', color: 'var(--text-secondary)' }}
+                  >
+                    <Search size={14} /> Browse ({eligibleShipments.length})
+                  </button>
+                </div>
               </div>
 
               {/* Quick Input Form */}
@@ -2687,6 +2815,147 @@ export default function BranchManifestManager({ user }: Props) {
               </div>
             </div>
           </div>
+        )}
+
+        {/* ================= MODAL 5: CAMERA BARCODE SCANNER ================= */}
+        {showCameraScanner && (
+          <CameraBarcodeScannerModal
+            title={`Scan Consignments into ${branchOrigin}`}
+            suggestedAwbs={eligibleShipments.map(s => s.id)}
+            onClose={() => setShowCameraScanner(false)}
+            onScan={(code) => {
+              setShowCameraScanner(false);
+              handleAddBookingById(code);
+            }}
+          />
+        )}
+
+        {/* ================= MODAL 6: MASTER BAGGING & CONTAINERIZATION ================= */}
+        {showBaggingModal && (
+          <MasterBaggingModal
+            originHubCode={effectiveBranchCode}
+            originHubName={branchOrigin}
+            onClose={() => setShowBaggingModal(false)}
+            onBagCreated={(bag) => handleAttachMasterBagToManifest(bag)}
+          />
+        )}
+
+        {/* ================= MODAL 7: ROUTE MISMATCH SENTINEL ALERT ================= */}
+        {routeMismatchWarning && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 999999,
+            backgroundColor: 'rgba(3, 7, 18, 0.9)',
+            backdropFilter: 'blur(10px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem'
+          }}>
+            <div style={{
+              width: '100%',
+              maxWidth: '540px',
+              backgroundColor: '#0d1527',
+              border: '2px solid #ef4444',
+              borderRadius: '16px',
+              padding: '1.75rem',
+              boxShadow: '0 25px 60px rgba(239, 68, 68, 0.3)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                <div style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                  color: '#f87171',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <ShieldAlert size={26} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, color: '#f87171' }}>
+                    Route Mismatch Detected!
+                  </h3>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.15rem 0 0 0' }}>
+                    Double 7 Routing Sentinel intercepted cross-corridor cargo misload
+                  </p>
+                </div>
+              </div>
+
+              <div style={{
+                backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
+                borderRadius: '10px',
+                padding: '1rem',
+                fontSize: '0.85rem',
+                marginBottom: '1.25rem',
+                lineHeight: 1.5
+              }}>
+                <div style={{ marginBottom: '0.5rem', fontWeight: 700, color: '#f8fafc' }}>
+                  Consignment: <span style={{ color: '#38bdf8' }}>{routeMismatchWarning.shipment.id}</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                  <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.5rem', borderRadius: '6px' }}>
+                    <div style={{ fontSize: '0.7rem', color: '#f87171', fontWeight: 700 }}>PARCEL DESTINATION</div>
+                    <div style={{ fontWeight: 800, color: '#fff' }}>{routeMismatchWarning.shipment.destination.city}</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{routeMismatchWarning.shipment.destination.hub}</div>
+                  </div>
+                  <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.5rem', borderRadius: '6px' }}>
+                    <div style={{ fontSize: '0.7rem', color: '#fbbf24', fontWeight: 700 }}>LINEHAUL MANIFEST ROUTE</div>
+                    <div style={{ fontWeight: 800, color: '#fff' }}>{destinationCity}</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{destinationHub}</div>
+                  </div>
+                </div>
+                <p style={{ fontSize: '0.78rem', color: '#fca5a5', margin: 0 }}>
+                  ⚠️ This consignment is routed to a different hub corridor. Mixing this parcel into this linehaul trunk may cause delayed delivery or misrouting penalty.
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (soundEnabled) playErrorBuzz();
+                    setRouteMismatchWarning(null);
+                  }}
+                  className="btn btn-secondary"
+                  style={{ borderColor: 'rgba(255, 255, 255, 0.2)', color: '#ffffff' }}
+                >
+                  ❌ Remove & Keep in Hub Belt
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const s = routeMismatchWarning.shipment;
+                    setRouteMismatchWarning(null);
+                    handleAddBookingById(s.id, true);
+                  }}
+                  className="btn btn-primary"
+                  style={{ background: '#dc2626', borderColor: '#dc2626', color: '#ffffff', fontWeight: 700 }}
+                >
+                  ⚠️ Admin Force Override (Add Anyway)
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ================= MODAL 8: DIGITAL POD & HANDOVER ================= */}
+        {podShipment && (
+          <DigitalPodModal
+            shipment={podShipment}
+            branchCode={effectiveBranchCode}
+            onClose={() => setPodShipment(null)}
+            onSuccess={() => {
+              setPodShipment(null);
+              reloadData();
+              setActionSuccessNotice(`✓ Consignment ${podShipment.id} successfully updated with Digital POD!`);
+              setTimeout(() => setActionSuccessNotice(null), 6000);
+            }}
+          />
         )}
       </div>
     </div>

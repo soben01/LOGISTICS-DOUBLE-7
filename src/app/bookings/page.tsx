@@ -24,7 +24,9 @@ import {
   ShieldCheck,
   FileText,
   Lock,
-  Layers
+  Layers,
+  Camera,
+  Smartphone
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser, loginAsDemo, User } from '../../lib/auth';
@@ -45,6 +47,9 @@ import { getWebsiteSettings } from '../../lib/settings';
 import ExcelImportModal from '../../components/shipping/ExcelImportModal';
 import { exportShipmentsToExcel } from '../../lib/excelImport';
 import { FileSpreadsheet } from 'lucide-react';
+import CameraBarcodeScannerModal from '../../components/common/CameraBarcodeScannerModal';
+import DigitalPodModal from '../../components/operations/DigitalPodModal';
+import { playScanBeep, playDispatchFanfare } from '../../lib/soundFx';
 
 export default function AllBookingsPage() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -60,6 +65,8 @@ export default function AllBookingsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [printFeedback, setPrintFeedback] = useState<string | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showCameraScanner, setShowCameraScanner] = useState(false);
+  const [podShipment, setPodShipment] = useState<Shipment | null>(null);
   const router = useRouter();
 
   // Quick edit status modal state
@@ -314,12 +321,27 @@ export default function AllBookingsPage() {
 
             <button
               type="button"
-              onClick={() => setShowImportModal(true)}
-              className="btn btn-sm"
+              onClick={() => setShowCameraScanner(true)}
+              className="btn btn-outline btn-sm"
               style={{
-                background: 'rgba(16, 185, 129, 0.15)',
-                color: '#10b981',
-                border: '1px solid rgba(16, 185, 129, 0.35)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                borderColor: 'rgba(56, 189, 248, 0.4)',
+                color: '#38bdf8',
+                backgroundColor: 'rgba(56, 189, 248, 0.08)'
+              }}
+              title="Scan AWB barcode with device camera or rapid barcode gun"
+            >
+              <Camera size={14} />
+              <span>📷 Camera Scanner</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowImportModal(true)}
+              className="btn btn-outline btn-sm"
+              style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.35rem',
@@ -760,6 +782,25 @@ export default function AllBookingsPage() {
 
                           <button
                             type="button"
+                            onClick={() => setPodShipment(s)}
+                            className="btn btn-sm"
+                            title="Digital Proof of Delivery (OTP & Recipient Signature)"
+                            style={{
+                              padding: '0.35rem 0.55rem',
+                              backgroundColor: s.status === 'Delivered' ? 'rgba(52, 211, 153, 0.12)' : 'rgba(56, 189, 248, 0.15)',
+                              borderColor: s.status === 'Delivered' ? 'rgba(52, 211, 153, 0.3)' : 'rgba(56, 189, 248, 0.4)',
+                              color: s.status === 'Delivered' ? '#34d399' : '#38bdf8',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.25rem'
+                            }}
+                          >
+                            <Smartphone size={13} />
+                            <span style={{ fontSize: '0.72rem', fontWeight: 700 }}>POD</span>
+                          </button>
+
+                          <button
+                            type="button"
                             onClick={() => setPrintingShipment(s)}
                             className="btn btn-outline btn-sm"
                             title="Print Consignment AWB Label"
@@ -1029,6 +1070,33 @@ export default function AllBookingsPage() {
             setTimeout(() => setPrintFeedback(null), 6000);
           }}
         />
+
+        {showCameraScanner && (
+          <CameraBarcodeScannerModal
+            title="Scan Consignment Barcode / Waybill"
+            suggestedAwbs={shipments.map(s => s.id)}
+            onClose={() => setShowCameraScanner(false)}
+            onScan={(code) => {
+              setShowCameraScanner(false);
+              setSearchTerm(code);
+              playScanBeep(1600, 0.08);
+            }}
+          />
+        )}
+
+        {podShipment && (
+          <DigitalPodModal
+            shipment={podShipment}
+            branchCode={currentUser?.branchCode || 'KTM-01'}
+            onClose={() => setPodShipment(null)}
+            onSuccess={() => {
+              setPodShipment(null);
+              loadBookings();
+              setPrintFeedback(`✓ Digital Proof of Delivery registered for ${podShipment.id}!`);
+              setTimeout(() => setPrintFeedback(null), 5000);
+            }}
+          />
+        )}
       </div>
 
       <style jsx global>{`
