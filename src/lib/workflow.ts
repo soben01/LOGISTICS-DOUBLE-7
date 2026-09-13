@@ -628,4 +628,421 @@ export function evaluateDeliveryFailure(
   };
 }
 
+// ---------------------------------------------------------------------------
+// NODE-BASED VISUAL WORKFLOW GRAPH (COMFYUI / N8N / LANGFLOW CANVAS ENGINE)
+// ---------------------------------------------------------------------------
+
+export interface WorkflowGraphNode {
+  id: string;
+  stageId: string;
+  stage: WorkflowStage;
+  x: number;
+  y: number;
+  collapsed?: boolean;
+}
+
+export interface WorkflowGraphEdge {
+  id: string;
+  fromNodeId: string;
+  toNodeId: string;
+  label?: string;
+  animated?: boolean;
+}
+
+export interface WorkflowGraphState {
+  flowTitle: string;
+  nodes: WorkflowGraphNode[];
+  edges: WorkflowGraphEdge[];
+  zoom: number;
+  panX: number;
+  panY: number;
+  lastUpdated: string;
+}
+
+export interface PaletteNodeTemplate {
+  id: string;
+  category: 'Built-in Nodes' | 'Intake & Booking' | 'Sorting & Gateway' | 'Transit & Linehaul' | 'Last-Mile & Delivery' | 'Logic & Sentinels';
+  label: string;
+  sublabel: string;
+  iconName: string;
+  stageColor: StageColor;
+  defaultSla: number;
+  stageCategory: StageCategory;
+  description: string;
+  badge?: string;
+}
+
+export const NODE_PALETTE_TEMPLATES: PaletteNodeTemplate[] = [
+  // Built-in Nodes
+  {
+    id: 'tpl-booking',
+    category: 'Built-in Nodes',
+    label: 'Order Intake Booking',
+    sublabel: 'Consignment Created',
+    iconName: 'Boxes',
+    stageColor: 'orange',
+    defaultSla: 2,
+    stageCategory: 'initial',
+    description: 'Registers consignor booking and assigns AWB in Double 7 network.',
+    badge: 'Core'
+  },
+  {
+    id: 'tpl-label',
+    category: 'Built-in Nodes',
+    label: 'AWB Label Generator',
+    sublabel: '4x6 Shipping Barcode',
+    iconName: 'Printer',
+    stageColor: 'purple',
+    defaultSla: 4,
+    stageCategory: 'processing',
+    description: 'Generates standard shipping barcode sticker and dispatch manifest slip.',
+    badge: 'Core'
+  },
+  {
+    id: 'tpl-hub-inward',
+    category: 'Built-in Nodes',
+    label: 'Hub Belt Inward',
+    sublabel: 'Origin Gateway Inward',
+    iconName: 'Building',
+    stageColor: 'cyan',
+    defaultSla: 8,
+    stageCategory: 'transit',
+    description: 'Primary conveyor intake and barcode verification at origin sorting facility.',
+    badge: 'Gateway'
+  },
+  {
+    id: 'tpl-linehaul',
+    category: 'Built-in Nodes',
+    label: 'Linehaul Trunk Transit',
+    sublabel: 'Inter-City Linehaul',
+    iconName: 'Truck',
+    stageColor: 'blue',
+    defaultSla: 18,
+    stageCategory: 'transit',
+    description: 'Scheduled multi-hub container truck linehaul across highway trunk corridor.',
+    badge: 'Trunk'
+  },
+  {
+    id: 'tpl-out-delivery',
+    category: 'Built-in Nodes',
+    label: 'Out for Delivery',
+    sublabel: 'Last-Mile Rider Van',
+    iconName: 'Radio',
+    stageColor: 'amber',
+    defaultSla: 6,
+    stageCategory: 'delivery',
+    description: 'Assigned to destination delivery courier for doorstep recipient handover.',
+    badge: 'Last-Mile'
+  },
+  {
+    id: 'tpl-pod-signed',
+    category: 'Built-in Nodes',
+    label: 'Digital POD Handover',
+    sublabel: 'Delivered & Signed',
+    iconName: 'CheckCircle2',
+    stageColor: 'emerald',
+    defaultSla: 1,
+    stageCategory: 'completed',
+    description: 'OTP verified, recipient signature archived, and COD cash collected.',
+    badge: 'Terminal'
+  },
+
+  // Intake & Booking
+  {
+    id: 'tpl-api-webhook',
+    category: 'Intake & Booking',
+    label: 'API Webhook Ingest',
+    sublabel: 'Merchant E-Commerce API',
+    iconName: 'Boxes',
+    stageColor: 'orange',
+    defaultSla: 1,
+    stageCategory: 'initial',
+    description: 'Automated REST webhook order creation from Shopify, WooCommerce or Daraz.',
+    badge: 'API'
+  },
+  {
+    id: 'tpl-kyc-check',
+    category: 'Intake & Booking',
+    label: 'Shipper KYC Check',
+    sublabel: 'Hazardous Goods Screen',
+    iconName: 'ShieldCheck',
+    stageColor: 'purple',
+    defaultSla: 2,
+    stageCategory: 'initial',
+    description: 'Automated verification of merchant business license and prohibited items screening.',
+    badge: 'Security'
+  },
+  {
+    id: 'tpl-doorstep-pickup',
+    category: 'Intake & Booking',
+    label: 'Doorstep Courier Pickup',
+    sublabel: 'First-Mile Rider',
+    iconName: 'Truck',
+    stageColor: 'blue',
+    defaultSla: 4,
+    stageCategory: 'processing',
+    description: 'First-mile rider dispatched to merchant warehouse to collect booked packages.',
+    badge: 'First-Mile'
+  },
+
+  // Sorting & Gateway
+  {
+    id: 'tpl-master-bagging',
+    category: 'Sorting & Gateway',
+    label: 'Master Bagging & Seal',
+    sublabel: 'Tamper-Evident Consolidation',
+    iconName: 'Building',
+    stageColor: 'cyan',
+    defaultSla: 4,
+    stageCategory: 'processing',
+    description: 'Parcels consolidated into destination master bag with tamper-evident security seal.',
+    badge: 'Security'
+  },
+  {
+    id: 'tpl-volumetric-audit',
+    category: 'Sorting & Gateway',
+    label: 'Weight & Dim Audit',
+    sublabel: 'Laser Dimensioner',
+    iconName: 'Printer',
+    stageColor: 'amber',
+    defaultSla: 2,
+    stageCategory: 'processing',
+    description: 'Automatic optical dimensioning and scale audit to calculate chargeable weight.',
+    badge: 'Billing'
+  },
+  {
+    id: 'tpl-regional-sort',
+    category: 'Sorting & Gateway',
+    label: 'Regional Gateway Sort',
+    sublabel: 'Cross-Dock Transit Hub',
+    iconName: 'Building',
+    stageColor: 'cyan',
+    defaultSla: 6,
+    stageCategory: 'transit',
+    description: 'De-bagging and barcode sorting into local delivery cluster route cages.',
+    badge: 'Sort Hub'
+  },
+
+  // Transit & Linehaul
+  {
+    id: 'tpl-highway-checkpoint',
+    category: 'Transit & Linehaul',
+    label: 'Highway GPS Checkpoint',
+    sublabel: 'Corridor Geo-Fence',
+    iconName: 'Compass',
+    stageColor: 'blue',
+    defaultSla: 12,
+    stageCategory: 'transit',
+    description: 'Automatic GPS geo-fence trigger at Mugling, Narayanghat, or Kohalpur toll junctions.',
+    badge: 'GPS Radar'
+  },
+  {
+    id: 'tpl-mismatch-sentinel',
+    category: 'Transit & Linehaul',
+    label: 'Route Mismatch Sentinel',
+    sublabel: 'Misrouting Interceptor',
+    iconName: 'AlertCircle',
+    stageColor: 'rose',
+    defaultSla: 1,
+    stageCategory: 'transit',
+    description: 'Live conveyor scanner checks package destination against truck route manifest.',
+    badge: 'Sentinel'
+  },
+  {
+    id: 'tpl-customs-clearance',
+    category: 'Transit & Linehaul',
+    label: 'Customs Border Appraisal',
+    sublabel: 'Import/Export Documentation',
+    iconName: 'ShieldCheck',
+    stageColor: 'purple',
+    defaultSla: 24,
+    stageCategory: 'transit',
+    description: 'Department of Customs inspection, duty calculation, and clearance stamp.',
+    badge: 'Customs'
+  },
+  {
+    id: 'tpl-air-cargo',
+    category: 'Transit & Linehaul',
+    label: 'TIA Air Cargo Flight',
+    sublabel: 'Aviation Bonded Transfer',
+    iconName: 'Compass',
+    stageColor: 'cyan',
+    defaultSla: 8,
+    stageCategory: 'transit',
+    description: 'Tribhuvan International Airport bonded cargo apron handling and flight transit.',
+    badge: 'Air Cargo'
+  },
+
+  // Last-Mile & Delivery
+  {
+    id: 'tpl-rider-runsheet',
+    category: 'Last-Mile & Delivery',
+    label: 'Rider Runsheet Batching',
+    sublabel: 'AI Route Optimization',
+    iconName: 'Radio',
+    stageColor: 'amber',
+    defaultSla: 3,
+    stageCategory: 'delivery',
+    description: 'Parcels clustered into optimal delivery sequences for courier two-wheeler navigation.',
+    badge: 'Routing'
+  },
+  {
+    id: 'tpl-recipient-otp',
+    category: 'Last-Mile & Delivery',
+    label: 'Customer Delivery OTP',
+    sublabel: 'SMS Passcode Handshake',
+    iconName: 'ShieldCheck',
+    stageColor: 'emerald',
+    defaultSla: 1,
+    stageCategory: 'delivery',
+    description: 'Rider verifies 4-digit SMS OTP from recipient before handing over consignment.',
+    badge: 'Security'
+  },
+  {
+    id: 'tpl-cod-cash',
+    category: 'Last-Mile & Delivery',
+    label: 'COD Cash Collection',
+    sublabel: 'Cash on Delivery Settlement',
+    iconName: 'CheckCircle2',
+    stageColor: 'emerald',
+    defaultSla: 2,
+    stageCategory: 'completed',
+    description: 'Rider collects payment, prints electronic cash receipt, and reconciles balance.',
+    badge: 'Finance'
+  },
+  {
+    id: 'tpl-ndr-exception',
+    category: 'Last-Mile & Delivery',
+    label: 'NDR Exception Handler',
+    sublabel: 'Reattempt / RTO Scheduler',
+    iconName: 'AlertCircle',
+    stageColor: 'rose',
+    defaultSla: 24,
+    stageCategory: 'exception',
+    description: 'Automated disposition if customer unreachable: schedules next-day retry or returns to merchant.',
+    badge: 'Exception'
+  },
+
+  // Logic & Sentinels
+  {
+    id: 'tpl-hub-splitter',
+    category: 'Logic & Sentinels',
+    label: 'Hub Gate Splitter',
+    sublabel: 'Multi-Branch Conditional Branch',
+    iconName: 'Compass',
+    stageColor: 'blue',
+    defaultSla: 1,
+    stageCategory: 'processing',
+    description: 'Evaluates destination pincode to divert packages toward Western or Eastern Nepal linehauls.',
+    badge: 'Condition'
+  },
+  {
+    id: 'tpl-sla-alarm',
+    category: 'Logic & Sentinels',
+    label: 'SLA Breach Monitor',
+    sublabel: 'Delay Alarm Sentinel',
+    iconName: 'AlertCircle',
+    stageColor: 'rose',
+    defaultSla: 1,
+    stageCategory: 'exception',
+    description: 'Triggers priority supervisor alerts if stage processing exceeds target SLA hours.',
+    badge: 'Sentinel'
+  }
+];
+
+export const WORKFLOW_GRAPH_STORAGE_KEY = 'double7_workflow_graph_v2';
+
+/**
+ * Generates an elegant staggered DAG layout matching the visual workflow editor reference image
+ */
+export function generateAutoLayout(stages: WorkflowStage[]): WorkflowGraphState {
+  // Staggered flowing layout matching the user's reference canvas
+  const nodeSpacingX = 380;
+  const nodes: WorkflowGraphNode[] = stages.map((stage, idx) => {
+    // Dynamic Y offset creates natural flowchart stagger (like in the reference screenshot)
+    let y = 200;
+    if (idx === 0) y = 260;
+    else if (idx === 1) y = 140;
+    else if (idx === 2) y = 320;
+    else if (idx === 3) y = 160;
+    else if (idx === 4) y = 360;
+    else if (idx === 5) y = 180;
+    else if (idx === 6) y = 340;
+    else if (idx >= 7) y = 220 + ((idx - 7) % 2) * 120;
+
+    return {
+      id: `node-${stage.id}`,
+      stageId: stage.id,
+      stage: { ...stage },
+      x: 80 + idx * nodeSpacingX,
+      y: y
+    };
+  });
+
+  // Connect node[i] -> node[i+1]
+  const edges: WorkflowGraphEdge[] = [];
+  for (let i = 0; i < nodes.length - 1; i++) {
+    edges.push({
+      id: `edge-${nodes[i].id}-${nodes[i + 1].id}`,
+      fromNodeId: nodes[i].id,
+      toNodeId: nodes[i + 1].id,
+      animated: true
+    });
+  }
+
+  return {
+    flowTitle: 'Double 7 Nationwide Express Dispatch & Tracking Pipeline',
+    nodes,
+    edges,
+    zoom: 0.9,
+    panX: 40,
+    panY: 30,
+    lastUpdated: new Date().toISOString()
+  };
+}
+
+export function getWorkflowGraphState(): WorkflowGraphState {
+  if (typeof window === 'undefined') {
+    return generateAutoLayout(DEFAULT_WORKFLOW_STAGES);
+  }
+  try {
+    const saved = localStorage.getItem(WORKFLOW_GRAPH_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && Array.isArray(parsed.nodes) && parsed.nodes.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load workflow graph state:', err);
+  }
+
+  // Fallback to active stages from tracking workflow
+  const currentStages = getTrackingWorkflow();
+  const generated = generateAutoLayout(currentStages);
+  saveWorkflowGraphState(generated);
+  return generated;
+}
+
+export function saveWorkflowGraphState(graph: WorkflowGraphState): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(WORKFLOW_GRAPH_STORAGE_KEY, JSON.stringify(graph));
+
+    // Also sync the ordered stages to the public tracking store double7_tracking_workflow_v1
+    // Derive order from graph topological or X coordinate sorting
+    const sortedStages: WorkflowStage[] = [...graph.nodes]
+      .sort((a, b) => a.x - b.x)
+      .map((node, index) => ({
+        ...node.stage,
+        order: index + 1
+      }));
+
+    saveTrackingWorkflow(sortedStages);
+    window.dispatchEvent(new Event('workflow-updated'));
+  } catch (err) {
+    console.error('Failed to save workflow graph state:', err);
+  }
+}
+
 
