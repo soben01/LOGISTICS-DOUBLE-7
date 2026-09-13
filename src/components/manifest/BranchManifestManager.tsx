@@ -26,15 +26,25 @@ import {
   Eye,
   Check,
   RefreshCw,
-  ExternalLink
+  ExternalLink,
+  Edit3,
+  XCircle,
+  CheckCheck,
+  AlertTriangle,
+  RotateCcw
 } from 'lucide-react';
 import { User, getCurrentUser } from '../../lib/auth';
 import { getShipments, updateShipmentStatus, Shipment } from '../../lib/store';
 import {
   BranchManifest,
   ManifestItem,
+  ManifestStatus,
+  NEPAL_HUBS,
+  NepalHub,
   getBranchManifests,
   saveBranchManifest,
+  updateBranchManifest,
+  deleteBranchManifest,
   createBranchManifest,
   markManifestPrinted,
   approveAndDispatchManifest,
@@ -50,33 +60,43 @@ export default function BranchManifestManager({ user }: Props) {
   const [manifests, setManifests] = useState<BranchManifest[]>([]);
   const [activeTab, setActiveTab] = useState<'create' | 'dispatched_manifests' | 'dispatched_shipments'>('create');
   
-  // Staging state for new manifest creation
+  // Hub Selection & Switching
+  const [selectedHubCode, setSelectedHubCode] = useState<string>('KTM-01');
+  const [branchOrigin, setBranchOrigin] = useState('Kathmandu Mega-Hub (KTM-01)');
+  const [branchCode, setBranchCode] = useState('KTM-01');
+
+  // Archive Filter Hub
+  const [archiveHubFilter, setArchiveHubFilter] = useState<string>('ALL');
+  const [archiveStatusFilter, setArchiveStatusFilter] = useState<'ALL' | 'PENDING' | 'DISPATCHED' | 'DRAFT'>('ALL');
+
+  // Staging / Editing state for manifest creation
+  const [editingManifestId, setEditingManifestId] = useState<string | null>(null);
   const [inputBookingId, setInputBookingId] = useState('');
   const [stagedItems, setStagedItems] = useState<ManifestItem[]>([]);
   const [inputFeedback, setInputFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // Linehaul vehicle & route details
-  const [branchOrigin, setBranchOrigin] = useState('Kathmandu Mega-Hub (KTM-01)');
-  const [branchCode, setBranchCode] = useState('KTM-01');
-  const [destinationHub, setDestinationHub] = useState('Pokhara Regional Sort Hub (Gandaki)');
+  const [destinationHub, setDestinationHub] = useState('Pokhara Regional Sort Hub (PKR-01)');
   const [destinationCity, setDestinationCity] = useState('Pokhara');
   const [linehaulVehicle, setLinehaulVehicle] = useState('BA 2 KHA 8841 (Express E-Van)');
   const [driverName, setDriverName] = useState('Bhimsen Thapa');
   const [driverPhone, setDriverPhone] = useState('+977 98510 11223');
   const [sealNumber, setSealNumber] = useState('SL-99412');
-  const [manifestNotes, setManifestNotes] = useState('Scheduled evening trunk dispatch. Fragile and priority parcels segregated.');
+  const [manifestNotes, setManifestNotes] = useState('Scheduled linehaul trunk dispatch. Priority and fragile parcels segregated.');
 
   // Modal view for generated/selected manifest
   const [activeManifest, setActiveManifest] = useState<BranchManifest | null>(null);
   const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
   const [actionSuccessNotice, setActionSuccessNotice] = useState<string | null>(null);
+  const [confirmDispatchModal, setConfirmDispatchModal] = useState<BranchManifest | null>(null);
 
   // Quick-add drawer state
   const [showEligibleDrawer, setShowEligibleDrawer] = useState(false);
   const [allShipments, setAllShipments] = useState<Shipment[]>([]);
 
   const reloadData = () => {
-    const list = getBranchManifests(currentUser?.branchCode);
+    // Admins see all manifests; branch users filter by their branch unless in admin mode
+    const list = getBranchManifests('ALL');
     setManifests(list);
     setAllShipments(getShipments());
   };
@@ -86,8 +106,12 @@ export default function BranchManifestManager({ user }: Props) {
     if (u) {
       setCurrentUser(u);
       if (u.branchCode) {
-        setBranchCode(u.branchCode);
-        setBranchOrigin(u.company || `${u.name} Hub`);
+        const found = NEPAL_HUBS.find(h => h.code === u.branchCode);
+        if (found) {
+          setSelectedHubCode(found.code);
+          setBranchCode(found.code);
+          setBranchOrigin(found.name);
+        }
       }
     }
     reloadData();
@@ -108,16 +132,35 @@ export default function BranchManifestManager({ user }: Props) {
     }
   }, []);
 
+  // Handle Switching Origin Hub
+  const handleSwitchHub = (hubCode: string) => {
+    setSelectedHubCode(hubCode);
+    const hub = NEPAL_HUBS.find(h => h.code === hubCode);
+    if (hub) {
+      setBranchCode(hub.code);
+      setBranchOrigin(hub.name);
+      
+      // Auto-set default destination to a different hub
+      const otherHubs = NEPAL_HUBS.filter(h => h.code !== hub.code);
+      if (otherHubs.length > 0) {
+        setDestinationHub(otherHubs[0].name);
+        setDestinationCity(otherHubs[0].city);
+      }
+    }
+    // If editing a manifest from another hub, ask to cancel
+    if (editingManifestId) {
+      if (confirm('Switching hubs will exit manifest edit mode. Discard current changes?')) {
+        handleCancelEdit();
+      }
+    }
+  };
+
   const handleDestinationChange = (hubName: string) => {
     setDestinationHub(hubName);
-    if (hubName.includes('Pokhara')) setDestinationCity('Pokhara');
-    else if (hubName.includes('Biratnagar')) setDestinationCity('Biratnagar');
-    else if (hubName.includes('Birgunj')) setDestinationCity('Birgunj');
-    else if (hubName.includes('Nepalgunj')) setDestinationCity('Nepalgunj');
-    else if (hubName.includes('Butwal')) setDestinationCity('Butwal');
-    else if (hubName.includes('Chitwan')) setDestinationCity('Bharatpur');
-    else if (hubName.includes('Dhangadhi')) setDestinationCity('Dhangadhi');
-    else setDestinationCity('Kathmandu');
+    const found = NEPAL_HUBS.find(h => h.name === hubName);
+    if (found) {
+      setDestinationCity(found.city);
+    }
   };
 
   const handleAddBookingById = (idToAdd?: string) => {
@@ -129,7 +172,7 @@ export default function BranchManifestManager({ user }: Props) {
 
     // Check if already staged
     if (stagedItems.some(i => i.bookingId.toUpperCase() === targetId)) {
-      setInputFeedback({ type: 'error', message: `Booking ${targetId} is already added in current staging manifest.` });
+      setInputFeedback({ type: 'error', message: `Booking ${targetId} is already added in this manifest.` });
       return;
     }
 
@@ -170,55 +213,134 @@ export default function BranchManifestManager({ user }: Props) {
     setStagedItems(prev => prev.filter(i => i.bookingId !== bookingId));
   };
 
-  const handleGenerateManifest = () => {
+  // Create or Update Manifest
+  const handleSaveManifest = (statusToSet: ManifestStatus = 'Pending Approval') => {
     if (stagedItems.length === 0) {
-      alert('Please add at least one booking number before generating a manifest.');
+      alert('Please add at least one booking number to the manifest.');
       return;
     }
 
-    const manifest = createBranchManifest({
-      branchOrigin,
-      branchCode,
-      destinationHub,
-      destinationCity,
-      linehaulVehicle,
-      driverName,
-      driverPhone,
-      sealNumber: sealNumber || `SL-${Math.floor(10000 + Math.random() * 90000)}`,
-      items: stagedItems,
-      notes: manifestNotes,
-    });
+    if (editingManifestId) {
+      // Update existing manifest
+      const existing = manifests.find(m => m.id === editingManifestId);
+      if (!existing) {
+        alert('Error: Original manifest not found.');
+        return;
+      }
+      if (existing.status === 'Approved & Dispatched' || existing.isLocked) {
+        alert('SECURITY ERROR: This manifest has already been Approved & Dispatched. It is locked and cannot be edited.');
+        return;
+      }
 
+      const updated: BranchManifest = {
+        ...existing,
+        branchOrigin,
+        branchCode,
+        destinationHub,
+        destinationCity,
+        linehaulVehicle,
+        driverName,
+        driverPhone,
+        sealNumber: sealNumber || existing.sealNumber,
+        items: stagedItems,
+        notes: manifestNotes,
+        status: statusToSet,
+      };
+
+      const res = updateBranchManifest(updated);
+      if (!res.success) {
+        alert(res.error || 'Failed to update manifest.');
+        return;
+      }
+
+      setActionSuccessNotice(`✓ Manifest ${existing.manifestNumber} updated successfully (${stagedItems.length} consignments).`);
+      handleCancelEdit();
+      reloadData();
+      setActiveTab('dispatched_manifests');
+      setTimeout(() => setActionSuccessNotice(null), 6000);
+    } else {
+      // Create fresh manifest
+      const manifest = createBranchManifest({
+        branchOrigin,
+        branchCode,
+        destinationHub,
+        destinationCity,
+        linehaulVehicle,
+        driverName,
+        driverPhone,
+        sealNumber: sealNumber || `SL-${Math.floor(10000 + Math.random() * 90000)}`,
+        items: stagedItems,
+        status: statusToSet,
+        notes: manifestNotes,
+      });
+
+      setStagedItems([]);
+      setActiveManifest(manifest);
+      setIsPrintPreviewOpen(true);
+      reloadData();
+      setActionSuccessNotice(
+        statusToSet === 'Pending Approval'
+          ? `✓ Linehaul Manifest ${manifest.manifestNumber} submitted for Admin Approval!`
+          : `✓ Linehaul Manifest ${manifest.manifestNumber} saved as Draft.`
+      );
+      setTimeout(() => setActionSuccessNotice(null), 6000);
+    }
+  };
+
+  // Start Editing an Existing Manifest (Only if NOT Approved & Dispatched)
+  const handleStartEdit = (manifest: BranchManifest) => {
+    if (manifest.status === 'Approved & Dispatched' || manifest.isLocked) {
+      alert('🔒 IMMUTABLE MANIFEST: This manifest has been verified and dispatched. Handover records and container seals are permanently locked.');
+      return;
+    }
+
+    setEditingManifestId(manifest.id);
+    setSelectedHubCode(manifest.branchCode);
+    setBranchCode(manifest.branchCode);
+    setBranchOrigin(manifest.branchOrigin);
+    setDestinationHub(manifest.destinationHub);
+    setDestinationCity(manifest.destinationCity);
+    setLinehaulVehicle(manifest.linehaulVehicle);
+    setDriverName(manifest.driverName);
+    setDriverPhone(manifest.driverPhone);
+    setSealNumber(manifest.sealNumber);
+    setManifestNotes(manifest.notes || '');
+    setStagedItems([...manifest.items]);
+
+    setActiveTab('create');
+    window.scrollTo({ top: 120, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingManifestId(null);
     setStagedItems([]);
-    setActiveManifest(manifest);
-    setIsPrintPreviewOpen(true);
-    reloadData();
-    setActionSuccessNotice(`✓ Linehaul Manifest ${manifest.manifestNumber} generated successfully with ${manifest.totalShipments} consignments!`);
-    setTimeout(() => setActionSuccessNotice(null), 6000);
+    setSealNumber(`SL-${Math.floor(10000 + Math.random() * 90000)}`);
   };
 
   const handlePrintManifest = (manifest: BranchManifest) => {
     markManifestPrinted(manifest.id);
     reloadData();
-    const updated = { ...manifest, status: (manifest.status === 'Approved & Dispatched' ? 'Approved & Dispatched' : 'Printed') as any };
+    const updated = { ...manifest, status: (manifest.status === 'Approved & Dispatched' ? 'Approved & Dispatched' : 'Printed') as ManifestStatus };
     setActiveManifest(updated);
     window.print();
   };
 
-  const handleApproveAndDispatch = (manifestId: string) => {
-    const res = approveAndDispatchManifest(manifestId, currentUser?.name);
+  // Execute Dispatch & Lock
+  const handleExecuteApprovalAndDispatch = (manifestId: string) => {
+    const res = approveAndDispatchManifest(manifestId, currentUser?.name || 'HQ Operations Admin');
     if (!res.success) {
       alert(res.error || 'Failed to approve dispatch.');
       return;
     }
 
+    setConfirmDispatchModal(null);
     reloadData();
     if (activeManifest && activeManifest.id === manifestId && res.manifest) {
       setActiveManifest(res.manifest);
     }
 
     setActionSuccessNotice(
-      `🚀 Manifest Approved & Dispatched! Updated ${res.updatedCount} consignment(s) to "Shipment Dispatched" status.`
+      `🔒 Manifest ${res.manifest?.manifestNumber} VERIFIED & DISPATCHED! Updated ${res.updatedCount} consignment(s) to "Shipment Dispatched" and permanently locked manifest against editing.`
     );
     setTimeout(() => setActionSuccessNotice(null), 8000);
   };
@@ -235,72 +357,130 @@ export default function BranchManifestManager({ user }: Props) {
   const eligibleShipments = allShipments.filter(
     s =>
       !stagedItems.some(i => i.bookingId.toUpperCase() === s.id.toUpperCase()) &&
-      (s.status === 'Order Placed' || s.status === 'Label Generated' || s.status === 'Origin Hub Inwarded' || s.status === 'Pending Pickup')
+      (s.status === 'Order Placed' || s.status === 'Label Generated' || s.status === 'Origin Hub Inwarded' || s.status === 'Pending Pickup' || s.status === 'Hub Received')
   );
+
+  // Filtered Archive Manifests
+  const filteredManifests = manifests.filter(m => {
+    if (archiveHubFilter !== 'ALL' && m.branchCode.toUpperCase() !== archiveHubFilter.toUpperCase()) {
+      return false;
+    }
+    if (archiveStatusFilter === 'PENDING' && m.status !== 'Pending Approval' && m.status !== 'Draft' && m.status !== 'Printed') {
+      return false;
+    }
+    if (archiveStatusFilter === 'DISPATCHED' && m.status !== 'Approved & Dispatched') {
+      return false;
+    }
+    if (archiveStatusFilter === 'DRAFT' && m.status !== 'Draft') {
+      return false;
+    }
+    return true;
+  });
+
+  const pendingApprovalCount = manifests.filter(m => m.status === 'Pending Approval' || m.status === 'Draft' || m.status === 'Printed').length;
+  const dispatchedCount = manifests.filter(m => m.status === 'Approved & Dispatched').length;
 
   return (
     <div style={{ padding: '2.5rem 0 6rem 0' }}>
       <div className="container">
-        {/* Branch Context Banner */}
+        {/* ================= 1. MULTI-HUB CONTEXT & CONTROLS BANNER ================= */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '1rem',
-          background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(10, 15, 29, 0.95) 100%)',
-          border: '1px solid rgba(168, 85, 247, 0.25)',
+          gap: '1.25rem',
+          background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.14) 0%, rgba(10, 15, 29, 0.96) 100%)',
+          border: '1px solid rgba(168, 85, 247, 0.3)',
           borderRadius: '16px',
-          padding: '1.25rem 1.5rem',
+          padding: '1.5rem',
           marginBottom: '2rem'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
             <div style={{
-              width: '52px',
-              height: '52px',
+              width: '56px',
+              height: '56px',
               borderRadius: '14px',
-              background: 'rgba(168, 85, 247, 0.2)',
-              border: '1px solid rgba(168, 85, 247, 0.4)',
+              background: 'rgba(168, 85, 247, 0.22)',
+              border: '1px solid rgba(168, 85, 247, 0.45)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: '#c084fc',
-              boxShadow: '0 8px 20px rgba(168, 85, 247, 0.25)'
+              boxShadow: '0 8px 24px rgba(168, 85, 247, 0.25)'
             }}>
-              <Boxes size={28} />
+              <Boxes size={30} />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <span className="badge badge-purple">
+                <span className="badge badge-purple" style={{ fontWeight: 800 }}>
                   <MapPin size={11} /> {branchCode}
                 </span>
                 <span className="badge badge-subtle">
-                  BRANCH DISPATCH CONSOLE
+                  MULTI-HUB LINEHAUL CONSOLE
                 </span>
-                {currentUser?.role === 'admin' && (
-                  <span className="badge badge-orange">HQ Super Admin Mode</span>
-                )}
+                <span className="badge badge-orange">
+                  <ShieldCheck size={11} /> HQ Dispatch &amp; Approval Engine
+                </span>
               </div>
-              <h1 style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0.25rem 0 0.1rem 0' }}>
+              <h1 style={{ fontSize: '1.85rem', fontWeight: 800, margin: '0.35rem 0 0.15rem 0', letterSpacing: '-0.02em' }}>
                 {branchOrigin}
               </h1>
-              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                Booking manifest generator, physical handover sheets, and linehaul dispatch approval engine.
+              <p style={{ margin: 0, fontSize: '0.86rem', color: 'var(--text-secondary)' }}>
+                Multi-hub consignment manifests, admin linehaul verification, and permanent immutable dispatch locking.
               </p>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <button
-              onClick={() => reloadData()}
-              className="btn btn-secondary btn-sm"
-              title="Refresh Data"
-            >
-              <RefreshCw size={14} /> Refresh
-            </button>
-            <Link href="/bookings" className="btn btn-secondary btn-sm">
-              <ExternalLink size={14} /> Consignment Registry
-            </Link>
+          {/* Right: Operating Hub Switcher & Quick Links */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', alignItems: 'flex-end' }}>
+            {/* Hub Selector */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.6rem',
+              background: 'rgba(255, 255, 255, 0.07)',
+              padding: '0.45rem 0.85rem',
+              borderRadius: '10px',
+              border: '1px solid rgba(255, 255, 255, 0.15)'
+            }}>
+              <Building size={16} color="#c084fc" />
+              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase' }}>
+                Active Hub:
+              </span>
+              <select
+                value={selectedHubCode}
+                onChange={(e) => handleSwitchHub(e.target.value)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#ffffff',
+                  fontWeight: 800,
+                  fontSize: '0.86rem',
+                  cursor: 'pointer',
+                  outline: 'none'
+                }}
+              >
+                {NEPAL_HUBS.map(hub => (
+                  <option key={hub.code} value={hub.code} style={{ background: '#0a0f1d', color: '#ffffff' }}>
+                    {hub.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button
+                onClick={() => reloadData()}
+                className="btn btn-secondary btn-sm"
+                title="Refresh Manifests & Bookings"
+              >
+                <RefreshCw size={14} /> Refresh
+              </button>
+              <Link href="/bookings" className="btn btn-secondary btn-sm">
+                <ExternalLink size={14} /> Consignments
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -317,14 +497,15 @@ export default function BranchManifestManager({ user }: Props) {
             alignItems: 'center',
             gap: '0.75rem',
             fontSize: '0.92rem',
-            fontWeight: 600
+            fontWeight: 600,
+            boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
           }}>
-            <CheckCircle2 size={20} />
+            <CheckCircle2 size={22} />
             <span>{actionSuccessNotice}</span>
           </div>
         )}
 
-        {/* Navigation Tabs */}
+        {/* ================= 2. WORKFLOW NAVIGATION TABS ================= */}
         <div style={{
           display: 'flex',
           gap: '0.5rem',
@@ -333,13 +514,14 @@ export default function BranchManifestManager({ user }: Props) {
           overflowX: 'auto',
           paddingBottom: '0.5rem'
         }}>
+          {/* Create / Edit Staging Tab */}
           <button
             onClick={() => setActiveTab('create')}
             className={`btn btn-sm ${activeTab === 'create' ? 'btn-primary' : 'btn-secondary'}`}
             style={{ borderRadius: '10px' }}
           >
-            <Plus size={14} />
-            <span>New Manifest / Staging</span>
+            {editingManifestId ? <Edit3 size={14} /> : <Plus size={14} />}
+            <span>{editingManifestId ? 'Editing Staged Manifest' : 'New Manifest / Staging'}</span>
             {stagedItems.length > 0 && (
               <span style={{
                 background: '#ffffff',
@@ -355,32 +537,47 @@ export default function BranchManifestManager({ user }: Props) {
             )}
           </button>
 
+          {/* All Manifests & Approval Queue Tab */}
           <button
             onClick={() => setActiveTab('dispatched_manifests')}
             className={`btn btn-sm ${activeTab === 'dispatched_manifests' ? 'btn-primary' : 'btn-secondary'}`}
             style={{ borderRadius: '10px' }}
           >
-            <Truck size={14} />
-            <span>Dispatched Manifest Archive</span>
+            <ShieldCheck size={14} />
+            <span>All Manifests &amp; Approval Queue</span>
+            {pendingApprovalCount > 0 && (
+              <span style={{
+                background: '#f59e0b',
+                color: '#060911',
+                padding: '0.1rem 0.45rem',
+                borderRadius: '10px',
+                fontSize: '0.72rem',
+                fontWeight: 800,
+                marginLeft: '0.35rem'
+              }}>
+                {pendingApprovalCount} Pending
+              </span>
+            )}
             <span style={{
               background: 'rgba(255,255,255,0.12)',
               padding: '0.1rem 0.45rem',
               borderRadius: '10px',
               fontSize: '0.72rem',
               fontWeight: 700,
-              marginLeft: '0.35rem'
+              marginLeft: '0.2rem'
             }}>
-              {manifests.filter(m => m.status === 'Approved & Dispatched').length}
+              {dispatchedCount} Dispatched
             </span>
           </button>
 
+          {/* Active Dispatched Shipments Tab */}
           <button
             onClick={() => setActiveTab('dispatched_shipments')}
             className={`btn btn-sm ${activeTab === 'dispatched_shipments' ? 'btn-primary' : 'btn-secondary'}`}
             style={{ borderRadius: '10px' }}
           >
             <Layers size={14} />
-            <span>Shipment Dispatched Section</span>
+            <span>Linehaul Transit Consignments</span>
             <span style={{
               background: 'rgba(255, 102, 0, 0.2)',
               color: 'var(--brand-orange)',
@@ -395,10 +592,45 @@ export default function BranchManifestManager({ user }: Props) {
           </button>
         </div>
 
-        {/* ================= TAB 1: CREATE MANIFEST / STAGING ================= */}
+        {/* ================= TAB 1: CREATE / EDIT MANIFEST STAGING ================= */}
         {activeTab === 'create' && (
           <div>
-            {/* Input Bar Card */}
+            {/* If currently editing an existing manifest, display prominent notice */}
+            {editingManifestId && (
+              <div style={{
+                padding: '1rem 1.25rem',
+                borderRadius: '12px',
+                background: 'rgba(245, 158, 11, 0.12)',
+                border: '1px solid rgba(245, 158, 11, 0.35)',
+                color: '#f59e0b',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1.75rem',
+                flexWrap: 'wrap',
+                gap: '0.75rem'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                  <Edit3 size={18} />
+                  <div>
+                    <strong>Editing Manifest Mode: {editingManifestId}</strong>
+                    <div style={{ fontSize: '0.8rem', color: '#fbbf24' }}>
+                      Add or remove consignments, change route, driver, or container seal. Once approved, it will be permanently locked.
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="btn btn-secondary btn-sm"
+                  style={{ borderColor: 'rgba(245, 158, 11, 0.4)', color: '#fef08a' }}
+                >
+                  <RotateCcw size={13} /> Cancel Edit (Discard)
+                </button>
+              </div>
+            )}
+
+            {/* Step 1: Input Bar Card */}
             <div className="card" style={{ padding: '1.75rem', marginBottom: '2rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
                 <div>
@@ -406,7 +638,7 @@ export default function BranchManifestManager({ user }: Props) {
                     <Boxes size={18} color="#c084fc" /> Step 1: Input Booking Number
                   </h3>
                   <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0 0' }}>
-                    Scan barcode or type AWB booking ID to assemble items into this linehaul manifest.
+                    Scan barcode or type AWB booking ID to assemble items into this linehaul manifest for <strong>{branchOrigin}</strong>.
                   </p>
                 </div>
 
@@ -433,7 +665,7 @@ export default function BranchManifestManager({ user }: Props) {
                     type="text"
                     value={inputBookingId}
                     onChange={(e) => setInputBookingId(e.target.value)}
-                    placeholder="Enter Booking Number (e.g. D7-8821-EXP / D7-6042-CARGO)"
+                    placeholder="ENTER BOOKING NUMBER (E.G. D7-8821-EXP / VIP016279 / FIC086274)"
                     className="input-field"
                     style={{ fontSize: '1rem', letterSpacing: '0.04em', textTransform: 'uppercase' }}
                     autoFocus
@@ -442,7 +674,7 @@ export default function BranchManifestManager({ user }: Props) {
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  style={{ background: '#a855f7', borderColor: '#a855f7', color: '#ffffff', minWidth: '160px' }}
+                  style={{ background: '#a855f7', borderColor: '#a855f7', color: '#ffffff', minWidth: '160px', fontWeight: 700 }}
                 >
                   <Plus size={16} /> Add to Manifest
                 </button>
@@ -472,20 +704,20 @@ export default function BranchManifestManager({ user }: Props) {
                 <div style={{
                   marginTop: '1.25rem',
                   padding: '1.25rem',
-                  background: 'rgba(15, 23, 42, 0.6)',
+                  background: 'rgba(15, 23, 42, 0.7)',
                   border: '1px solid rgba(255, 255, 255, 0.12)',
                   borderRadius: '12px'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                     <div style={{ fontSize: '0.86rem', fontWeight: 700, color: '#ffffff' }}>
-                      📦 Inwarded & Pending Pickups Ready for Dispatch ({eligibleShipments.length}):
+                      📦 Inwarded &amp; Unassigned Consignments Ready for Linehaul ({eligibleShipments.length}):
                     </div>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Click [ + Add ] to include in manifest</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Click [ + Add ] to stage into manifest</span>
                   </div>
 
                   {eligibleShipments.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                      No unassigned consignments currently waiting in origin staging.
+                      No unassigned consignments currently waiting in staging.
                     </div>
                   ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.65rem', maxHeight: '240px', overflowY: 'auto' }}>
@@ -524,41 +756,48 @@ export default function BranchManifestManager({ user }: Props) {
               )}
             </div>
 
-            {/* Linehaul Routing & Vehicle Assignment */}
+            {/* Step 2: Linehaul Route & Carrier Assignment */}
             <div className="card" style={{ padding: '1.75rem', marginBottom: '2rem' }}>
               <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0 0 1.25rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Truck size={18} color="var(--brand-orange)" /> Step 2: Linehaul Route & Carrier Assignment
+                <Truck size={18} color="var(--brand-orange)" /> Step 2: Linehaul Route &amp; Carrier Assignment
               </h3>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+                {/* Origin Departure Hub */}
                 <div className="input-group">
                   <label className="input-label">Origin Departure Hub</label>
-                  <input
-                    type="text"
-                    value={branchOrigin}
-                    onChange={(e) => setBranchOrigin(e.target.value)}
+                  <select
+                    value={selectedHubCode}
+                    onChange={(e) => handleSwitchHub(e.target.value)}
                     className="input-field"
-                  />
+                    style={{ fontWeight: 700, color: '#c084fc' }}
+                  >
+                    {NEPAL_HUBS.map(hub => (
+                      <option key={hub.code} value={hub.code}>
+                        {hub.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
+                {/* Destination Gateway Hub */}
                 <div className="input-group">
                   <label className="input-label">Destination Gateway Hub</label>
                   <select
                     value={destinationHub}
                     onChange={(e) => handleDestinationChange(e.target.value)}
                     className="input-field"
+                    style={{ fontWeight: 700 }}
                   >
-                    <option value="Pokhara Regional Sort Hub (Gandaki)">Pokhara Regional Sort Hub (Gandaki)</option>
-                    <option value="Biratnagar Hub (Koshi Eastern Corridor)">Biratnagar Hub (Koshi Eastern Corridor)</option>
-                    <option value="Birgunj Port Terminal (Madhesh Commercial Gateway)">Birgunj Port Terminal (Madhesh)</option>
-                    <option value="Nepalgunj Western Regional Hub (Lumbini / Karnali)">Nepalgunj Western Regional Hub</option>
-                    <option value="Butwal Cross-Dock Transit Hub">Butwal Cross-Dock Transit Hub</option>
-                    <option value="Chitwan Narayangarh Gateway Hub">Chitwan Narayangarh Gateway Hub</option>
-                    <option value="Dhangadhi Far-Western Terminal">Dhangadhi Far-Western Terminal</option>
-                    <option value="Kathmandu Mega-Hub (KTM-01)">Kathmandu Mega-Hub (KTM-01)</option>
+                    {NEPAL_HUBS.filter(h => h.code !== selectedHubCode).map(hub => (
+                      <option key={hub.code} value={hub.name}>
+                        {hub.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
+                {/* Vehicle */}
                 <div className="input-group">
                   <label className="input-label">Linehaul Vehicle / Flight</label>
                   <input
@@ -570,6 +809,7 @@ export default function BranchManifestManager({ user }: Props) {
                   />
                 </div>
 
+                {/* Driver */}
                 <div className="input-group">
                   <label className="input-label">Driver / Carrier Name</label>
                   <input
@@ -581,6 +821,7 @@ export default function BranchManifestManager({ user }: Props) {
                   />
                 </div>
 
+                {/* Driver Phone */}
                 <div className="input-group">
                   <label className="input-label">Driver Phone Number</label>
                   <input
@@ -592,6 +833,7 @@ export default function BranchManifestManager({ user }: Props) {
                   />
                 </div>
 
+                {/* Security Seal Number */}
                 <div className="input-group">
                   <label className="input-label">Container / Security Seal Number</label>
                   <input
@@ -600,13 +842,13 @@ export default function BranchManifestManager({ user }: Props) {
                     onChange={(e) => setSealNumber(e.target.value)}
                     placeholder="e.g. SL-99412"
                     className="input-field"
-                    style={{ fontWeight: 700, letterSpacing: '0.05em' }}
+                    style={{ fontWeight: 700, letterSpacing: '0.05em', color: 'var(--brand-cyan)' }}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Staged Items Table */}
+            {/* Step 3: Staged Consignments */}
             <div className="card" style={{ padding: '1.75rem', marginBottom: '2rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
@@ -614,7 +856,7 @@ export default function BranchManifestManager({ user }: Props) {
                     <Layers size={18} color="var(--brand-cyan)" /> Step 3: Staged Consignments ({stagedItems.length})
                   </h3>
                   <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0 0' }}>
-                    Review all bookings included in this manifest before generating the formal handover sheet.
+                    Review all bookings before generating manifest or submitting for admin approval.
                   </p>
                 </div>
 
@@ -642,7 +884,7 @@ export default function BranchManifestManager({ user }: Props) {
                 </div>
               </div>
 
-              {/* Table */}
+              {/* Staged Table */}
               {stagedItems.length === 0 ? (
                 <div style={{
                   textAlign: 'center',
@@ -666,7 +908,7 @@ export default function BranchManifestManager({ user }: Props) {
                       <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', textAlign: 'left', color: 'var(--text-secondary)' }}>
                         <th style={{ padding: '0.75rem 0.5rem' }}>#</th>
                         <th style={{ padding: '0.75rem' }}>Booking / AWB</th>
-                        <th style={{ padding: '0.75rem' }}>Consignee & Phone</th>
+                        <th style={{ padding: '0.75rem' }}>Consignee &amp; Phone</th>
                         <th style={{ padding: '0.75rem' }}>Destination City</th>
                         <th style={{ padding: '0.75rem' }}>Pkgs</th>
                         <th style={{ padding: '0.75rem' }}>Gross Wt</th>
@@ -735,155 +977,282 @@ export default function BranchManifestManager({ user }: Props) {
                 </div>
               )}
 
-              {/* Step 4 Generate Button */}
+              {/* Actions Footer */}
               {stagedItems.length > 0 && (
-                <div style={{ marginTop: '1.75rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem', alignItems: 'center' }}>
-                  <button
-                    type="button"
-                    onClick={() => setStagedItems([])}
-                    className="btn btn-secondary"
-                  >
-                    Clear Staging
-                  </button>
+                <div style={{ marginTop: '1.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setStagedItems([])}
+                      className="btn btn-secondary btn-sm"
+                    >
+                      Clear Staging
+                    </button>
+                  </div>
 
-                  <button
-                    type="button"
-                    onClick={handleGenerateManifest}
-                    className="btn btn-primary"
-                    style={{
-                      background: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)',
-                      borderColor: '#9333ea',
-                      padding: '0.75rem 1.75rem',
-                      fontSize: '0.96rem',
-                      fontWeight: 700,
-                      boxShadow: '0 8px 24px rgba(168, 85, 247, 0.35)'
-                    }}
-                  >
-                    <FileText size={18} />
-                    <span>Generate Manifest ({stagedItems.length} Bookings)</span>
-                    <ArrowRight size={16} />
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    {/* Save as Draft */}
+                    <button
+                      type="button"
+                      onClick={() => handleSaveManifest('Draft')}
+                      className="btn btn-secondary"
+                    >
+                      Save as Draft
+                    </button>
+
+                    {/* Submit for Approval */}
+                    <button
+                      type="button"
+                      onClick={() => handleSaveManifest('Pending Approval')}
+                      className="btn btn-primary"
+                      style={{
+                        background: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)',
+                        borderColor: '#9333ea',
+                        fontWeight: 700
+                      }}
+                    >
+                      <CheckCheck size={16} />
+                      <span>{editingManifestId ? 'Update & Submit for Approval' : 'Submit for Admin Approval'}</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* ================= TAB 2: DISPATCHED MANIFEST ARCHIVE ================= */}
+        {/* ================= TAB 2: ALL MANIFESTS & APPROVAL QUEUE ================= */}
         {activeTab === 'dispatched_manifests' && (
           <div className="card" style={{ padding: '1.75rem' }}>
+            {/* Header & Filter Controls */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Truck size={18} color="var(--brand-orange)" /> Linehaul Dispatch Manifest Archive
+                  <ShieldCheck size={20} color="#34d399" /> Multi-Hub Manifest Control &amp; Approval Queue
                 </h3>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0 0' }}>
-                  Historical and live records of all generated manifests, driver handovers, and linehaul departures.
+                  Inspect all manifests across Nepal hubs. Admins can verify and approve dispatches. Dispatched manifests are permanently locked.
                 </p>
+              </div>
+
+              {/* Filters */}
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                {/* Hub Filter */}
+                <select
+                  value={archiveHubFilter}
+                  onChange={(e) => setArchiveHubFilter(e.target.value)}
+                  className="input-field"
+                  style={{ width: 'auto', fontSize: '0.84rem', padding: '0.45rem 0.85rem' }}
+                >
+                  <option value="ALL">All Origin Hubs (Nationwide)</option>
+                  {NEPAL_HUBS.map(hub => (
+                    <option key={hub.code} value={hub.code}>
+                      {hub.code} - {hub.city}
+                    </option>
+                  ))}
+                </select>
+
+                {/* Status Filter */}
+                <div style={{ display: 'flex', gap: '0.35rem' }}>
+                  {[
+                    { id: 'ALL', label: 'All' },
+                    { id: 'PENDING', label: `Pending Approval (${pendingApprovalCount})` },
+                    { id: 'DISPATCHED', label: `Dispatched & Locked (${dispatchedCount})` }
+                  ].map(f => (
+                    <button
+                      key={f.id}
+                      onClick={() => setArchiveStatusFilter(f.id as any)}
+                      className={`btn btn-sm ${archiveStatusFilter === f.id ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{ fontSize: '0.78rem', borderRadius: '6px' }}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {manifests.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                No manifests have been generated yet for this branch.
+            {/* Manifests Table */}
+            {filteredManifests.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3.5rem 1rem', color: 'var(--text-muted)' }}>
+                <Boxes size={40} style={{ opacity: 0.3, margin: '0 auto 0.75rem auto' }} />
+                <div style={{ fontSize: '1rem', fontWeight: 600, color: '#ffffff' }}>No Manifests Matching Filter</div>
+                <p style={{ fontSize: '0.84rem', maxWidth: '400px', margin: '0.25rem auto 1rem auto' }}>
+                  Use "New Manifest / Staging" tab to generate a manifest for {branchOrigin}.
+                </p>
               </div>
             ) : (
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', textAlign: 'left', color: 'var(--text-secondary)' }}>
-                      <th style={{ padding: '0.75rem' }}>Manifest Number</th>
-                      <th style={{ padding: '0.75rem' }}>Destination Hub</th>
-                      <th style={{ padding: '0.75rem' }}>Vehicle & Driver</th>
-                      <th style={{ padding: '0.75rem' }}>Seal No.</th>
+                      <th style={{ padding: '0.75rem' }}>Manifest # &amp; Date</th>
+                      <th style={{ padding: '0.75rem' }}>Origin &rarr; Destination</th>
+                      <th style={{ padding: '0.75rem' }}>Carrier &amp; Seal</th>
                       <th style={{ padding: '0.75rem' }}>Shipments</th>
-                      <th style={{ padding: '0.75rem' }}>Weight</th>
-                      <th style={{ padding: '0.75rem' }}>COD Total</th>
-                      <th style={{ padding: '0.75rem' }}>Status</th>
+                      <th style={{ padding: '0.75rem' }}>Weight &amp; COD</th>
+                      <th style={{ padding: '0.75rem' }}>Status &amp; Lock</th>
                       <th style={{ padding: '0.75rem', textAlign: 'right' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {manifests.map((m) => (
-                      <tr
-                        key={m.id}
-                        style={{
-                          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                        }}
-                      >
-                        <td style={{ padding: '0.75rem', fontWeight: 800, color: '#ffffff' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                            <FileText size={15} color="#c084fc" />
-                            <span>{m.manifestNumber}</span>
-                          </div>
-                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                            {new Date(m.createdAt).toLocaleString()}
-                          </div>
-                        </td>
-                        <td style={{ padding: '0.75rem', color: '#cbd5e1' }}>
-                          <div style={{ fontWeight: 600 }}>{m.destinationCity}</div>
-                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{m.destinationHub}</div>
-                        </td>
-                        <td style={{ padding: '0.75rem' }}>
-                          <div style={{ fontWeight: 600, color: '#ffffff' }}>{m.linehaulVehicle}</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                            {m.driverName} ({m.driverPhone})
-                          </div>
-                        </td>
-                        <td style={{ padding: '0.75rem', fontWeight: 700, color: 'var(--brand-cyan)' }}>
-                          {m.sealNumber}
-                        </td>
-                        <td style={{ padding: '0.75rem', fontWeight: 700 }}>
-                          {m.totalShipments} Consignments
-                        </td>
-                        <td style={{ padding: '0.75rem', fontWeight: 600 }}>
-                          {m.totalWeightKg} KG
-                        </td>
-                        <td style={{ padding: '0.75rem', fontWeight: 700, color: '#34d399' }}>
-                          Rs. {m.totalCodNpr.toLocaleString()}
-                        </td>
-                        <td style={{ padding: '0.75rem' }}>
-                          {m.status === 'Approved & Dispatched' ? (
-                            <span className="badge badge-emerald">Approved & Dispatched</span>
-                          ) : m.status === 'Printed' ? (
-                            <span className="badge badge-cyan">Printed / Ready</span>
-                          ) : (
-                            <span className="badge badge-purple">Generated</span>
-                          )}
-                        </td>
-                        <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                          <div style={{ display: 'inline-flex', gap: '0.5rem' }}>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActiveManifest(m);
-                                setIsPrintPreviewOpen(true);
-                              }}
-                              className="btn btn-secondary btn-sm"
-                              title="View & Print Handover Manifest"
-                            >
-                              <Eye size={13} /> View / Print
-                            </button>
+                    {filteredManifests.map((m) => {
+                      const isDispatchedAndLocked = m.status === 'Approved & Dispatched' || m.isLocked;
 
-                            {m.status !== 'Approved & Dispatched' && (
+                      return (
+                        <tr
+                          key={m.id}
+                          style={{
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                            backgroundColor: isDispatchedAndLocked ? 'rgba(16, 185, 129, 0.02)' : 'transparent'
+                          }}
+                        >
+                          {/* Manifest Number & Timestamp */}
+                          <td style={{ padding: '0.75rem', fontWeight: 800, color: '#ffffff' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              <FileText size={15} color={isDispatchedAndLocked ? '#34d399' : '#c084fc'} />
+                              <span>{m.manifestNumber}</span>
+                            </div>
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                              {new Date(m.createdAt).toLocaleString()}
+                            </div>
+                          </td>
+
+                          {/* Route */}
+                          <td style={{ padding: '0.75rem', color: '#cbd5e1' }}>
+                            <div style={{ fontWeight: 700, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                              <span>{m.branchCode}</span>
+                              <ArrowRight size={12} color="#94a3b8" />
+                              <span>{m.destinationCity}</span>
+                            </div>
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                              {m.destinationHub}
+                            </div>
+                          </td>
+
+                          {/* Vehicle, Driver & Seal */}
+                          <td style={{ padding: '0.75rem' }}>
+                            <div style={{ fontWeight: 600, color: '#ffffff' }}>{m.linehaulVehicle}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                              {m.driverName} • Seal: <strong style={{ color: 'var(--brand-cyan)' }}>#{m.sealNumber}</strong>
+                            </div>
+                          </td>
+
+                          {/* Total Shipments */}
+                          <td style={{ padding: '0.75rem', fontWeight: 700 }}>
+                            {m.totalShipments} Consignments
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{m.totalPieces} Pieces</div>
+                          </td>
+
+                          {/* Weight & COD */}
+                          <td style={{ padding: '0.75rem' }}>
+                            <div style={{ fontWeight: 700, color: 'var(--brand-orange)' }}>{m.totalWeightKg} KG</div>
+                            {m.totalCodNpr > 0 ? (
+                              <div style={{ fontSize: '0.75rem', color: '#34d399', fontWeight: 700 }}>
+                                COD Rs. {m.totalCodNpr.toLocaleString()}
+                              </div>
+                            ) : (
+                              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Prepaid</div>
+                            )}
+                          </td>
+
+                          {/* Status Badge & Lock Indicator */}
+                          <td style={{ padding: '0.75rem' }}>
+                            {isDispatchedAndLocked ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                <span className="badge badge-emerald" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: 800 }}>
+                                  <Lock size={11} /> VERIFIED &amp; DISPATCHED
+                                </span>
+                                <span style={{ fontSize: '0.68rem', color: '#10b981' }}>
+                                  Permanently Locked
+                                </span>
+                              </div>
+                            ) : m.status === 'Pending Approval' ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                <span className="badge badge-amber" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: 700 }}>
+                                  <AlertCircle size={11} /> Pending Approval
+                                </span>
+                                <span style={{ fontSize: '0.68rem', color: '#fbbf24' }}>
+                                  Awaiting Admin Verification
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="badge badge-purple">Draft</span>
+                            )}
+                          </td>
+
+                          {/* Actions */}
+                          <td style={{ padding: '0.75rem', textAlign: 'right' }}>
+                            <div style={{ display: 'inline-flex', gap: '0.45rem', alignItems: 'center' }}>
+                              {/* View / Print Handover Sheet */}
                               <button
                                 type="button"
-                                onClick={() => handleApproveAndDispatch(m.id)}
-                                className="btn btn-sm"
-                                style={{
-                                  background: 'rgba(16, 185, 129, 0.15)',
-                                  borderColor: 'rgba(16, 185, 129, 0.4)',
-                                  color: '#34d399',
-                                  fontWeight: 700
+                                onClick={() => {
+                                  setActiveManifest(m);
+                                  setIsPrintPreviewOpen(true);
                                 }}
+                                className="btn btn-secondary btn-sm"
+                                title="View & Print Handover Manifest"
                               >
-                                <Check size={13} /> Approve Dispatched
+                                <Eye size={13} /> View / Print
                               </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+
+                              {/* If NOT Dispatched: Allow Edit */}
+                              {!isDispatchedAndLocked ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStartEdit(m)}
+                                    className="btn btn-secondary btn-sm"
+                                    style={{ borderColor: 'rgba(168, 85, 247, 0.4)', color: '#c084fc' }}
+                                    title="Edit Manifest Staging & Cargo"
+                                  >
+                                    <Edit3 size={13} /> Edit
+                                  </button>
+
+                                  {/* Admin Approve & Dispatch Button */}
+                                  <button
+                                    type="button"
+                                    onClick={() => setConfirmDispatchModal(m)}
+                                    className="btn btn-sm"
+                                    style={{
+                                      background: '#10b981',
+                                      borderColor: '#059669',
+                                      color: '#ffffff',
+                                      fontWeight: 800,
+                                      boxShadow: '0 2px 10px rgba(16, 185, 129, 0.25)'
+                                    }}
+                                    title="Verify & Dispatch this Manifest"
+                                  >
+                                    <Check size={13} /> Approve &amp; Dispatch
+                                  </button>
+                                </>
+                              ) : (
+                                /* When Dispatched: Show Locked Indicator */
+                                <div
+                                  title="Locked: Dispatched manifests are sealed and cannot be edited."
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.25rem',
+                                    padding: '0.35rem 0.6rem',
+                                    borderRadius: '6px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    color: 'var(--text-muted)',
+                                    fontSize: '0.75rem',
+                                    cursor: 'not-allowed'
+                                  }}
+                                >
+                                  <Lock size={12} color="#10b981" />
+                                  <span>Locked</span>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -891,13 +1260,13 @@ export default function BranchManifestManager({ user }: Props) {
           </div>
         )}
 
-        {/* ================= TAB 3: SHIPMENT DISPATCHED SECTION ================= */}
+        {/* ================= TAB 3: DISPATCHED SHIPMENTS SECTION ================= */}
         {activeTab === 'dispatched_shipments' && (
           <div className="card" style={{ padding: '1.75rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Layers size={18} color="var(--brand-orange)" /> Shipment Dispatched Section ({dispatchedShipments.length})
+                  <Layers size={18} color="var(--brand-orange)" /> Linehaul Transit Consignments ({dispatchedShipments.length})
                 </h3>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0 0' }}>
                   All individual consignments currently approved and active on linehaul transit routes across Nepal.
@@ -919,7 +1288,7 @@ export default function BranchManifestManager({ user }: Props) {
                   <thead>
                     <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', textAlign: 'left', color: 'var(--text-secondary)' }}>
                       <th style={{ padding: '0.75rem' }}>AWB Number</th>
-                      <th style={{ padding: '0.75rem' }}>Origin & Destination</th>
+                      <th style={{ padding: '0.75rem' }}>Origin &rarr; Destination</th>
                       <th style={{ padding: '0.75rem' }}>Consignee</th>
                       <th style={{ padding: '0.75rem' }}>Cargo Specs</th>
                       <th style={{ padding: '0.75rem' }}>Assigned Vehicle</th>
@@ -936,7 +1305,7 @@ export default function BranchManifestManager({ user }: Props) {
                           </Link>
                         </td>
                         <td style={{ padding: '0.75rem', color: '#ffffff' }}>
-                          <div style={{ fontWeight: 600 }}>{s.origin.city} → {s.destination.city}</div>
+                          <div style={{ fontWeight: 600 }}>{s.origin.city} &rarr; {s.destination.city}</div>
                           <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{s.destination.hub}</div>
                         </td>
                         <td style={{ padding: '0.75rem' }}>
@@ -948,7 +1317,7 @@ export default function BranchManifestManager({ user }: Props) {
                           {s.codAmount ? <div style={{ fontSize: '0.72rem', color: '#34d399', fontWeight: 700 }}>COD Rs. {s.codAmount.toLocaleString()}</div> : null}
                         </td>
                         <td style={{ padding: '0.75rem', color: 'var(--text-secondary)' }}>
-                          {s.telemetry.transportVehicle || 'BA 2 KHA 8841 (Express E-Van)'}
+                          {s.telemetry?.transportVehicle || 'BA 2 KHA 8841 (Express E-Van)'}
                         </td>
                         <td style={{ padding: '0.75rem', fontSize: '0.75rem', color: 'var(--text-secondary)', maxWidth: '220px' }}>
                           <div style={{ color: '#ffffff', fontWeight: 600 }}>{s.checkpoints[0]?.status}</div>
@@ -968,7 +1337,105 @@ export default function BranchManifestManager({ user }: Props) {
           </div>
         )}
 
-        {/* ================= MODAL: PRINTABLE OFFICIAL MANIFEST ================= */}
+        {/* ================= MODAL: CONFIRM DISPATCH & LOCK ================= */}
+        {confirmDispatchModal && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 999999,
+            backgroundColor: 'rgba(3, 7, 18, 0.85)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem'
+          }}>
+            <div style={{
+              width: '100%',
+              maxWidth: '540px',
+              backgroundColor: '#0d1527',
+              border: '1px solid rgba(16, 185, 129, 0.4)',
+              borderRadius: '16px',
+              padding: '1.75rem',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.9)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '10px', backgroundColor: 'rgba(16, 185, 129, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
+                  <ShieldCheck size={24} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>
+                    Confirm Dispatch &amp; Lock Manifest
+                  </h3>
+                  <div style={{ fontSize: '0.8rem', color: '#10b981', fontWeight: 700 }}>
+                    {confirmDispatchModal.manifestNumber}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.04)', borderRadius: '10px', padding: '1rem', marginBottom: '1.25rem', fontSize: '0.85rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Origin &rarr; Destination:</span>
+                  <strong style={{ color: '#fff' }}>{confirmDispatchModal.branchCode} &rarr; {confirmDispatchModal.destinationCity}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Linehaul Vehicle:</span>
+                  <strong style={{ color: '#fff' }}>{confirmDispatchModal.linehaulVehicle}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Driver / Carrier:</span>
+                  <strong style={{ color: '#fff' }}>{confirmDispatchModal.driverName} ({confirmDispatchModal.driverPhone})</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Security Container Seal:</span>
+                  <strong style={{ color: 'var(--brand-cyan)' }}>#{confirmDispatchModal.sealNumber}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Included Shipments:</span>
+                  <strong style={{ color: '#34d399' }}>{confirmDispatchModal.totalShipments} Bookings ({confirmDispatchModal.totalWeightKg} KG)</strong>
+                </div>
+              </div>
+
+              {/* Security Lock Notice */}
+              <div style={{
+                padding: '0.85rem',
+                borderRadius: '8px',
+                backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                color: '#fca5a5',
+                fontSize: '0.82rem',
+                marginBottom: '1.5rem',
+                display: 'flex',
+                gap: '0.5rem'
+              }}>
+                <Lock size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+                <div>
+                  <strong>IMMUTABILITY WARNING:</strong> Once verified and approved for dispatch, this manifest will be <strong>PERMANENTLY LOCKED</strong>. No further edits, parcel additions, or deletions will be permitted.
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setConfirmDispatchModal(null)}
+                  className="btn btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleExecuteApprovalAndDispatch(confirmDispatchModal.id)}
+                  className="btn btn-primary"
+                  style={{ background: '#10b981', borderColor: '#059669', color: '#fff', fontWeight: 800 }}
+                >
+                  <Check size={16} /> Yes, Approve &amp; Lock Dispatch
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ================= MODAL: PRINTABLE OFFICIAL MANIFEST & INSPECTION ================= */}
         {isPrintPreviewOpen && activeManifest && (
           <div style={{
             position: 'fixed',
@@ -985,7 +1452,7 @@ export default function BranchManifestManager({ user }: Props) {
           }}>
             <div style={{
               width: '100%',
-              maxWidth: '900px',
+              maxWidth: '920px',
               backgroundColor: '#0c1222',
               border: '1px solid rgba(255, 255, 255, 0.15)',
               borderRadius: '20px',
@@ -1007,12 +1474,18 @@ export default function BranchManifestManager({ user }: Props) {
                 gap: '0.75rem'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div className="badge badge-purple">
+                  <div className="badge badge-purple" style={{ fontWeight: 800 }}>
                     <FileText size={12} /> {activeManifest.manifestNumber}
                   </div>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    Status: <strong style={{ color: activeManifest.status === 'Approved & Dispatched' ? '#34d399' : '#c084fc' }}>{activeManifest.status}</strong>
-                  </span>
+                  {activeManifest.status === 'Approved & Dispatched' || activeManifest.isLocked ? (
+                    <span className="badge badge-emerald" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: 800 }}>
+                      <Lock size={12} /> Verified &amp; Locked
+                    </span>
+                  ) : (
+                    <span className="badge badge-amber" style={{ fontWeight: 700 }}>
+                      {activeManifest.status}
+                    </span>
+                  )}
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
@@ -1026,11 +1499,11 @@ export default function BranchManifestManager({ user }: Props) {
                     <Printer size={15} /> Print Out Manifest
                   </button>
 
-                  {/* APPROVE DISPATCHED BUTTON */}
-                  {activeManifest.status !== 'Approved & Dispatched' ? (
+                  {/* APPROVE DISPATCHED BUTTON (If not locked) */}
+                  {!(activeManifest.status === 'Approved & Dispatched' || activeManifest.isLocked) ? (
                     <button
                       type="button"
-                      onClick={() => handleApproveAndDispatch(activeManifest.id)}
+                      onClick={() => setConfirmDispatchModal(activeManifest)}
                       className="btn btn-sm"
                       style={{
                         background: '#10b981',
@@ -1043,11 +1516,7 @@ export default function BranchManifestManager({ user }: Props) {
                     >
                       <Check size={15} /> Approve Dispatched
                     </button>
-                  ) : (
-                    <span className="badge badge-emerald" style={{ padding: '0.4rem 0.8rem' }}>
-                      <CheckCircle2 size={13} /> Dispatched
-                    </span>
-                  )}
+                  ) : null}
 
                   <button
                     type="button"
@@ -1068,6 +1537,30 @@ export default function BranchManifestManager({ user }: Props) {
                 color: '#000000',
               }}>
                 <div id="printable-manifest-sheet" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                  {/* Lock Banner in Print Preview if Locked */}
+                  {(activeManifest.status === 'Approved & Dispatched' || activeManifest.isLocked) && (
+                    <div style={{
+                      backgroundColor: '#ecfdf5',
+                      border: '1.5px solid #10b981',
+                      borderRadius: '8px',
+                      padding: '0.65rem 1rem',
+                      marginBottom: '1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      color: '#065f46',
+                      fontSize: '0.82rem'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Lock size={16} />
+                        <strong>OFFICIAL RECORD: VERIFIED &amp; LOCKED FOR DISPATCH</strong>
+                      </div>
+                      <div>
+                        Verified by: <strong>{activeManifest.approvedBy || 'Operations Admin'}</strong> at {new Date(activeManifest.approvedAt || activeManifest.dispatchedAt || '').toLocaleString()}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Print Document Header */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #000000', paddingBottom: '1rem', marginBottom: '1.25rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -1081,7 +1574,7 @@ export default function BranchManifestManager({ user }: Props) {
                           DOUBLE 7 LOGISTICS
                         </div>
                         <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#444444', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                          Official Linehaul Dispatch & Gateway Handover Manifest
+                          Official Linehaul Dispatch &amp; Gateway Handover Manifest
                         </div>
                         <div style={{ fontSize: '0.72rem', color: '#666666' }}>
                           HQ Command: Kathmandu, Nepal • Phone: +977 1 4411000 • www.double7.com.np
@@ -1133,7 +1626,7 @@ export default function BranchManifestManager({ user }: Props) {
                   {/* Driver & Dispatcher Details */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: '1rem', padding: '0 0.25rem' }}>
                     <div><strong>Driver Name:</strong> {activeManifest.driverName} ({activeManifest.driverPhone})</div>
-                    <div><strong>Dispatched By:</strong> {activeManifest.dispatchedBy || 'Branch Operations Officer'}</div>
+                    <div><strong>Dispatched / Approved By:</strong> {activeManifest.approvedBy || activeManifest.dispatchedBy || 'Authorized Officer'}</div>
                   </div>
 
                   {/* Consignment Items Table */}
@@ -1205,7 +1698,7 @@ export default function BranchManifestManager({ user }: Props) {
                     <div style={{ textAlign: 'center' }}>
                       <div style={{ height: '40px', borderBottom: '1px dotted #666666', marginBottom: '0.4rem' }}></div>
                       <div style={{ fontSize: '0.75rem', fontWeight: 800 }}>DESTINATION HUB RECEIVING OFFICER</div>
-                      <div style={{ fontSize: '0.68rem', color: '#666666' }}>Piece Count & Verification</div>
+                      <div style={{ fontSize: '0.68rem', color: '#666666' }}>Piece Count &amp; Verification</div>
                     </div>
                   </div>
 

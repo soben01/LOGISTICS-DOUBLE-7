@@ -17,7 +17,26 @@ export interface ManifestItem {
   addedAt: string;
 }
 
-export type ManifestStatus = 'Draft' | 'Generated' | 'Printed' | 'Approved & Dispatched';
+export type ManifestStatus = 'Draft' | 'Pending Approval' | 'Printed' | 'Approved & Dispatched';
+
+export interface NepalHub {
+  code: string;
+  name: string;
+  city: string;
+  region: string;
+  prefix: string;
+}
+
+export const NEPAL_HUBS: NepalHub[] = [
+  { code: 'KTM-01', name: 'Kathmandu Mega-Hub (KTM-01)', city: 'Kathmandu', region: 'Bagmati Central', prefix: 'KTM' },
+  { code: 'PKR-01', name: 'Pokhara Regional Sort Hub (PKR-01)', city: 'Pokhara', region: 'Gandaki Western', prefix: 'PKR' },
+  { code: 'BRT-01', name: 'Biratnagar Hub (BRT-01)', city: 'Biratnagar', region: 'Koshi Eastern', prefix: 'BRT' },
+  { code: 'BRG-01', name: 'Birgunj Port Gateway (BRG-01)', city: 'Birgunj', region: 'Madhesh Commercial', prefix: 'BRG' },
+  { code: 'CHT-01', name: 'Chitwan Narayangarh Hub (CHT-01)', city: 'Bharatpur', region: 'Central Terai', prefix: 'CHT' },
+  { code: 'BTW-01', name: 'Butwal Cross-Dock Hub (BTW-01)', city: 'Butwal', region: 'Lumbini Corridor', prefix: 'BTW' },
+  { code: 'NPJ-01', name: 'Nepalgunj Regional Hub (NPJ-01)', city: 'Nepalgunj', region: 'Bheri / Karnali Gateway', prefix: 'NPJ' },
+  { code: 'DHN-01', name: 'Dhangadhi Terminal (DHN-01)', city: 'Dhangadhi', region: 'Sudurpashchim Gateway', prefix: 'DHN' },
+];
 
 export interface BranchManifest {
   id: string;
@@ -36,11 +55,14 @@ export interface BranchManifest {
   totalWeightKg: number;
   totalCodNpr: number;
   status: ManifestStatus;
+  isLocked?: boolean;
   createdAt: string;
   generatedAt?: string;
   printedAt?: string;
   dispatchedAt?: string;
   dispatchedBy?: string;
+  approvedBy?: string;
+  approvedAt?: string;
   notes?: string;
 }
 
@@ -79,6 +101,53 @@ export function saveBranchManifest(manifest: BranchManifest): void {
   window.dispatchEvent(new Event('manifest-updated'));
 }
 
+export function updateBranchManifest(updated: BranchManifest): { success: boolean; error?: string } {
+  if (typeof window === 'undefined') return { success: false, error: 'Window undefined' };
+  const current = getBranchManifests();
+  const index = current.findIndex(m => m.id === updated.id);
+  if (index === -1) {
+    return { success: false, error: 'Manifest not found in registry.' };
+  }
+  const existing = current[index];
+  if (existing.status === 'Approved & Dispatched' || existing.isLocked) {
+    return {
+      success: false,
+      error: 'CRITICAL SECURITY: This manifest is already Verified & Dispatched. It is permanently locked and cannot be edited.'
+    };
+  }
+
+  // Recalculate totals
+  const totalPieces = updated.items.reduce((sum, item) => sum + (item.pieces || 1), 0);
+  const totalWeightKg = Math.round(updated.items.reduce((sum, item) => sum + (item.weightKg || 0), 0) * 10) / 10;
+  const totalCodNpr = updated.items.reduce((sum, item) => sum + (item.codAmount || 0), 0);
+
+  current[index] = {
+    ...updated,
+    totalShipments: updated.items.length,
+    totalPieces,
+    totalWeightKg,
+    totalCodNpr,
+  };
+
+  localStorage.setItem(MANIFESTS_STORAGE_KEY, JSON.stringify(current));
+  window.dispatchEvent(new Event('manifest-updated'));
+  return { success: true };
+}
+
+export function deleteBranchManifest(id: string): { success: boolean; error?: string } {
+  if (typeof window === 'undefined') return { success: false, error: 'Window undefined' };
+  const current = getBranchManifests();
+  const target = current.find(m => m.id === id);
+  if (!target) return { success: false, error: 'Manifest not found.' };
+  if (target.status === 'Approved & Dispatched' || target.isLocked) {
+    return { success: false, error: 'Cannot delete an Approved & Dispatched manifest. It is permanently archived.' };
+  }
+  const filtered = current.filter(m => m.id !== id);
+  localStorage.setItem(MANIFESTS_STORAGE_KEY, JSON.stringify(filtered));
+  window.dispatchEvent(new Event('manifest-updated'));
+  return { success: true };
+}
+
 export function getManifestById(id: string): BranchManifest | undefined {
   const manifests = getBranchManifests();
   return manifests.find(m => m.id.toLowerCase() === id.toLowerCase() || m.manifestNumber.toLowerCase() === id.toLowerCase());
@@ -94,6 +163,7 @@ export function createBranchManifest(params: {
   driverPhone: string;
   sealNumber: string;
   items: ManifestItem[];
+  status?: ManifestStatus;
   notes?: string;
 }): BranchManifest {
   const now = new Date();
@@ -122,7 +192,8 @@ export function createBranchManifest(params: {
     totalPieces,
     totalWeightKg,
     totalCodNpr,
-    status: 'Generated',
+    status: params.status || 'Pending Approval',
+    isLocked: false,
     createdAt: now.toISOString(),
     generatedAt: now.toISOString(),
     notes: params.notes,
@@ -135,44 +206,56 @@ export function createBranchManifest(params: {
 export function markManifestPrinted(id: string): BranchManifest | null {
   const manifest = getManifestById(id);
   if (!manifest) return null;
-  manifest.status = manifest.status === 'Approved & Dispatched' ? 'Approved & Dispatched' : 'Printed';
+  if (manifest.status !== 'Approved & Dispatched') {
+    manifest.status = 'Printed';
+  }
   manifest.printedAt = new Date().toISOString();
   saveBranchManifest(manifest);
   return manifest;
 }
 
 /**
- * Approves and dispatches the manifest, updating ALL included shipments to "Shipment Dispatched".
+ * Approves and dispatches the manifest, updating ALL included shipments to "Shipment Dispatched"
+ * and permanently locking the manifest from any further edits.
  */
 export function approveAndDispatchManifest(
   manifestId: string,
-  dispatchedBy?: string
+  approvedBy?: string
 ): { success: boolean; manifest?: BranchManifest; updatedCount: number; error?: string } {
-  const manifest = getManifestById(manifestId);
+  const manifests = getBranchManifests();
+  const manifest = manifests.find(m => m.id.toLowerCase() === manifestId.toLowerCase() || m.manifestNumber.toLowerCase() === manifestId.toLowerCase());
   if (!manifest) {
-    return { success: false, updatedCount: 0, error: 'Manifest not found.' };
+    return { success: false, updatedCount: 0, error: 'Manifest not found in registry.' };
+  }
+
+  if (manifest.status === 'Approved & Dispatched' || manifest.isLocked) {
+    return { success: false, updatedCount: 0, error: 'This manifest is already verified, dispatched, and locked.' };
   }
 
   if (manifest.items.length === 0) {
-    return { success: false, updatedCount: 0, error: 'Cannot dispatch an empty manifest.' };
+    return { success: false, updatedCount: 0, error: 'Cannot dispatch an empty manifest without shipments.' };
   }
 
   const now = new Date().toISOString();
   manifest.status = 'Approved & Dispatched';
+  manifest.isLocked = true;
   manifest.dispatchedAt = now;
-  manifest.dispatchedBy = dispatchedBy || 'Authorized Branch Dispatcher';
+  manifest.approvedAt = now;
+  manifest.dispatchedBy = approvedBy || 'Authorized Branch Officer';
+  manifest.approvedBy = approvedBy || 'HQ Operations Controller';
 
   let updatedCount = 0;
   // Update every shipment in this manifest to 'Shipment Dispatched'
   manifest.items.forEach(item => {
     item.status = 'Shipment Dispatched';
-    const note = `Manifest ${manifest.manifestNumber} approved & dispatched. Transit via ${manifest.linehaulVehicle} to ${manifest.destinationHub}. Security Seal #${manifest.sealNumber}.`;
+    const note = `Manifest ${manifest.manifestNumber} verified & dispatched by ${manifest.approvedBy}. Transit via ${manifest.linehaulVehicle} to ${manifest.destinationHub}. Container Seal #${manifest.sealNumber}.`;
     updateShipmentStatus(item.bookingId, 'Shipment Dispatched', manifest.branchOrigin, note);
     updatedCount++;
   });
 
   saveBranchManifest(manifest);
   if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('manifest-updated'));
     window.dispatchEvent(new Event('shipments-updated'));
     window.dispatchEvent(new Event('storage'));
   }
@@ -187,7 +270,7 @@ export function lookupShipmentForManifest(bookingId: string): Shipment | null {
   if (!bookingId || !bookingId.trim()) return null;
   const cleanId = bookingId.trim().toUpperCase();
   const shipments = getShipments();
-  const found = shipments.find(s => s.id.toUpperCase() === cleanId || s.telemetry.waybillNumber?.toUpperCase() === cleanId);
+  const found = shipments.find(s => s.id.toUpperCase() === cleanId || s.telemetry?.waybillNumber?.toUpperCase() === cleanId || s.bookingNo?.toUpperCase() === cleanId);
   return found || null;
 }
 

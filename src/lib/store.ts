@@ -18,7 +18,7 @@ export interface Shipment {
   service: string;
   serviceCode: 'EXP' | 'CARGO' | 'RUSH' | 'INTL' | 'AIR' | 'SEA' | 'FUL';
   isInternational?: boolean;
-  status: 'In Transit' | 'Out for Delivery' | 'Customs Cleared' | 'Delivered' | 'Pending Pickup' | 'Exception' | 'Label Generated' | 'Shipment Dispatched' | 'Origin Hub Inwarded' | 'Courier Assigned' | 'Regional Sort Complete' | 'Order Placed' | 'Reattempt Scheduled' | 'Return Initiated' | 'Returned to Merchant' | 'Booked' | 'Picked Up' | 'Customs' | 'Returned';
+  status: 'In Transit' | 'Out for Delivery' | 'Customs Cleared' | 'Delivered' | 'Pending Pickup' | 'Exception' | 'Label Generated' | 'Shipment Dispatched' | 'Origin Hub Inwarded' | 'Hub Received' | 'Courier Assigned' | 'Regional Sort Complete' | 'Order Placed' | 'Reattempt Scheduled' | 'Return Initiated' | 'Returned to Merchant' | 'Booked' | 'Picked Up' | 'Customs' | 'Returned';
   deliveryAttempts?: number;
   origin: {
     city: string;
