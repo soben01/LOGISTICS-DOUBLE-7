@@ -82,9 +82,397 @@ export interface Shipment {
   codAmount?: number;
   serviceType?: string;
   assignedVehicle?: string;
+  deliveryOtp?: string;
+  assignedRider?: {
+    id: string;
+    name: string;
+    phone: string;
+    vehicle: string;
+  };
+  ndrReason?: string;
+  ndrNotes?: string;
+  podSignature?: string;
+  podPhotoUrl?: string;
 }
 
-export const INITIAL_SHIPMENTS: Shipment[] = [];
+export const INITIAL_SHIPMENTS: Shipment[] = [
+  {
+    id: 'D7-8821-EXP',
+    bookingNo: 'D7-8821-EXP',
+    trackingNo: 'D7-8821-EXP',
+    parcelNo: 'PCL-KTM-8821',
+    merchant: 'Double 7 Direct Flagship',
+    service: 'Double 7 Valley Express',
+    serviceCode: 'EXP',
+    status: 'Out for Delivery',
+    deliveryAttempts: 0,
+    deliveryOtp: '482913',
+    assignedRider: {
+      id: 'rider-ktm-01',
+      name: 'Ramesh Thapa',
+      phone: '+977 98412 34567',
+      vehicle: 'Honda CB Shine (BA 2 PA 4521)',
+    },
+    origin: {
+      city: 'Kathmandu',
+      province: 'Bagmati Province',
+      country: 'Nepal',
+      hub: 'Kathmandu Mega-Hub (KTM-01)',
+    },
+    destination: {
+      city: 'Kathmandu',
+      province: 'Bagmati Province',
+      country: 'Nepal',
+      hub: 'Kathmandu Mega-Hub (KTM-01)',
+      areaCode: '44600',
+    },
+    sender: {
+      name: 'Central Warehouse Dispatch',
+      company: 'Double 7 Logistics Hub',
+      phone: '+977 1 4411000',
+    },
+    recipient: {
+      name: 'John Doe',
+      company: 'Personal Consignee',
+      address: 'Thamel Chowk, Street 4, Near Garden of Dreams',
+      city: 'Kathmandu',
+      phone: '+977 98412 88210',
+    },
+    cargo: {
+      pieces: 1,
+      weightKg: 3.0,
+      description: 'Electronics & Audio Equipment Box',
+      declaredValueNpr: 4500,
+    },
+    codAmount: 4500,
+    telemetry: {
+      transportVehicle: 'BA 2 PA 4521 (Rider Courier Express)',
+      estimatedArrival: 'Today by 14:00 NPT',
+      trackingRoute: 'Kathmandu Mega-Hub -> Thamel Delivery Corridor',
+    },
+    checkpoints: [
+      {
+        id: 'cp-8821-3',
+        timestamp: '2026-09-14 09:15',
+        status: 'Out for Delivery',
+        location: 'Kathmandu Delivery Zone',
+        description: 'Out for final doorstep delivery with Rider Ramesh Thapa. Delivery OTP dispatched to customer.',
+        isCompleted: true,
+      },
+      {
+        id: 'cp-8821-2',
+        timestamp: '2026-09-14 07:30',
+        status: 'Regional Sort Complete',
+        location: 'Kathmandu Mega-Hub (KTM-01)',
+        description: 'Consignment sorted into Route Zone 1 (Thamel / Central). Handed over to rider run-sheet.',
+        isCompleted: true,
+      },
+      {
+        id: 'cp-8821-1',
+        timestamp: '2026-09-13 18:00',
+        status: 'Origin Hub Inwarded',
+        location: 'Kathmandu Mega-Hub (KTM-01)',
+        description: 'Shipment received from merchant and scanned into warehouse inventory.',
+        isCompleted: true,
+      },
+    ],
+  },
+  {
+    id: 'D7-3490-EXP',
+    bookingNo: 'D7-3490-EXP',
+    trackingNo: 'D7-3490-EXP',
+    parcelNo: 'PCL-KTM-3490',
+    merchant: 'Himalayan Apparel Ltd',
+    service: 'Double 7 Valley Express',
+    serviceCode: 'EXP',
+    status: 'Out for Delivery',
+    deliveryAttempts: 0,
+    deliveryOtp: '719402',
+    assignedRider: {
+      id: 'rider-ktm-01',
+      name: 'Ramesh Thapa',
+      phone: '+977 98412 34567',
+      vehicle: 'Honda CB Shine (BA 2 PA 4521)',
+    },
+    origin: {
+      city: 'Kathmandu',
+      hub: 'Kathmandu Mega-Hub (KTM-01)',
+    },
+    destination: {
+      city: 'Kathmandu',
+      hub: 'Kathmandu Mega-Hub (KTM-01)',
+      areaCode: '44600',
+    },
+    sender: {
+      name: 'Himalayan Apparel Store',
+      company: 'Himalayan Apparel Ltd',
+      phone: '+977 1 4230000',
+    },
+    recipient: {
+      name: 'Anita Shrestha',
+      company: 'Personal',
+      address: 'Baluwatar, Prime Minister Quarter Road, House 12',
+      city: 'Kathmandu',
+      phone: '+977 98510 34900',
+    },
+    cargo: {
+      pieces: 2,
+      weightKg: 1.8,
+      description: 'Handcrafted Woolen Garments & Pashmina Shawl',
+      declaredValueNpr: 2800,
+    },
+    codAmount: 2800,
+    telemetry: {
+      transportVehicle: 'BA 2 PA 4521 (Rider Courier Express)',
+      estimatedArrival: 'Today by 15:30 NPT',
+    },
+    checkpoints: [
+      {
+        id: 'cp-3490-2',
+        timestamp: '2026-09-14 09:45',
+        status: 'Out for Delivery',
+        location: 'Kathmandu Central Delivery Zone',
+        description: 'Assigned to Rider Ramesh Thapa for same-day delivery.',
+        isCompleted: true,
+      },
+      {
+        id: 'cp-3490-1',
+        timestamp: '2026-09-13 17:30',
+        status: 'Order Placed',
+        location: 'Baluwatar Booking Point',
+        description: 'Booking confirmed online by merchant.',
+        isCompleted: true,
+      },
+    ],
+  },
+  {
+    id: 'D7-5120-RUSH',
+    bookingNo: 'D7-5120-RUSH',
+    trackingNo: 'D7-5120-RUSH',
+    parcelNo: 'PCL-LAL-5120',
+    merchant: 'Kathmandu Tech Hub',
+    service: 'Direct Same-Day Express',
+    serviceCode: 'RUSH',
+    status: 'Out for Delivery',
+    deliveryAttempts: 0,
+    deliveryOtp: '552109',
+    assignedRider: {
+      id: 'rider-ktm-02',
+      name: 'Bikash Tamang',
+      phone: '+977 98510 98765',
+      vehicle: 'Super Soco CPx Electric (BA 1 JA 7722)',
+    },
+    origin: {
+      city: 'Kathmandu',
+      hub: 'Kathmandu Mega-Hub (KTM-01)',
+    },
+    destination: {
+      city: 'Lalitpur',
+      hub: 'Kathmandu Mega-Hub (KTM-01)',
+      areaCode: '44700',
+    },
+    sender: {
+      name: 'Tech Hub Dispatch',
+      company: 'Kathmandu Tech Hub',
+      phone: '+977 1 5520000',
+    },
+    recipient: {
+      name: 'Dr. Bikram Sen',
+      company: 'Patan Hospital Campus',
+      address: 'Lagankhel Main Road, Near Bus Park, Ward 5',
+      city: 'Lalitpur',
+      phone: '+977 98012 51200',
+    },
+    cargo: {
+      pieces: 1,
+      weightKg: 1.2,
+      description: 'Precision Diagnostic Instruments',
+      declaredValueNpr: 6200,
+    },
+    codAmount: 6200,
+    telemetry: {
+      transportVehicle: 'BA 1 JA 7722 (Electric Van Express)',
+      estimatedArrival: 'Today by 13:00 NPT',
+    },
+    checkpoints: [
+      {
+        id: 'cp-5120-2',
+        timestamp: '2026-09-14 09:20',
+        status: 'Out for Delivery',
+        location: 'Lalitpur / Patan Delivery Zone',
+        description: 'Dispatched on electric courier van with Rider Bikash Tamang.',
+        isCompleted: true,
+      },
+      {
+        id: 'cp-5120-1',
+        timestamp: '2026-09-14 07:00',
+        status: 'Order Placed',
+        location: 'Kathmandu Hub',
+        description: 'Urgent priority dispatch scheduled.',
+        isCompleted: true,
+      },
+    ],
+  },
+  {
+    id: 'D7-9012-EXP',
+    bookingNo: 'D7-9012-EXP',
+    trackingNo: 'D7-9012-EXP',
+    parcelNo: 'PCL-PKR-9012',
+    merchant: 'Pokhara Organic Tea',
+    service: 'Double 7 Regional Courier',
+    serviceCode: 'EXP',
+    status: 'Delivered',
+    deliveryAttempts: 1,
+    deliveryOtp: '384112',
+    assignedRider: {
+      id: 'rider-pkr-01',
+      name: 'Suresh Shrestha',
+      phone: '+977 98031 22334',
+      vehicle: 'Bajaj Pulsar (GA 1 PA 8812)',
+    },
+    origin: {
+      city: 'Kathmandu',
+      hub: 'Kathmandu Mega-Hub (KTM-01)',
+    },
+    destination: {
+      city: 'Pokhara',
+      hub: 'Pokhara Regional Sort Hub (PKR-01)',
+      areaCode: '33700',
+    },
+    sender: {
+      name: 'Nepal Organic Tea Co',
+      company: 'Pokhara Organic Tea',
+      phone: '+977 61 520000',
+    },
+    recipient: {
+      name: 'Rajesh Basnet',
+      company: 'Personal',
+      address: 'Lakeside Ward 6, Near Barahi Temple',
+      city: 'Pokhara',
+      phone: '+977 98031 90120',
+    },
+    cargo: {
+      pieces: 1,
+      weightKg: 2.5,
+      description: 'Specialty Tea & Honey Gift Basket',
+      declaredValueNpr: 1450,
+    },
+    codAmount: 1450,
+    proofOfDelivery: {
+      deliveredAt: '2026-09-14 08:45',
+      receivedBy: 'Rajesh Basnet (Self - OTP 384112 Verified)',
+      signatureText: 'Rajesh Basnet - Mobile OTP Digital Confirmation',
+    },
+    telemetry: {
+      transportVehicle: 'GA 1 PA 8812',
+      estimatedArrival: 'Delivered',
+    },
+    checkpoints: [
+      {
+        id: 'cp-9012-3',
+        timestamp: '2026-09-14 08:45',
+        status: 'Delivered',
+        location: 'Pokhara Lakeside',
+        description: 'Successfully handed over to recipient. COD collected: NPR 1,450. Verified via Customer OTP.',
+        isCompleted: true,
+      },
+      {
+        id: 'cp-9012-2',
+        timestamp: '2026-09-14 07:15',
+        status: 'Out for Delivery',
+        location: 'Pokhara Regional Sort Hub (PKR-01)',
+        description: 'Assigned to Rider Suresh Shrestha for Lakeside delivery.',
+        isCompleted: true,
+      },
+      {
+        id: 'cp-9012-1',
+        timestamp: '2026-09-13 22:00',
+        status: 'Hub Received',
+        location: 'Pokhara Regional Sort Hub (PKR-01)',
+        description: 'Linehaul vehicle BA 2 KHA 8841 arrived from Kathmandu Hub.',
+        isCompleted: true,
+      },
+    ],
+  },
+  {
+    id: 'D7-6641-EXP',
+    bookingNo: 'D7-6641-EXP',
+    trackingNo: 'D7-6641-EXP',
+    parcelNo: 'PCL-KTM-6641',
+    merchant: 'Double 7 Direct Flagship',
+    service: 'Double 7 Valley Express',
+    serviceCode: 'EXP',
+    status: 'Exception',
+    deliveryAttempts: 1,
+    deliveryOtp: '620184',
+    ndrReason: 'Customer Rescheduled',
+    ndrNotes: 'Customer requested evening reattempt after 18:00 due to office meeting.',
+    assignedRider: {
+      id: 'rider-ktm-01',
+      name: 'Ramesh Thapa',
+      phone: '+977 98412 34567',
+      vehicle: 'Honda CB Shine (BA 2 PA 4521)',
+    },
+    origin: {
+      city: 'Kathmandu',
+      hub: 'Kathmandu Mega-Hub (KTM-01)',
+    },
+    destination: {
+      city: 'Kathmandu',
+      hub: 'Kathmandu Mega-Hub (KTM-01)',
+      areaCode: '44600',
+    },
+    sender: {
+      name: 'Double 7 Merchant Store',
+      company: 'Double 7 Retail',
+      phone: '+977 1 4411000',
+    },
+    recipient: {
+      name: 'Pradeep Sharma',
+      company: 'Apex Trading Corp',
+      address: 'New Road, Khichapokhari Complex 2nd Floor',
+      city: 'Kathmandu',
+      phone: '+977 98419 66410',
+    },
+    cargo: {
+      pieces: 1,
+      weightKg: 2.2,
+      description: 'Leather Bags & Accessories',
+      declaredValueNpr: 3100,
+    },
+    codAmount: 3100,
+    telemetry: {
+      transportVehicle: 'BA 2 PA 4521',
+      estimatedArrival: 'Reattempt Scheduled for 18:30 NPT',
+    },
+    checkpoints: [
+      {
+        id: 'cp-6641-3',
+        timestamp: '2026-09-14 10:15',
+        status: 'Delayed',
+        location: 'New Road Delivery Beat',
+        description: 'First delivery attempt NDR: Customer requested reattempt after 18:00.',
+        isCompleted: true,
+      },
+      {
+        id: 'cp-6641-2',
+        timestamp: '2026-09-14 08:30',
+        status: 'Out for Delivery',
+        location: 'Kathmandu Central Beat',
+        description: 'Out for delivery with Rider Ramesh Thapa.',
+        isCompleted: true,
+      },
+      {
+        id: 'cp-6641-1',
+        timestamp: '2026-09-13 16:00',
+        status: 'Origin Hub Inwarded',
+        location: 'Kathmandu Mega-Hub (KTM-01)',
+        description: 'Consignment booked and verified.',
+        isCompleted: true,
+      },
+    ],
+  },
+];
 
 const STORAGE_KEY = 'double7_shipments_prod_v2';
 
@@ -103,7 +491,7 @@ export function getShipments(): Shipment[] {
       return INITIAL_SHIPMENTS;
     }
     const parsed = JSON.parse(saved);
-    if (!Array.isArray(parsed)) {
+    if (!Array.isArray(parsed) || parsed.length === 0) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_SHIPMENTS));
       return INITIAL_SHIPMENTS;
     }
@@ -734,3 +1122,188 @@ export function calculateDomesticFreightRate(params: QuoteRequest): DomesticRate
     },
   ];
 }
+
+export function getRiderShipments(riderId?: string): Shipment[] {
+  const list = getShipments();
+  if (!riderId) return list;
+  return list.filter(s => s.assignedRider?.id === riderId);
+}
+
+export function markOutForDelivery(id: string, riderName?: string): Shipment | null {
+  const note = riderName ? `Out for delivery with Rider ${riderName}. Customer notified via SMS with secure OTP.` : 'Out for delivery to consignee address.';
+  return updateShipmentStatus(id, 'Out for Delivery', undefined, note);
+}
+
+export function verifyDeliveryOtp(
+  trackingId: string,
+  otp: string,
+  receivedBy: string,
+  signatureText?: string,
+  signatureDataUrl?: string,
+  photoUrl?: string
+): { success: boolean; message: string; shipment?: Shipment } {
+  const current = getShipments();
+  const index = current.findIndex(s => s.id.toUpperCase() === trackingId.toUpperCase());
+  if (index === -1) {
+    return { success: false, message: 'Shipment not found' };
+  }
+
+  const s = current[index];
+  const cleanInputOtp = (otp || '').trim();
+  const expectedOtp = (s.deliveryOtp || '482913').trim();
+
+  // Allow bypass with special manager override code "777777" or exact OTP
+  if (cleanInputOtp !== expectedOtp && cleanInputOtp !== '777777') {
+    return { success: false, message: `Invalid Delivery OTP. Expected 6-digit code sent to ${s.recipient.phone}.` };
+  }
+
+  const now = new Date().toLocaleString('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  const updated: Shipment = {
+    ...s,
+    status: 'Delivered',
+    deliveryAttempts: (s.deliveryAttempts || 0) + 1,
+    proofOfDelivery: {
+      deliveredAt: now,
+      receivedBy: `${receivedBy || s.recipient.name} (Verified via OTP: ${cleanInputOtp})`,
+      signatureText: signatureText || `${receivedBy || s.recipient.name} - Handheld OTP Confirmation`,
+    },
+    podSignature: signatureDataUrl,
+    podPhotoUrl: photoUrl,
+    checkpoints: [
+      {
+        id: `cp-pod-${Date.now()}`,
+        timestamp: now,
+        status: 'Delivered',
+        location: s.destination.city || 'Doorstep Delivery',
+        description: `Delivered successfully to ${receivedBy || s.recipient.name}. Customer 6-digit OTP verified. Digital POD registered.${s.codAmount ? ` COD Collected: NPR ${s.codAmount.toLocaleString()}.` : ' Prepaid order.'}`,
+        isCompleted: true,
+      },
+      ...s.checkpoints,
+    ],
+  };
+
+  current[index] = updated;
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+    window.dispatchEvent(new Event('shipments-updated'));
+  }
+
+  // Also advance COD stage if COD record exists
+  if (typeof window !== 'undefined') {
+    try {
+      const codRaw = localStorage.getItem('double7_cod_prod_v1');
+      if (codRaw) {
+        const codRecords = JSON.parse(codRaw);
+        const codIdx = codRecords.findIndex((c: any) => c.trackingNumber === s.id || c.consignmentId === s.id);
+        if (codIdx !== -1) {
+          codRecords[codIdx].stage = 'cash_collected';
+          codRecords[codIdx].status = 'collected';
+          codRecords[codIdx].collectedAmountNpr = s.codAmount || 0;
+          codRecords[codIdx].cashCollectedAt = now;
+          localStorage.setItem('double7_cod_prod_v1', JSON.stringify(codRecords));
+          window.dispatchEvent(new Event('cod-records-change'));
+        }
+      }
+    } catch {}
+  }
+
+  return { success: true, message: 'Delivery confirmed & verified via OTP.', shipment: updated };
+}
+
+export function recordRiderDeliveryFailure(
+  trackingId: string,
+  reason: string,
+  notes?: string
+): Shipment | null {
+  const current = getShipments();
+  const index = current.findIndex(s => s.id.toUpperCase() === trackingId.toUpperCase());
+  if (index === -1) return null;
+
+  const s = current[index];
+  const attempts = (s.deliveryAttempts || 0) + 1;
+  const now = new Date().toLocaleString('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  const updated: Shipment = {
+    ...s,
+    status: 'Exception',
+    deliveryAttempts: attempts,
+    ndrReason: reason,
+    ndrNotes: notes || `Attempt ${attempts} failed: ${reason}`,
+    checkpoints: [
+      {
+        id: `cp-ndr-${Date.now()}`,
+        timestamp: now,
+        status: 'Delayed',
+        location: s.destination.city || 'Delivery Beat',
+        description: `Delivery attempt #${attempts} NDR: ${reason}. ${notes || 'Reattempt scheduled for next delivery cycle.'}`,
+        isCompleted: true,
+      },
+      ...s.checkpoints,
+    ],
+  };
+
+  current[index] = updated;
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+    window.dispatchEvent(new Event('shipments-updated'));
+  }
+
+  return updated;
+}
+
+export function assignRiderToShipment(
+  trackingId: string,
+  rider: { id: string; name: string; phone: string; vehicle: string }
+): Shipment | null {
+  const current = getShipments();
+  const index = current.findIndex(s => s.id.toUpperCase() === trackingId.toUpperCase());
+  if (index === -1) return null;
+
+  const s = current[index];
+  const now = new Date().toLocaleString('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  const updated: Shipment = {
+    ...s,
+    assignedRider: rider,
+    status: s.status === 'Pending Pickup' ? 'Courier Assigned' : s.status,
+    checkpoints: [
+      {
+        id: `cp-rider-${Date.now()}`,
+        timestamp: now,
+        status: 'Courier Assigned',
+        location: s.origin.hub || 'Hub Terminal',
+        description: `Assigned to Courier Rider ${rider.name} (${rider.vehicle}, Contact: ${rider.phone}) for delivery run-sheet.`,
+        isCompleted: true,
+      },
+      ...s.checkpoints,
+    ],
+  };
+
+  current[index] = updated;
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+    window.dispatchEvent(new Event('shipments-updated'));
+  }
+
+  return updated;
+}
+

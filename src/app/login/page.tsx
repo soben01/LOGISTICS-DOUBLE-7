@@ -16,6 +16,7 @@ import {
   Sparkles,
   KeyRound,
   Truck,
+  Bike,
   LogIn,
   LogOut
 } from 'lucide-react';
@@ -358,6 +359,51 @@ function LoginContent() {
           {/* ================= TAB 1: LOGIN ================= */}
           {authTab === 'signin' ? (
             <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              {/* Dedicated Rider Terminal Link */}
+              <Link
+                href="/rider"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.85rem 1rem',
+                  backgroundColor: 'rgba(255, 102, 0, 0.08)',
+                  border: '1px solid rgba(255, 102, 0, 0.3)',
+                  borderRadius: '12px',
+                  textDecoration: 'none',
+                  color: '#ffffff',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
+                    background: 'linear-gradient(135deg, #ff6600 0%, #ea580c 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#ffffff',
+                    flexShrink: 0
+                  }}>
+                    <Bike size={20} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#fed7aa' }}>
+                      Field Delivery Rider?
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                      Access dedicated Rider Terminal &amp; PIN login
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--brand-orange)', fontWeight: 700, fontSize: '0.8rem' }}>
+                  <span>Open Portal</span>
+                  <ArrowRight size={14} />
+                </div>
+              </Link>
+
               <div className="input-group">
                 <label className="input-label">Email Address</label>
                 <div style={{ position: 'relative' }}>
@@ -495,8 +541,43 @@ function LoginContent() {
                   </div>
                 </div>
 
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.4 }}>
-                  Credentials are pre-configured in the platform. Select Super Admin for nationwide oversight, or a Branch Station to test branch code isolation.
+                {/* 1-Click Field Rider Terminal */}
+                <div style={{
+                  marginTop: '0.5rem',
+                  paddingTop: '0.75rem',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>
+                      Field Delivery Rider Terminal
+                    </span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--brand-cyan)', fontWeight: 600 }}>Mobile App</span>
+                  </div>
+                  <Link
+                    href="/rider"
+                    className="btn btn-outline"
+                    style={{
+                      width: '100%',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      borderColor: 'rgba(6, 182, 212, 0.4)',
+                      backgroundColor: 'rgba(6, 182, 212, 0.08)',
+                      color: 'var(--brand-cyan)',
+                      fontWeight: 700,
+                      padding: '0.65rem 1rem',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    <Bike size={16} />
+                    <span>🛵 Field Rider Portal (Delivery Terminal &amp; App)</span>
+                  </Link>
+                </div>
+
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.4, marginTop: '0.25rem' }}>
+                  Credentials are pre-configured in the platform. Select Super Admin for nationwide oversight, Branch Station for manifest dispatch, or Rider Portal for mobile delivery.
                 </div>
               </div>
             </form>

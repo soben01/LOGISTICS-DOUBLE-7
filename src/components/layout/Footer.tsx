@@ -82,11 +82,17 @@ export default function Footer() {
               <Link href="/track" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
                 Track Consignment
               </Link>
+              <Link href="/rider" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
+                Rider Delivery App
+              </Link>
               <Link href="/book" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
                 Book Express Delivery
               </Link>
               <Link href="/rates" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
                 Rates &amp; Tariffs
+              </Link>
+              <Link href="/manifest" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
+                Linehaul Manifests
               </Link>
               <Link href="/merchant" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
                 Merchant COD Portal

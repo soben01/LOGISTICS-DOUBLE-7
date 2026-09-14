@@ -16,17 +16,31 @@ import {
   Settings as SettingsIcon,
   ChevronDown,
   MapPin,
-  Boxes
+  Boxes,
+  Bike
 } from 'lucide-react';
 import { getCurrentUser, logoutUser, User } from '../../lib/auth';
+import GlobalSearchModal from '../common/GlobalSearchModal';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchModalOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     const checkUser = () => {
@@ -68,6 +82,7 @@ export default function Navbar() {
         { href: '/manifest', label: 'Manifest' }
       ] : []),
     ] : []),
+    { href: '/rider', label: 'Rider App' },
     { href: '/track', label: 'Track' },
     { href: currentUser ? '/book' : '/login?redirect=/book', label: 'Book Cargo' },
     { href: '/rates', label: 'Rates' },
@@ -170,6 +185,38 @@ export default function Navbar() {
           gap: '0.75rem',
           flexShrink: 0,
         }}>
+          {/* Quick Global Telemetry Search Trigger */}
+          <button
+            type="button"
+            onClick={() => setSearchModalOpen(true)}
+            title="Global Telemetry Search (Ctrl+K)"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: '20px',
+              padding: '0.35rem 0.65rem',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontSize: '0.78rem',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <Search size={14} color="var(--brand-orange)" />
+            <span className="hidden sm:inline">Search</span>
+            <span style={{
+              fontSize: '0.65rem',
+              fontFamily: 'var(--font-mono)',
+              background: 'rgba(255, 255, 255, 0.08)',
+              padding: '0.1rem 0.35rem',
+              borderRadius: '4px',
+              color: 'var(--text-muted)',
+            }}>
+              ⌘K
+            </span>
+          </button>
           {currentUser ? (
             <div
               ref={dropdownRef}
@@ -760,6 +807,12 @@ export default function Navbar() {
           }
         }
       `}</style>
+
+      {/* Global Telemetry Search Modal */}
+      <GlobalSearchModal
+        isOpen={searchModalOpen}
+        onClose={() => setSearchModalOpen(false)}
+      />
     </header>
   );
 }

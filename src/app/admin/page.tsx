@@ -51,7 +51,8 @@ import {
   SlidersHorizontal,
   LogOut,
   ExternalLink,
-  Download
+  Download,
+  Bot
 } from 'lucide-react';
 import {
   getShipments,
@@ -94,6 +95,7 @@ import TrackingWorkflowEditor from '../../components/admin/TrackingWorkflowEdito
 import BranchManifestManager from '../../components/manifest/BranchManifestManager';
 import PlatformSettingsMasterHub from '../../components/admin/PlatformSettingsMasterHub';
 import DatabaseControlCenter from '../../components/admin/DatabaseControlCenter';
+import AIOperationsAssistantModal from '../../components/admin/AIOperationsAssistantModal';
 
 type AdminSection =
   | 'overview'
@@ -169,6 +171,7 @@ export default function AdminControlPanel() {
   // Website Settings State
   const [settings, setSettings] = useState<WebsiteSettings>(getWebsiteSettings());
   const [settingsSavedNotice, setSettingsSavedNotice] = useState(false);
+  const [showAiAssistant, setShowAiAssistant] = useState(false);
 
   // Shipments State
   const [shipments, setShipments] = useState<Shipment[]>([]);
@@ -201,7 +204,7 @@ export default function AdminControlPanel() {
   const [pwdModalUser, setPwdModalUser] = useState<User | null>(null);
   const [newPasswordVal, setNewPasswordVal] = useState('');
   const [roleModalUser, setRoleModalUser] = useState<User | null>(null);
-  const [newRoleVal, setNewRoleVal] = useState<'merchant' | 'admin' | 'branch'>('merchant');
+  const [newRoleVal, setNewRoleVal] = useState<'merchant' | 'admin' | 'branch' | 'rider'>('merchant');
   const [newSubRoleVal, setNewSubRoleVal] = useState('');
   const [balanceModalUser, setBalanceModalUser] = useState<User | null>(null);
   const [newBalanceVal, setNewBalanceVal] = useState<number>(0);
@@ -1227,6 +1230,40 @@ export default function AdminControlPanel() {
 
             {/* Quick Actions */}
             <div className="admin-quick-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+              {/* AI Operations Assistant Trigger */}
+              <button
+                type="button"
+                onClick={() => setShowAiAssistant(true)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  backgroundColor: 'rgba(6, 182, 212, 0.15)',
+                  border: '1px solid rgba(6, 182, 212, 0.45)',
+                  color: '#38bdf8',
+                  borderRadius: '8px',
+                  padding: '0.35rem 0.75rem',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 10px rgba(6, 182, 212, 0.25)',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <Bot size={15} color="#38bdf8" />
+                <span>AI Ops Assistant</span>
+                <span style={{
+                  fontSize: '0.62rem',
+                  padding: '0.05rem 0.35rem',
+                  borderRadius: '4px',
+                  backgroundColor: 'rgba(6, 182, 212, 0.3)',
+                  color: '#fff',
+                  fontWeight: 800,
+                }}>
+                  LIVE
+                </span>
+              </button>
+
               {/* Impersonation Selector */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', backgroundColor: 'rgba(255, 255, 255, 0.04)', padding: '0.35rem 0.65rem', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
                 <Eye size={14} color="#f59e0b" />
@@ -3371,6 +3408,12 @@ export default function AdminControlPanel() {
           role="admin"
         />
       )}
+
+      {/* Modal 8: AI Operations Assistant */}
+      <AIOperationsAssistantModal
+        isOpen={showAiAssistant}
+        onClose={() => setShowAiAssistant(false)}
+      />
     </div>
   );
 }

@@ -1,0 +1,38 @@
+{
+  "name": "Double 7 Rider - Field Logistics Terminal",
+  "short_name": "D7 Rider",
+  "description": "Double 7 Logistics Field Delivery Run-sheet, OTP Verification & COD Cash Remittance Terminal",
+  "start_url": "/rider",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#060911",
+  "theme_color": "#ff6600",
+  "categories": ["business", "logistics", "productivity"],
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Rider Run-Sheet",
+      "url": "/rider",
+      "description": "Open active run-sheet for assigned deliveries"
+    },
+    {
+      "name": "COD Remittance",
+      "url": "/rider?tab=remit",
+      "description": "Handover collected cash to station cashier"
+    }
+  ]
+}

@@ -4,7 +4,7 @@ export interface User {
   email: string;
   company: string;
   phone: string;
-  role: 'merchant' | 'admin' | 'branch';
+  role: 'merchant' | 'admin' | 'branch' | 'rider';
   branchCode?: string;
   subRole?: string;
   permissions?: string[];
@@ -39,6 +39,34 @@ export const DEFAULT_USERS: User[] = [
     codBalanceNpr: 0,
     totalShipments: 0,
     createdAt: '2026-09-08',
+  },
+  {
+    id: 'usr-rider-ramesh',
+    name: 'Ramesh Thapa (Field Rider)',
+    email: 'ramesh.rider@double7.com.np',
+    company: 'Kathmandu Mega-Hub (KTM-01)',
+    phone: '+977 98412 34567',
+    role: 'rider',
+    branchCode: 'KTM-01',
+    subRole: 'Express Delivery Rider (Bike #BA 2 PA 4521)',
+    status: 'active',
+    codBalanceNpr: 0,
+    totalShipments: 48,
+    createdAt: '2025-04-12',
+  },
+  {
+    id: 'usr-rider-bikash',
+    name: 'Bikash Tamang (Field Rider)',
+    email: 'bikash.rider@double7.com.np',
+    company: 'Kathmandu Mega-Hub (KTM-01)',
+    phone: '+977 98510 98765',
+    role: 'rider',
+    branchCode: 'KTM-01',
+    subRole: 'Express Delivery Rider (EV #BA 1 JA 7722)',
+    status: 'active',
+    codBalanceNpr: 0,
+    totalShipments: 32,
+    createdAt: '2025-08-01',
   },
   {
     id: 'usr-branch-ktm',
@@ -515,7 +543,7 @@ export function isHqAdmin(user: User | null | undefined): boolean {
   return false;
 }
 
-export function updateUserRole(id: string, role: 'merchant' | 'admin' | 'branch', subRole?: string, permissions?: string[]): boolean {
+export function updateUserRole(id: string, role: 'merchant' | 'admin' | 'branch' | 'rider', subRole?: string, permissions?: string[]): boolean {
   const users = getUsers();
   const index = users.findIndex(u => u.id === id);
   if (index === -1) return false;
@@ -673,6 +701,25 @@ export function findUserByEmail(email: string): User | undefined {
     };
   }
 
+  // Detect Rider accounts
+  if (normalized.includes('.rider@') || normalized.includes('rider@') || normalized.includes('rider.')) {
+    const rawName = normalized.split('@')[0].replace(/[._-]/g, ' ');
+    const name = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+    return {
+      id: `usr-rider-${Date.now()}`,
+      name: `${name} (Field Rider)`,
+      email: normalized,
+      company: 'Double 7 Field Delivery Fleet',
+      phone: '+977 98412 34567',
+      role: 'rider',
+      subRole: 'Express Delivery Rider',
+      status: 'active',
+      codBalanceNpr: 0,
+      totalShipments: 25,
+      createdAt: '2026-01-01',
+    };
+  }
+
   // Detect Branch hub accounts
   if (normalized.includes('branch.') || normalized.includes('.branch') || normalized.startsWith('branch@') || normalized.includes('hub.')) {
     const rawName = normalized.split('@')[0].replace(/[._-]/g, ' ');
@@ -736,15 +783,24 @@ export function findUserByEmail(email: string): User | undefined {
 }
 
 export interface PortalConfig {
-  role: 'admin' | 'merchant' | 'branch';
-  portalPath: '/admin' | '/merchant' | '/manifest';
+  role: 'admin' | 'merchant' | 'branch' | 'rider';
+  portalPath: '/admin' | '/merchant' | '/manifest' | '/rider';
   portalName: string;
   badgeLabel: string;
   description: string;
 }
 
-export function getMatchingPortal(userOrRole: User | 'merchant' | 'admin' | 'branch'): PortalConfig {
+export function getMatchingPortal(userOrRole: User | 'merchant' | 'admin' | 'branch' | 'rider'): PortalConfig {
   const role = typeof userOrRole === 'string' ? userOrRole : userOrRole.role;
+  if (role === 'rider') {
+    return {
+      role: 'rider',
+      portalPath: '/rider',
+      portalName: 'Rider Delivery Terminal',
+      badgeLabel: 'FIELD RIDER',
+      description: 'Mobile run-sheet, live OTP verification, digital POD signature & COD cash bag remittance',
+    };
+  }
   if (role === 'branch') {
     return {
       role: 'branch',
@@ -773,6 +829,10 @@ export function getMatchingPortal(userOrRole: User | 'merchant' | 'admin' | 'bra
 }
 
 export function resolveMatchedRedirect(user: User, redirectParam?: string | null): string {
+  if (user.role === 'rider') {
+    return '/rider';
+  }
+
   // Landing page after login
   if (!redirectParam || redirectParam.startsWith('/login') || redirectParam === '/') {
     return user.role === 'branch' ? '/manifest' : (user.role === 'admin' ? '/admin' : '/dashboard');

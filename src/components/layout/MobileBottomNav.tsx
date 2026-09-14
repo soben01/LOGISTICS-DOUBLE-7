@@ -17,7 +17,8 @@ import {
   ExternalLink,
   Cpu,
   Calculator,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Bike
 } from 'lucide-react';
 import { getCurrentUser, logoutUser, User } from '../../lib/auth';
 
@@ -199,6 +200,15 @@ export default function MobileBottomNav() {
 
             {/* Quick Links: Strictly Tools and Settings (No Dashboard) */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
+              <Link
+                href="/rider"
+                onClick={() => setShowAccountSheet(false)}
+                className="btn btn-secondary btn-sm"
+                style={{ justifyContent: 'flex-start', padding: '0.65rem 0.9rem', borderColor: 'rgba(255, 102, 0, 0.3)' }}
+              >
+                <Bike size={16} color="var(--brand-orange)" />
+                <span>Rider Delivery Portal</span>
+              </Link>
               <Link
                 href={currentUser.role === 'admin' ? '/admin' : '/merchant'}
                 onClick={() => setShowAccountSheet(false)}

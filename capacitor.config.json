@@ -1,0 +1,14 @@
+{
+  "appId": "np.com.double7.rider",
+  "appName": "Double 7 Rider",
+  "webDir": "out",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "http://localhost:3111/rider",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true,
+    "backgroundColor": "#060911"
+  }
+}
