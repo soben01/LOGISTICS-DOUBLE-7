@@ -200,12 +200,11 @@ export default function HomePage() {
       </div>
 
       {/* ================= HERO SECTION ================= */}
-      <section style={{
+      <section className="animate-fade-in" style={{
         padding: '4.5rem 0 3.5rem 0',
         borderBottom: '1px solid var(--border-subtle)',
         position: 'relative',
-        overflow: 'hidden',
-        background: 'radial-gradient(circle at 50% 10%, rgba(255, 102, 0, 0.08) 0%, transparent 60%)'
+        backgroundColor: 'var(--bg-main)'
       }}>
         <div className="container">
           <div className="hero-grid">
@@ -314,7 +313,7 @@ export default function HomePage() {
                 background: 'linear-gradient(135deg, rgba(16, 25, 46, 0.95) 0%, rgba(10, 15, 29, 0.95) 100%)',
                 padding: '1.75rem',
                 borderRadius: '16px',
-                boxShadow: '0 12px 40px rgba(0,0,0,0.6)'
+                boxShadow: 'var(--shadow-md)'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
@@ -382,7 +381,7 @@ export default function HomePage() {
       </section>
 
       {/* ================= SECTION 2: INTERACTIVE RATE & TRANSIT TIME ESTIMATOR ================= */}
-      <section style={{ padding: '4.5rem 0', borderBottom: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.01)' }}>
+      <section className="animate-slide-up" style={{ padding: '4.5rem 0', borderBottom: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-surface)' }}>
         <div className="container">
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <div className="badge badge-cyan" style={{ marginBottom: '0.5rem' }}>
@@ -599,7 +598,7 @@ export default function HomePage() {
       </section>
 
       {/* ================= SECTION 3: DEDICATED PHONE UI DASHBOARD SECTION ================= */}
-      <section style={{ padding: '4.5rem 0', borderBottom: '1px solid var(--border-subtle)', background: '#070b15' }}>
+      <section className="animate-slide-up" style={{ padding: '4.5rem 0', borderBottom: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-main)' }}>
         <div className="container">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '3rem', alignItems: 'center' }}>
             
@@ -664,9 +663,9 @@ export default function HomePage() {
                 maxWidth: '360px',
                 backgroundColor: '#050811',
                 border: '8px solid #1e293b',
-                borderRadius: '38px',
+                borderRadius: '24px',
                 padding: '1.1rem 1rem 1.25rem 1rem',
-                boxShadow: '0 25px 60px rgba(0,0,0,0.85), 0 0 35px rgba(255, 102, 0, 0.18)',
+                boxShadow: 'var(--shadow-lg)',
                 position: 'relative'
               }}>
                 {/* Phone Speaker Notch & Status Bar */}
@@ -980,7 +979,7 @@ export default function HomePage() {
       </section>
 
       {/* ================= SECTION 5: GUARANTEED COD REMITTANCE & MERCHANT BENEFITS ================= */}
-      <section style={{ padding: '4.5rem 0', borderBottom: '1px solid var(--border-subtle)', background: 'linear-gradient(180deg, #060911 0%, #0a1122 100%)' }}>
+      <section className="animate-slide-up animate-stagger-2" style={{ padding: '4.5rem 0', borderBottom: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-surface)' }}>
         <div className="container">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '3rem', alignItems: 'center' }}>
             <div>

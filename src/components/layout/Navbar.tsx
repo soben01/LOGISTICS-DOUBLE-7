@@ -95,10 +95,8 @@ export default function Navbar() {
       position: 'sticky',
       top: 0,
       zIndex: 100,
-      backgroundColor: 'rgba(7, 10, 18, 0.95)',
-      backdropFilter: 'blur(16px)',
-      WebkitBackdropFilter: 'blur(16px)',
-      borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+      backgroundColor: 'var(--bg-main)',
+      borderBottom: '1px solid var(--border-subtle)',
       width: '100%',
     }}>
       <div className="container" style={{
@@ -354,24 +352,21 @@ export default function Navbar() {
               {/* Floating Dropdown Menu (Strictly Settings & Tools - NO Dashboard) */}
               {accountDropdownOpen && (
                 <div
-                  className="nav-account-dropdown"
+                  className="nav-account-dropdown animate-scale-in"
                   style={{
                     position: 'absolute',
                     top: 'calc(100% + 8px)',
                     right: 0,
                     minWidth: '240px',
-                    backgroundColor: '#0a0f1d',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    backgroundColor: 'var(--bg-surface)',
+                    border: '1px solid var(--border-subtle)',
                     borderRadius: '14px',
                     padding: '0.65rem',
-                    boxShadow: '0 16px 40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06)',
+                    boxShadow: 'var(--shadow-lg)',
                     zIndex: 1000,
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '0.3rem',
-                    backdropFilter: 'blur(16px)',
-                    WebkitBackdropFilter: 'blur(16px)',
-                    animation: 'fadeIn 0.15s ease',
                   }}
                 >
                   {/* Dropdown Header */}

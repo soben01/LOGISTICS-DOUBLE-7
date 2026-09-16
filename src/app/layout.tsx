@@ -4,6 +4,7 @@ import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import MobileBottomNav from '../components/layout/MobileBottomNav';
 import LogisticsSplashScreen from '../components/layout/LogisticsSplashScreen';
+import PageTransition from '../components/layout/PageTransition';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -49,7 +50,9 @@ export default function RootLayout({
         <LogisticsSplashScreen />
         <Navbar />
         <main style={{ minHeight: '80vh' }}>
-          {children}
+          <PageTransition>
+            {children}
+          </PageTransition>
         </main>
         <div className="mobile-bottom-nav-spacer" />
         <Footer />

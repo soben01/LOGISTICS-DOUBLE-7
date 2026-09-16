@@ -40,8 +40,8 @@ export default function Footer() {
                   height: '34px',
                   borderRadius: '8px',
                   objectFit: 'cover',
-                  boxShadow: '0 2px 8px rgba(255, 102, 0, 0.3)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  boxShadow: 'var(--shadow-sm)',
+                  border: '1px solid var(--border-subtle)',
                 }}
               />
               <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ffffff' }}>
@@ -140,7 +140,7 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div style={{
-          borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+          borderTop: '1px solid var(--border-subtle)',
           paddingTop: '1.5rem',
           display: 'flex',
           flexWrap: 'wrap',

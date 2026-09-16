@@ -155,9 +155,7 @@ export default function MobileBottomNav() {
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.65)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
             zIndex: 1050,
             display: 'flex',
             alignItems: 'flex-end',
@@ -168,13 +166,13 @@ export default function MobileBottomNav() {
           <div
             style={{
               width: '100%',
-              backgroundColor: '#0a0f1d',
-              borderTop: '1px solid rgba(255, 255, 255, 0.14)',
+              backgroundColor: 'var(--bg-surface)',
+              borderTop: '1px solid var(--border-subtle)',
               borderRadius: '20px 20px 0 0',
               padding: '1.5rem 1.25rem',
               paddingBottom: 'calc(max(1rem, var(--sab)) + 4.5rem)',
-              animation: 'slideUpMobileSheet 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
-              boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.8)',
+              animation: 'slideUp 0.3s ease-out forwards',
+              boxShadow: 'var(--shadow-lg)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
