@@ -147,18 +147,18 @@ export default function HomePage() {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#060911', color: '#f8fafc' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-main)', color: 'var(--text-primary)' }}>
       
       {/* ================= LIVE OPERATIONS TELEMETRY TICKER ================= */}
       <div className="telemetry-ticker-bar">
         <div className="ticker-track">
           <div className="ticker-content">
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#34d399', fontWeight: 700 }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981' }} />
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#34d399', fontWeight: 600 }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block', boxShadow: '0 0 6px #10b981' }} />
               KATHMANDU CENTRAL HUB: 100% OPERATIONAL
             </span>
             <span>&bull;</span>
-            <span style={{ color: '#ff8533', fontWeight: 700 }}>
+            <span style={{ color: '#fb923c', fontWeight: 600 }}>
               ⏰ DAILY LINEHAUL DISPATCH CUTOFF: 6:00 PM (18:00 NPT)
             </span>
             <span>&bull;</span>
@@ -166,21 +166,21 @@ export default function HomePage() {
               🚚 PRITHVI &amp; TRIBHUVAN CORRIDORS: ALL TRUCKS GPS TRACKED
             </span>
             <span>&bull;</span>
-            <span style={{ color: '#10b981', fontWeight: 700 }}>
+            <span style={{ color: '#10b981', fontWeight: 600 }}>
               💰 SAME-DAY COD BANK SETTLEMENTS: 100% CLEARED
             </span>
             <span>&bull;</span>
-            <span style={{ color: '#cbd5e1' }}>
+            <span style={{ color: 'var(--text-secondary)' }}>
               🏔️ 77 DISTRICTS NATIONAL EXPRESS COVERAGE
             </span>
           </div>
           <div className="ticker-content" aria-hidden="true">
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#34d399', fontWeight: 700 }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981' }} />
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#34d399', fontWeight: 600 }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block', boxShadow: '0 0 6px #10b981' }} />
               KATHMANDU CENTRAL HUB: 100% OPERATIONAL
             </span>
             <span>&bull;</span>
-            <span style={{ color: '#ff8533', fontWeight: 700 }}>
+            <span style={{ color: '#fb923c', fontWeight: 600 }}>
               ⏰ DAILY LINEHAUL DISPATCH CUTOFF: 6:00 PM (18:00 NPT)
             </span>
             <span>&bull;</span>
@@ -188,11 +188,11 @@ export default function HomePage() {
               🚚 PRITHVI &amp; TRIBHUVAN CORRIDORS: ALL TRUCKS GPS TRACKED
             </span>
             <span>&bull;</span>
-            <span style={{ color: '#10b981', fontWeight: 700 }}>
+            <span style={{ color: '#10b981', fontWeight: 600 }}>
               💰 SAME-DAY COD BANK SETTLEMENTS: 100% CLEARED
             </span>
             <span>&bull;</span>
-            <span style={{ color: '#cbd5e1' }}>
+            <span style={{ color: 'var(--text-secondary)' }}>
               🏔️ 77 DISTRICTS NATIONAL EXPRESS COVERAGE
             </span>
           </div>
@@ -200,11 +200,12 @@ export default function HomePage() {
       </div>
 
       {/* ================= HERO SECTION ================= */}
-      <section className="animate-fade-in" style={{
-        padding: '4.5rem 0 3.5rem 0',
+      <section style={{
+        padding: '4rem 0 3.5rem 0',
         borderBottom: '1px solid var(--border-subtle)',
         position: 'relative',
-        backgroundColor: 'var(--bg-main)'
+        overflow: 'hidden',
+        background: 'radial-gradient(circle at 50% 0%, rgba(249, 115, 22, 0.05) 0%, transparent 60%)'
       }}>
         <div className="container">
           <div className="hero-grid">
@@ -213,26 +214,26 @@ export default function HomePage() {
               <div style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.5rem',
-                backgroundColor: 'rgba(255, 102, 0, 0.1)',
-                border: '1px solid rgba(255, 102, 0, 0.3)',
-                padding: '0.35rem 0.85rem',
+                gap: '0.45rem',
+                backgroundColor: 'rgba(249, 115, 22, 0.08)',
+                border: '1px solid rgba(249, 115, 22, 0.22)',
+                padding: '0.28rem 0.75rem',
                 borderRadius: '9999px',
-                fontSize: '0.78rem',
-                fontWeight: 700,
+                fontSize: '0.74rem',
+                fontWeight: 600,
                 color: 'var(--brand-orange)',
                 marginBottom: '1.25rem'
               }}>
-                <Sparkles size={14} />
+                <Sparkles size={13} />
                 <span>NEPAL&apos;S PREMIER TECH FREIGHT &amp; CARGO NETWORK</span>
               </div>
 
               <h1 style={{
-                fontSize: 'clamp(2.2rem, 5.5vw, 3.4rem)',
-                fontWeight: 900,
+                fontSize: 'clamp(2.2rem, 5vw, 3.2rem)',
+                fontWeight: 800,
                 lineHeight: 1.15,
-                marginBottom: '1.25rem',
-                letterSpacing: '-0.02em',
+                marginBottom: '1.2rem',
+                letterSpacing: '-0.025em',
                 color: '#ffffff'
               }}>
                 Next-Gen Express Freight &amp;{' '}
@@ -246,42 +247,42 @@ export default function HomePage() {
               </h1>
 
               <p style={{
-                fontSize: 'clamp(1rem, 2vw, 1.15rem)',
+                fontSize: 'clamp(0.95rem, 1.8vw, 1.05rem)',
                 color: 'var(--text-secondary)',
                 lineHeight: 1.6,
-                marginBottom: '2rem',
-                maxWidth: '580px'
+                marginBottom: '1.75rem',
+                maxWidth: '560px'
               }}>
                 Connecting Kathmandu Valley to all 77 districts across Nepal. Experience guaranteed linehaul transit SLAs, thermal barcode waybills, live highway GPS tracking, and automated daily merchant remittance.
               </p>
 
               {/* Waybill Tracking Bar */}
               <div style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                borderRadius: '14px',
-                padding: '1.25rem',
+                backgroundColor: 'rgba(14, 20, 36, 0.7)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: '12px',
+                padding: '1.2rem',
                 marginBottom: '1.5rem',
-                boxShadow: '0 8px 30px rgba(0,0,0,0.5)'
+                boxShadow: 'var(--shadow-sm)'
               }}>
-                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.65rem' }}>
-                  🔍 Real-Time Consignment &amp; Waybill Tracking
+                <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.65rem' }}>
+                  Real-Time Consignment &amp; Waybill Tracking
                 </div>
                 <form onSubmit={handleTrackSubmit} className="hero-tracking-form" style={{ display: 'flex', gap: '0.65rem' }}>
                   <div style={{ position: 'relative', flex: 1 }}>
-                    <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                    <Search size={17} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                     <input
                       type="text"
                       value={trackingId}
                       onChange={(e) => setTrackingId(e.target.value)}
                       placeholder="Enter Waybill Tracking ID (e.g., NEP-882194)..."
                       className="input-field"
-                      style={{ paddingLeft: '2.75rem', width: '100%', height: '48px', fontSize: '0.95rem' }}
+                      style={{ paddingLeft: '2.6rem', width: '100%', height: '46px', fontSize: '0.92rem' }}
                     />
                   </div>
-                  <button type="submit" className="btn btn-primary" style={{ height: '48px', padding: '0 1.5rem', whiteSpace: 'nowrap' }}>
+                  <button type="submit" className="btn btn-primary" style={{ height: '46px', padding: '0 1.35rem', whiteSpace: 'nowrap' }}>
                     <span>Track Cargo</span>
-                    <ArrowRight size={16} />
+                    <ArrowRight size={15} />
                   </button>
                 </form>
 
@@ -291,14 +292,14 @@ export default function HomePage() {
                   <button
                     type="button"
                     onClick={() => { setTrackingId('NEP-882194'); router.push('/track?id=NEP-882194'); }}
-                    style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#38bdf8', padding: '2px 8px', borderRadius: '4px', cursor: 'pointer', fontFamily: 'monospace' }}
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-subtle)', color: 'var(--brand-cyan)', padding: '2px 8px', borderRadius: '4px', cursor: 'pointer', fontFamily: 'monospace' }}
                   >
                     NEP-882194 (Pokhara)
                   </button>
                   <button
                     type="button"
                     onClick={() => { setTrackingId('NEP-441209'); router.push('/track?id=NEP-441209'); }}
-                    style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#38bdf8', padding: '2px 8px', borderRadius: '4px', cursor: 'pointer', fontFamily: 'monospace' }}
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-subtle)', color: 'var(--brand-cyan)', padding: '2px 8px', borderRadius: '4px', cursor: 'pointer', fontFamily: 'monospace' }}
                   >
                     NEP-441209 (Biratnagar)
                   </button>

@@ -22,45 +22,72 @@ function GithubIcon({ size = 16 }: { size?: number }) {
 export default function Footer() {
   return (
     <footer style={{
-      backgroundColor: 'var(--bg-surface)',
+      backgroundColor: '#090d18',
       borderTop: '1px solid var(--border-subtle)',
       padding: '3.5rem 0 2rem 0',
       marginTop: '4rem',
     }}>
       <div className="container">
-        <div className="grid grid-cols-4 gap-8" style={{ marginBottom: '2.5rem' }}>
-          {/* Col 1: Brand & Founder */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-              <img
-                src="/images/logo.png"
-                alt="Double 7"
-                style={{
-                  width: '34px',
-                  height: '34px',
-                  borderRadius: '8px',
-                  objectFit: 'cover',
-                  boxShadow: 'var(--shadow-sm)',
-                  border: '1px solid var(--border-subtle)',
-                }}
-              />
-              <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ffffff' }}>
-                DOUBLE <span style={{ color: 'var(--brand-orange)' }}>7</span> <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)' }}>LOGISTICS</span>
-              </span>
-            </div>
+        {/* Top Status & Network Bar */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '1rem',
+          paddingBottom: '2rem',
+          marginBottom: '2.5rem',
+          borderBottom: '1px solid var(--border-subtle)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <img
+              src="/images/logo.png"
+              alt="Double 7"
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                objectFit: 'cover',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+              }}
+            />
+            <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em' }}>
+              DOUBLE <span style={{ color: 'var(--brand-orange)' }}>7</span> <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', marginLeft: '4px' }}>LOGISTICS</span>
+            </span>
+          </div>
 
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-              Next-generation domestic logistics, express linehaul, and automated Cash on Delivery across all 7 provinces of Nepal.
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.3rem 0.75rem',
+            borderRadius: '9999px',
+            backgroundColor: 'rgba(16, 185, 129, 0.08)',
+            border: '1px solid rgba(16, 185, 129, 0.2)',
+            fontSize: '0.74rem',
+            fontWeight: 600,
+            color: '#34d399',
+          }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981' }} />
+            <span>National Fleet Network: 100% Operational</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-4 gap-8" style={{ marginBottom: '2.5rem' }}>
+          {/* Col 1: Brand Info */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+              Next-generation domestic tech cargo, express linehaul, and automated same-day COD settlements across all 7 provinces of Nepal.
             </p>
 
             <div style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '0.6rem',
-              fontSize: '0.8rem',
+              gap: '0.5rem',
+              fontSize: '0.78rem',
               color: 'var(--text-muted)',
             }}>
-              <span>Built by Soben</span>
+              <span>Engineered by Soben</span>
               <a
                 href="https://github.com/soben01/LOGISTICS-DOUBLE-7"
                 target="_blank"
@@ -74,65 +101,65 @@ export default function Footer() {
           </div>
 
           {/* Col 2: Services */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <h4 style={{ color: '#ffffff', fontSize: '0.85rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+            <h4 style={{ color: '#ffffff', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
               Services
             </h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem' }}>
-              <Link href="/track" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', fontSize: '0.84rem' }}>
+              <Link href="/track" style={{ color: 'var(--text-secondary)', textDecoration: 'none', transition: 'color var(--transition-fast)' }}>
                 Track Consignment
               </Link>
-              <Link href="/rider" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
+              <Link href="/rider" style={{ color: 'var(--text-secondary)', textDecoration: 'none', transition: 'color var(--transition-fast)' }}>
                 Rider Delivery App
               </Link>
-              <Link href="/book" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
-                Book Express Delivery
+              <Link href="/book" style={{ color: 'var(--text-secondary)', textDecoration: 'none', transition: 'color var(--transition-fast)' }}>
+                Book Express Cargo
               </Link>
-              <Link href="/rates" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
+              <Link href="/rates" style={{ color: 'var(--text-secondary)', textDecoration: 'none', transition: 'color var(--transition-fast)' }}>
                 Rates &amp; Tariffs
               </Link>
-              <Link href="/manifest" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
+              <Link href="/manifest" style={{ color: 'var(--text-secondary)', textDecoration: 'none', transition: 'color var(--transition-fast)' }}>
                 Linehaul Manifests
               </Link>
-              <Link href="/merchant" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
+              <Link href="/merchant" style={{ color: 'var(--text-secondary)', textDecoration: 'none', transition: 'color var(--transition-fast)' }}>
                 Merchant COD Portal
               </Link>
             </div>
           </div>
 
           {/* Col 3: Key Hubs */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <h4 style={{ color: '#ffffff', fontSize: '0.85rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+            <h4 style={{ color: '#ffffff', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
               Hub Network
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
               <div>Kathmandu Central Dispatch</div>
-              <div>Pokhara Regional Hub</div>
-              <div>Birgunj Linehaul Terminal</div>
+              <div>Pokhara Regional Terminal</div>
+              <div>Birgunj Linehaul Hub</div>
               <div>Biratnagar Eastern Gateway</div>
-              <div>Chitwan &amp; Butwal Hubs</div>
+              <div>Chitwan &amp; Butwal Terminals</div>
             </div>
           </div>
 
           {/* Col 4: Contact */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <h4 style={{ color: '#ffffff', fontSize: '0.85rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-              Contact
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+            <h4 style={{ color: '#ffffff', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              Dispatch Support
             </h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Mail size={14} color="var(--brand-orange)" />
+                <Mail size={13} color="var(--brand-orange)" />
                 <span>dispatch@sobinupreti.com.np</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <MapPin size={14} color="var(--brand-cyan)" />
+                <MapPin size={13} color="var(--brand-cyan)" />
                 <span>Kathmandu, Nepal</span>
               </div>
               <Link
                 href="/support"
-                style={{ color: 'var(--brand-orange)', textDecoration: 'none', fontWeight: 600, marginTop: '0.25rem' }}
+                style={{ color: 'var(--brand-orange)', textDecoration: 'none', fontWeight: 600, marginTop: '0.2rem', fontSize: '0.82rem' }}
               >
-                Help &amp; Support &rarr;
+                Help &amp; Documentation &rarr;
               </Link>
             </div>
           </div>
@@ -151,10 +178,10 @@ export default function Footer() {
           color: 'var(--text-muted)',
         }}>
           <div>
-            &copy; 2026 Double 7 Logistics. All rights reserved.
+            &copy; 2026 Double 7 Logistics Inc. All rights reserved.
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
             <Link href="/support" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Privacy Policy</Link>
             <Link href="/support" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Terms of Carriage</Link>
           </div>

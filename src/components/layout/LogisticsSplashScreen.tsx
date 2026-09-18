@@ -72,7 +72,7 @@ export default function LogisticsSplashScreen() {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: '#060911',
+        backgroundColor: '#080c15',
         zIndex: 999999,
         display: 'flex',
         flexDirection: 'column',
@@ -80,19 +80,19 @@ export default function LogisticsSplashScreen() {
         justifyContent: 'center',
         padding: '1.5rem',
         opacity: fadeOut ? 0 : 1,
-        transform: fadeOut ? 'scale(1.03)' : 'scale(1)',
+        transform: fadeOut ? 'scale(1.02)' : 'scale(1)',
         pointerEvents: fadeOut ? 'none' : 'auto',
-        transition: 'opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)',
+        transition: 'opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
         overflow: 'hidden',
       }}
     >
-      {/* Ambient Radial Background Glows */}
+      {/* Ambient Subtle Background Glow */}
       <div
         style={{
           position: 'absolute',
-          width: 'min(700px, 95vw)',
-          height: 'min(700px, 95vw)',
-          background: 'radial-gradient(circle, rgba(255, 102, 0, 0.18) 0%, rgba(6, 182, 212, 0.08) 45%, transparent 70%)',
+          width: 'min(650px, 90vw)',
+          height: 'min(650px, 90vw)',
+          background: 'radial-gradient(circle, rgba(249, 115, 22, 0.1) 0%, rgba(6, 182, 212, 0.04) 40%, transparent 70%)',
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
@@ -106,9 +106,9 @@ export default function LogisticsSplashScreen() {
         style={{
           position: 'absolute',
           inset: 0,
-          backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)',
+          backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px)',
           backgroundSize: '40px 40px',
-          opacity: 0.65,
+          opacity: 0.5,
           pointerEvents: 'none',
         }}
       />
@@ -121,7 +121,7 @@ export default function LogisticsSplashScreen() {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          maxWidth: '440px',
+          maxWidth: '420px',
           width: '100%',
           textAlign: 'center',
         }}
@@ -132,17 +132,16 @@ export default function LogisticsSplashScreen() {
             display: 'inline-flex',
             alignItems: 'center',
             gap: '0.45rem',
-            padding: '0.35rem 0.85rem',
+            padding: '0.3rem 0.8rem',
             borderRadius: '9999px',
-            background: 'rgba(255, 102, 0, 0.12)',
-            border: '1px solid rgba(255, 102, 0, 0.35)',
-            color: '#ff8533',
-            fontSize: '0.72rem',
-            fontWeight: 800,
-            letterSpacing: '0.08em',
-            marginBottom: '1.75rem',
+            background: 'rgba(249, 115, 22, 0.08)',
+            border: '1px solid rgba(249, 115, 22, 0.25)',
+            color: '#fb923c',
+            fontSize: '0.7rem',
+            fontWeight: 700,
+            letterSpacing: '0.06em',
+            marginBottom: '1.5rem',
             textTransform: 'uppercase',
-            boxShadow: '0 0 20px rgba(255, 102, 0, 0.2)',
           }}
         >
           <span className="pulse-dot pulse-dot-orange" style={{ width: 6, height: 6 }} />
@@ -153,19 +152,19 @@ export default function LogisticsSplashScreen() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
           <div
             style={{
-              width: '46px',
-              height: '46px',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #ff6600 0%, #d9480f 100%)',
+              width: '42px',
+              height: '42px',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 24px rgba(255, 102, 0, 0.5)',
+              boxShadow: '0 4px 16px rgba(249, 115, 22, 0.35)',
             }}
           >
             <span
               style={{
-                fontSize: '1.45rem',
+                fontSize: '1.35rem',
                 fontWeight: 900,
                 fontFamily: 'var(--font-mono)',
                 color: '#ffffff',

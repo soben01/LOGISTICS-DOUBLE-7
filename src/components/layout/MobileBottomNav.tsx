@@ -166,38 +166,38 @@ export default function MobileBottomNav() {
           <div
             style={{
               width: '100%',
-              backgroundColor: 'var(--bg-surface)',
-              borderTop: '1px solid var(--border-subtle)',
+              backgroundColor: '#0c1220',
+              borderTop: '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: '20px 20px 0 0',
-              padding: '1.5rem 1.25rem',
+              padding: '1.25rem 1.25rem',
               paddingBottom: 'calc(max(1rem, var(--sab)) + 4.5rem)',
-              animation: 'slideUp 0.3s ease-out forwards',
-              boxShadow: 'var(--shadow-lg)',
+              animation: 'slideUpMobileSheet 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+              boxShadow: '0 -10px 36px rgba(0, 0, 0, 0.8)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Sheet Handle */}
-            <div style={{ width: '40px', height: '4px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '2px', margin: '0 auto 1.25rem auto' }} />
+            <div style={{ width: '36px', height: '4px', backgroundColor: 'rgba(255, 255, 255, 0.16)', borderRadius: '2px', margin: '0 auto 1.25rem auto' }} />
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <div>
-                <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ffffff' }}>
+                <div style={{ fontSize: '1rem', fontWeight: 700, color: '#ffffff' }}>
                   {currentUser.name}
                 </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                  {currentUser.email} &bull; <span style={{ color: currentUser.role === 'admin' ? 'var(--brand-orange)' : 'var(--brand-cyan)', textTransform: 'uppercase', fontWeight: 700 }}>{currentUser.role}</span>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                  {currentUser.email} &bull; <span style={{ color: currentUser.role === 'admin' ? 'var(--brand-orange)' : 'var(--brand-cyan)', textTransform: 'uppercase', fontWeight: 600 }}>{currentUser.role}</span>
                 </div>
               </div>
               <button
                 onClick={() => setShowAccountSheet(false)}
-                style={{ background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                style={{ background: 'rgba(255, 255, 255, 0.05)', border: 'none', borderRadius: '50%', width: '30px', height: '30px', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
 
-            {/* Quick Links: Strictly Tools and Settings (No Dashboard) */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
+            {/* Quick Links: Strictly Tools and Settings */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', marginBottom: '1.25rem' }}>
               <Link
                 href="/rider"
                 onClick={() => setShowAccountSheet(false)}
@@ -213,7 +213,7 @@ export default function MobileBottomNav() {
                 className="btn btn-secondary btn-sm"
                 style={{ justifyContent: 'flex-start', padding: '0.65rem 0.9rem' }}
               >
-                {currentUser.role === 'admin' ? <Shield size={16} color="var(--brand-orange)" /> : <Building size={16} color="var(--brand-cyan)" />}
+                {currentUser.role === 'admin' ? <Shield size={15} color="var(--brand-orange)" /> : <Building size={15} color="var(--brand-cyan)" />}
                 <span>{currentUser.role === 'admin' ? 'Admin Tools' : 'Merchant Tools'}</span>
               </Link>
               <Link
@@ -222,7 +222,7 @@ export default function MobileBottomNav() {
                 className="btn btn-secondary btn-sm"
                 style={{ justifyContent: 'flex-start', padding: '0.65rem 0.9rem' }}
               >
-                <SettingsIcon size={16} color="#94a3b8" />
+                <SettingsIcon size={15} color="#94a3b8" />
                 <span>Settings</span>
               </Link>
             </div>
@@ -230,23 +230,23 @@ export default function MobileBottomNav() {
             {/* Log Out Button */}
             <button
               onClick={handleLogout}
-              className="btn btn-outline"
+              className="btn"
               style={{
                 width: '100%',
                 justifyContent: 'center',
                 gap: '0.5rem',
-                color: '#ef4444',
-                borderColor: 'rgba(239, 68, 68, 0.4)',
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                padding: '0.8rem',
-                fontWeight: 700,
-                fontSize: '0.95rem',
-                borderRadius: '10px',
+                color: '#f87171',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
+                backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                padding: '0.75rem',
+                fontWeight: 600,
+                fontSize: '0.9rem',
+                borderRadius: '9px',
                 cursor: 'pointer',
               }}
             >
-              <LogOut size={17} />
-              <span>Sign Out (Log Out)</span>
+              <LogOut size={15} />
+              <span>Sign Out</span>
             </button>
           </div>
         </div>

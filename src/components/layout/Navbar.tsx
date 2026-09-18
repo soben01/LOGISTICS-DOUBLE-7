@@ -95,15 +95,17 @@ export default function Navbar() {
       position: 'sticky',
       top: 0,
       zIndex: 100,
-      backgroundColor: 'var(--bg-main)',
-      borderBottom: '1px solid var(--border-subtle)',
+      backgroundColor: 'rgba(8, 12, 21, 0.88)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      borderBottom: '1px solid rgba(255, 255, 255, 0.07)',
       width: '100%',
     }}>
       <div className="container" style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        height: '4.25rem',
+        height: '4rem',
         gap: '1.5rem',
       }}>
         {/* Brand Logo */}
@@ -118,18 +120,18 @@ export default function Navbar() {
             src="/images/logo.png"
             alt="Double 7"
             style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: '9px',
+              width: '34px',
+              height: '34px',
+              borderRadius: '8px',
               objectFit: 'cover',
-              boxShadow: '0 2px 10px rgba(255, 102, 0, 0.35)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
             }}
           />
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
             <span style={{
-              fontSize: '1.18rem',
+              fontSize: '1.12rem',
               fontWeight: 800,
               letterSpacing: '-0.02em',
               color: '#ffffff',
@@ -137,13 +139,14 @@ export default function Navbar() {
               DOUBLE <span style={{ color: 'var(--brand-orange)' }}>7</span>
             </span>
             <span style={{
-              fontSize: '0.65rem',
+              fontSize: '0.62rem',
               fontWeight: 700,
-              background: 'rgba(255, 255, 255, 0.08)',
-              color: 'var(--text-secondary)',
-              padding: '0.15rem 0.4rem',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              color: 'var(--text-muted)',
+              padding: '0.12rem 0.45rem',
               borderRadius: '4px',
-              letterSpacing: '0.06em',
+              letterSpacing: '0.07em',
             }}>
               LOGISTICS
             </span>
@@ -154,7 +157,7 @@ export default function Navbar() {
         <nav className="nav-desktop-links" style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '1.75rem',
+          gap: '0.5rem',
         }}>
           {navLinks.map((item) => {
             const isActive = pathname === item.href;
@@ -163,11 +166,15 @@ export default function Navbar() {
                 key={item.href}
                 href={item.href}
                 style={{
-                  fontSize: '0.9rem',
-                  fontWeight: isActive ? 700 : 500,
+                  fontSize: '0.86rem',
+                  fontWeight: isActive ? 600 : 500,
                   color: isActive ? '#ffffff' : 'var(--text-secondary)',
                   textDecoration: 'none',
-                  transition: 'color var(--transition-fast)',
+                  padding: '0.38rem 0.75rem',
+                  borderRadius: '7px',
+                  backgroundColor: isActive ? 'rgba(255, 255, 255, 0.07)' : 'transparent',
+                  border: isActive ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid transparent',
+                  transition: 'all var(--transition-fast)',
                 }}
               >
                 {item.label}
@@ -226,9 +233,9 @@ export default function Navbar() {
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  background: accountDropdownOpen ? 'rgba(255, 255, 255, 0.09)' : 'rgba(255, 255, 255, 0.05)',
-                  border: accountDropdownOpen ? '1px solid rgba(255, 255, 255, 0.25)' : '1px solid rgba(255, 255, 255, 0.12)',
-                  borderRadius: '30px',
+                  background: accountDropdownOpen ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.04)',
+                  border: accountDropdownOpen ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '24px',
                   padding: '3px 4px 3px 10px',
                   gap: '0.45rem',
                   userSelect: 'none',
@@ -255,16 +262,16 @@ export default function Navbar() {
                   }}
                 >
                   {currentUser.role === 'admin' ? (
-                    <ShieldCheck size={15} color="var(--brand-orange)" />
+                    <ShieldCheck size={14} color="var(--brand-orange)" />
                   ) : currentUser.role === 'branch' ? (
-                    <MapPin size={15} color="#c084fc" />
+                    <MapPin size={14} color="#c084fc" />
                   ) : (
-                    <Building size={15} color="var(--brand-cyan)" />
+                    <Building size={14} color="var(--brand-cyan)" />
                   )}
                   <span>{currentUser.name.split(' ')[0]}</span>
                   <span
                     className={currentUser.role === 'admin' ? 'badge badge-orange' : (currentUser.role === 'branch' ? 'badge badge-purple' : 'badge badge-cyan')}
-                    style={{ fontSize: '0.6rem', padding: '0.08rem 0.4rem' }}
+                    style={{ fontSize: '0.58rem', padding: '0.06rem 0.35rem' }}
                   >
                     {currentUser.role === 'admin' ? 'Admin' : (currentUser.role === 'branch' ? 'Branch' : 'Merchant')}
                   </span>
@@ -273,7 +280,7 @@ export default function Navbar() {
                     style={{
                       transform: accountDropdownOpen ? 'rotate(180deg)' : 'none',
                       transition: 'transform 0.18s ease',
-                      opacity: 0.75,
+                      opacity: 0.7,
                       marginLeft: '-2px',
                     }}
                   />
@@ -292,17 +299,17 @@ export default function Navbar() {
                     border: 'none',
                     color: '#ffffff',
                     fontSize: '0.78rem',
-                    fontWeight: 700,
+                    fontWeight: 600,
                     cursor: 'pointer',
                     padding: 0,
                   }}
                 >
                   {currentUser.role === 'admin' ? (
-                    <ShieldCheck size={14} color="var(--brand-orange)" />
+                    <ShieldCheck size={13} color="var(--brand-orange)" />
                   ) : currentUser.role === 'branch' ? (
-                    <MapPin size={14} color="#c084fc" />
+                    <MapPin size={13} color="#c084fc" />
                   ) : (
-                    <Building size={14} color="var(--brand-cyan)" />
+                    <Building size={13} color="var(--brand-cyan)" />
                   )}
                   <span>{currentUser.role === 'admin' ? 'Admin' : (currentUser.role === 'branch' ? 'Branch' : currentUser.name.split(' ')[0])}</span>
                   <ChevronDown
@@ -310,7 +317,7 @@ export default function Navbar() {
                     style={{
                       transform: accountDropdownOpen ? 'rotate(180deg)' : 'none',
                       transition: 'transform 0.18s ease',
-                      opacity: 0.75,
+                      opacity: 0.7,
                     }}
                   />
                 </button>
@@ -319,8 +326,8 @@ export default function Navbar() {
                 <div
                   style={{
                     width: '1px',
-                    height: '16px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                    height: '14px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.12)',
                   }}
                 />
 
@@ -333,11 +340,11 @@ export default function Navbar() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    width: '26px',
-                    height: '26px',
+                    width: '24px',
+                    height: '24px',
                     borderRadius: '50%',
                     border: 'none',
-                    background: 'rgba(239, 68, 68, 0.12)',
+                    background: 'rgba(239, 68, 68, 0.1)',
                     color: '#f87171',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease',
@@ -345,28 +352,31 @@ export default function Navbar() {
                     padding: 0,
                   }}
                 >
-                  <LogOut size={13} />
+                  <LogOut size={12} />
                 </button>
               </div>
 
               {/* Floating Dropdown Menu (Strictly Settings & Tools - NO Dashboard) */}
               {accountDropdownOpen && (
                 <div
-                  className="nav-account-dropdown animate-scale-in"
+                  className="nav-account-dropdown"
                   style={{
                     position: 'absolute',
                     top: 'calc(100% + 8px)',
                     right: 0,
-                    minWidth: '240px',
-                    backgroundColor: 'var(--bg-surface)',
-                    border: '1px solid var(--border-subtle)',
-                    borderRadius: '14px',
-                    padding: '0.65rem',
-                    boxShadow: 'var(--shadow-lg)',
+                    minWidth: '230px',
+                    backgroundColor: '#0c1220',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    padding: '0.5rem',
+                    boxShadow: '0 16px 36px -4px rgba(0, 0, 0, 0.75)',
                     zIndex: 1000,
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '0.3rem',
+                    gap: '0.25rem',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
+                    animation: 'fadeIn 0.15s ease',
                   }}
                 >
                   {/* Dropdown Header */}
