@@ -82,7 +82,6 @@ export default function Navbar() {
         { href: '/manifest', label: 'Manifest' }
       ] : []),
     ] : []),
-    { href: '/rider', label: 'Rider App' },
     { href: '/track', label: 'Track' },
     { href: currentUser ? '/book' : '/login?redirect=/book', label: 'Book Cargo' },
     { href: '/rates', label: 'Rates' },

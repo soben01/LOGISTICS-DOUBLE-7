@@ -830,7 +830,7 @@ export function getMatchingPortal(userOrRole: User | 'merchant' | 'admin' | 'bra
 
 export function resolveMatchedRedirect(user: User, redirectParam?: string | null): string {
   if (user.role === 'rider') {
-    return '/rider';
+    return '/rider/dashboard';
   }
 
   // Landing page after login

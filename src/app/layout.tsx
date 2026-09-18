@@ -1,10 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import '../styles/globals.css';
-import Navbar from '../components/layout/Navbar';
-import Footer from '../components/layout/Footer';
-import MobileBottomNav from '../components/layout/MobileBottomNav';
 import LogisticsSplashScreen from '../components/layout/LogisticsSplashScreen';
-import PageTransition from '../components/layout/PageTransition';
+import AppLayoutWrapper from '../components/layout/AppLayoutWrapper';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -48,15 +45,9 @@ export default function RootLayout({
       </head>
       <body>
         <LogisticsSplashScreen />
-        <Navbar />
-        <main style={{ minHeight: '80vh' }}>
-          <PageTransition>
-            {children}
-          </PageTransition>
-        </main>
-        <div className="mobile-bottom-nav-spacer" />
-        <Footer />
-        <MobileBottomNav />
+        <AppLayoutWrapper>
+          {children}
+        </AppLayoutWrapper>
       </body>
     </html>
   );

@@ -49,6 +49,7 @@ import { exportShipmentsToExcel } from '../../lib/excelImport';
 import { FileSpreadsheet } from 'lucide-react';
 import CameraBarcodeScannerModal from '../../components/common/CameraBarcodeScannerModal';
 import DigitalPodModal from '../../components/operations/DigitalPodModal';
+import AWBViewModal from '../../components/shipping/AWBViewModal';
 import { playScanBeep, playDispatchFanfare } from '../../lib/soundFx';
 
 export default function AllBookingsPage() {
@@ -67,6 +68,7 @@ export default function AllBookingsPage() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showCameraScanner, setShowCameraScanner] = useState(false);
   const [podShipment, setPodShipment] = useState<Shipment | null>(null);
+  const [awbShipment, setAwbShipment] = useState<Shipment | null>(null);
   const router = useRouter();
 
   // Quick edit status modal state
@@ -683,17 +685,24 @@ export default function AllBookingsPage() {
                       {/* AWB # */}
                       <td style={{ padding: '0.85rem 1rem', verticalAlign: 'middle' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                          <Link
-                            href={`/track?id=${encodeURIComponent(s.id)}`}
+                          <button
+                            type="button"
+                            onClick={() => setAwbShipment(s)}
                             style={{
                               fontFamily: 'var(--font-mono)',
                               fontWeight: 700,
                               color: 'var(--brand-orange)',
-                              textDecoration: 'none'
+                              textDecoration: 'none',
+                              background: 'none',
+                              border: 'none',
+                              padding: 0,
+                              cursor: 'pointer',
+                              textAlign: 'left'
                             }}
+                            title="Click to open Air Waybill (AWB) View & Payment QR"
                           >
                             {s.id}
-                          </Link>
+                          </button>
                           <button
                             type="button"
                             onClick={() => handleCopy(s.id)}
@@ -771,6 +780,25 @@ export default function AllBookingsPage() {
                       {/* Action buttons */}
                       <td style={{ padding: '0.85rem 1rem', verticalAlign: 'middle', textAlign: 'right' }}>
                         <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end' }}>
+                          <button
+                            type="button"
+                            onClick={() => setAwbShipment(s)}
+                            className="btn btn-sm"
+                            title="AWB View: Packing List, Bill Breakdown & Payment QR"
+                            style={{
+                              padding: '0.35rem 0.55rem',
+                              backgroundColor: 'rgba(249, 115, 22, 0.15)',
+                              borderColor: 'rgba(249, 115, 22, 0.45)',
+                              color: '#fb923c',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.25rem'
+                            }}
+                          >
+                            <FileText size={13} />
+                            <span style={{ fontSize: '0.72rem', fontWeight: 700 }}>AWB</span>
+                          </button>
+
                           <Link
                             href={`/track?id=${encodeURIComponent(s.id)}`}
                             className="btn btn-secondary btn-sm"
@@ -1093,6 +1121,18 @@ export default function AllBookingsPage() {
               setPodShipment(null);
               loadBookings();
               setPrintFeedback(`✓ Digital Proof of Delivery registered for ${podShipment.id}!`);
+              setTimeout(() => setPrintFeedback(null), 5000);
+            }}
+          />
+        )}
+
+        {awbShipment && (
+          <AWBViewModal
+            shipment={awbShipment}
+            onClose={() => setAwbShipment(null)}
+            onStatusUpdated={() => {
+              loadBookings();
+              setPrintFeedback(`✓ AWB payment & status updated for ${awbShipment.id}!`);
               setTimeout(() => setPrintFeedback(null), 5000);
             }}
           />

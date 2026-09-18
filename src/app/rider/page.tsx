@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Bike,
   Phone,
@@ -61,6 +62,7 @@ import {
 } from '../../lib/rider';
 
 export default function RiderPortalPage() {
+  const router = useRouter();
   const [activeRiderProfile, setActiveRiderProfile] = useState<RiderProfile>(PRESET_RIDERS[0]);
   const [allShipments, setAllShipments] = useState<Shipment[]>([]);
   const [filterTab, setFilterTab] = useState<'active' | 'delivered' | 'failed' | 'remit'>('active');
@@ -188,7 +190,7 @@ export default function RiderPortalPage() {
   const handleLogout = () => {
     logoutRider();
     setAuthenticatedRider(null);
-    showNotice('Terminal locked. Field rider signed out.');
+    router.push('/rider/login');
   };
 
   const handleTriggerInstall = async () => {
@@ -671,346 +673,28 @@ npx cap open android`}
   };
 
   // =========================================================================
-  // RIDER LOGIN SCREEN (Shown when not authenticated)
+  // AUTHENTICATION GUARD (Redirects unauthenticated users to /rider/login)
   // =========================================================================
-  if (isAuthChecked && !authenticatedRider) {
+  useEffect(() => {
+    if (isAuthChecked && !authenticatedRider) {
+      router.replace('/rider/login');
+    }
+  }, [isAuthChecked, authenticatedRider, router]);
+
+  if (!isAuthChecked || !authenticatedRider) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#060911', color: '#f8fafc', padding: '2.5rem 1rem 6rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {/* Toast Notification */}
-        {notice && (
-          <div style={{
-            position: 'fixed',
-            top: '5rem',
-            right: '1.5rem',
-            zIndex: 1000,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.65rem',
-            padding: '0.85rem 1.25rem',
-            borderRadius: '12px',
-            border: '1px solid rgba(255, 102, 0, 0.4)',
-            backgroundColor: '#0f172a',
-            color: '#fed7aa',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.8)',
-            fontSize: '0.86rem',
-            fontWeight: 600,
-          }}>
-            <ShieldCheck size={18} color="var(--brand-orange)" />
-            <span>{notice}</span>
-          </div>
-        )}
-
-        {/* Top Navbar Links */}
-        <div style={{ width: '100%', maxWidth: '480px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-          <Link
-            href="/dashboard"
-            style={{
-              color: 'var(--text-secondary)',
-              textDecoration: 'none',
-              fontSize: '0.8rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              transition: 'color 0.2s'
-            }}
-          >
-            <span>← Back to Double 7 Web</span>
-          </Link>
-          <button
-            type="button"
-            onClick={() => { setShowAppModal(true); setAppModalTab('pwa'); }}
-            style={{
-              background: 'rgba(255, 102, 0, 0.12)',
-              border: '1px solid rgba(255, 102, 0, 0.3)',
-              borderRadius: '20px',
-              padding: '0.35rem 0.75rem',
-              color: 'var(--brand-orange)',
-              fontSize: '0.75rem',
-              fontWeight: 700,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              cursor: 'pointer'
-            }}
-          >
-            <Smartphone size={14} />
-            <span>Install App</span>
-          </button>
-        </div>
-
-        {/* Main Login Card */}
-        <div style={{
-          width: '100%',
-          maxWidth: '480px',
-          backgroundColor: '#0d1527',
-          border: '1px solid rgba(255, 102, 0, 0.35)',
-          borderRadius: '24px',
-          padding: '2rem 1.75rem',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.85)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1.5rem'
-        }}>
-          {/* Brand Header */}
-          <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.65rem' }}>
-            <div style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '18px',
-              background: 'linear-gradient(135deg, #ff6600 0%, #ea580c 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#ffffff',
-              boxShadow: '0 8px 24px rgba(255, 102, 0, 0.45)',
-            }}>
-              <Bike size={34} />
-            </div>
-
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.2rem 0.65rem',
-              borderRadius: '20px',
-              fontSize: '0.7rem',
-              fontWeight: 800,
-              backgroundColor: 'rgba(255, 102, 0, 0.15)',
-              color: 'var(--brand-orange)',
-              border: '1px solid rgba(255, 102, 0, 0.3)'
-            }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'var(--brand-orange)' }} />
-              FIELD DISPATCH TERMINAL
-            </div>
-
-            <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', margin: 0 }}>
-              Rider Portal Login
-            </h1>
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, maxWidth: '380px', lineHeight: 1.45 }}>
-              Sign in with your registered mobile number and 4-digit PIN to access your daily run-sheet and verify delivery OTPs.
-            </p>
-          </div>
-
-          {/* Error Message */}
-          {loginError && (
-            <div style={{
-              backgroundColor: 'rgba(239, 68, 68, 0.12)',
-              border: '1px solid rgba(239, 68, 68, 0.35)',
-              borderRadius: '12px',
-              padding: '0.85rem 1rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.65rem',
-              color: '#fca5a5',
-              fontSize: '0.82rem',
-              fontWeight: 600
-            }}>
-              <AlertTriangle size={18} color="#ef4444" style={{ flexShrink: 0 }} />
-              <span>{loginError}</span>
-            </div>
-          )}
-
-          {/* Form */}
-          <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#e2e8f0', marginBottom: '0.4rem' }}>
-                Rider Mobile Number or Code
-              </label>
-              <div style={{ position: 'relative' }}>
-                <Phone size={17} color="var(--text-muted)" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
-                <input
-                  type="text"
-                  value={loginPhone}
-                  onChange={(e) => setLoginPhone(e.target.value)}
-                  placeholder="e.g. 9841234567 or rider-ktm-01"
-                  required
-                  style={{
-                    width: '100%',
-                    backgroundColor: '#060911',
-                    border: '1px solid rgba(255, 255, 255, 0.14)',
-                    borderRadius: '12px',
-                    padding: '0.8rem 1rem 0.8rem 2.6rem',
-                    color: '#ffffff',
-                    fontSize: '0.9rem',
-                    outline: 'none',
-                    transition: 'border-color 0.2s',
-                    boxSizing: 'border-box'
-                  }}
-                />
-              </div>
-            </div>
-
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#e2e8f0' }}>
-                  4-Digit Security PIN
-                </label>
-                <span style={{ fontSize: '0.72rem', color: 'var(--brand-orange)', fontWeight: 600 }}>Default: 1234</span>
-              </div>
-              <div style={{ position: 'relative' }}>
-                <KeyRound size={17} color="var(--text-muted)" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
-                <input
-                  type={showPin ? 'text' : 'password'}
-                  maxLength={6}
-                  value={loginPin}
-                  onChange={(e) => setLoginPin(e.target.value)}
-                  placeholder="••••"
-                  required
-                  style={{
-                    width: '100%',
-                    backgroundColor: '#060911',
-                    border: '1px solid rgba(255, 255, 255, 0.14)',
-                    borderRadius: '12px',
-                    padding: '0.8rem 2.8rem 0.8rem 2.6rem',
-                    color: '#ffffff',
-                    fontSize: '1rem',
-                    letterSpacing: showPin ? 'normal' : '0.2em',
-                    outline: 'none',
-                    transition: 'border-color 0.2s',
-                    boxSizing: 'border-box'
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPin(!showPin)}
-                  style={{
-                    position: 'absolute',
-                    right: '12px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--text-muted)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center'
-                  }}
-                >
-                  {showPin ? <EyeOff size={17} /> : <Eye size={17} />}
-                </button>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoggingIn}
-              className="btn btn-primary"
-              style={{
-                width: '100%',
-                padding: '0.85rem',
-                fontSize: '0.95rem',
-                fontWeight: 800,
-                justifyContent: 'center',
-                gap: '0.5rem',
-                marginTop: '0.4rem',
-                boxShadow: '0 6px 22px rgba(255, 102, 0, 0.45)',
-                cursor: isLoggingIn ? 'not-allowed' : 'pointer'
-              }}
-            >
-              <LogIn size={18} />
-              <span>{isLoggingIn ? 'Unlocking Terminal...' : 'Unlock Terminal & Open Run-Sheet'}</span>
-            </button>
-          </form>
-
-          {/* Quick Demo 1-Tap Logins */}
-          <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '1.25rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.5px' }}>
-                ⚡ Quick Demo Rider Access
-              </span>
-              <span style={{ fontSize: '0.7rem', color: 'var(--brand-cyan)', fontWeight: 600 }}>1-Tap Sign-In</span>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
-              {PRESET_RIDERS.map((rider) => (
-                <button
-                  key={rider.id}
-                  type="button"
-                  onClick={() => handleQuickDemoLogin(rider)}
-                  style={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
-                    padding: '0.75rem 0.65rem',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.2rem'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(255, 102, 0, 0.5)';
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 102, 0, 0.06)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)';
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#ffffff' }}>
-                      {rider.name.split(' ')[0]}
-                    </span>
-                    <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem', borderRadius: '4px', backgroundColor: 'rgba(6, 182, 212, 0.15)', color: 'var(--brand-cyan)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
-                      {rider.hubCode}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                    {rider.vehiclePlate}
-                  </div>
-                  <div style={{ fontSize: '0.68rem', color: 'var(--brand-orange)', fontWeight: 600, marginTop: '0.2rem' }}>
-                    Tap to Sign In →
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* App Download / PWA Banner */}
-          <div style={{
-            backgroundColor: 'rgba(6, 182, 212, 0.08)',
-            border: '1px solid rgba(6, 182, 212, 0.25)',
-            borderRadius: '14px',
-            padding: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '0.75rem'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-              <Smartphone size={22} color="var(--brand-cyan)" />
-              <div>
-                <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#ffffff' }}>Install Rider App</div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Works on Android &amp; iOS phones</div>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => { setShowAppModal(true); setAppModalTab('pwa'); }}
-              style={{
-                backgroundColor: 'var(--brand-cyan)',
-                color: '#060911',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '0.45rem 0.75rem',
-                fontSize: '0.75rem',
-                fontWeight: 800,
-                cursor: 'pointer'
-              }}
-            >
-              Get App
-            </button>
-          </div>
-
-          {/* Hotline */}
-          <div style={{ textAlign: 'center', fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-            Hub Dispatch Support: <strong style={{ color: '#ffffff' }}>+977 1 4411000</strong>
-          </div>
-        </div>
-
-        {/* Modal 4 rendered in login state */}
-        {renderAppInstallModal()}
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#050811',
+        color: '#94a3b8',
+        fontFamily: 'var(--font-sans)',
+        gap: '0.75rem'
+      }}>
+        <RefreshCw size={20} className="animate-spin" color="var(--brand-orange)" />
+        <span>Authenticating Terminal Session...</span>
       </div>
     );
   }
