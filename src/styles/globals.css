@@ -352,6 +352,133 @@ a {
   .flex-sm-1 { flex: 1 1 0% !important; }
 }
 
+/* ==========================================================================
+   Responsive Visibility & Display Utilities
+   ========================================================================== */
+.hidden { display: none !important; }
+.block { display: block !important; }
+.inline { display: inline !important; }
+.inline-block { display: inline-block !important; }
+
+@media (min-width: 640px) {
+  .sm\:inline { display: inline !important; }
+  .sm\:block { display: block !important; }
+  .sm\:flex { display: flex !important; }
+  .sm\:inline-flex { display: inline-flex !important; }
+  .sm\:hidden { display: none !important; }
+}
+
+@media (max-width: 639px) {
+  .sm-hidden, .hide-on-mobile, .mobile-hidden {
+    display: none !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .md\:inline { display: inline !important; }
+  .md\:block { display: block !important; }
+  .md\:flex { display: flex !important; }
+  .md\:inline-flex { display: inline-flex !important; }
+  .md\:hidden { display: none !important; }
+}
+
+@media (max-width: 767px) {
+  .md-hidden {
+    display: none !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .lg\:inline { display: inline !important; }
+  .lg\:block { display: block !important; }
+  .lg\:flex { display: flex !important; }
+  .lg\:hidden { display: none !important; }
+}
+
+.hide-on-mobile, .mobile-hide {
+  display: block;
+}
+@media (max-width: 768px) {
+  .hide-on-mobile, .mobile-hide {
+    display: none !important;
+  }
+}
+
+.hide-on-desktop, .desktop-hide {
+  display: none !important;
+}
+@media (max-width: 768px) {
+  .hide-on-desktop, .desktop-hide {
+    display: block !important;
+  }
+}
+
+/* ==========================================================================
+   Navbar Responsive System
+   ========================================================================== */
+.nav-desktop-links {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-mobile-toggle {
+  display: none !important;
+}
+
+.nav-user-desktop {
+  display: flex !important;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.nav-user-mobile {
+  display: none !important;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.nav-desktop-auth {
+  display: flex !important;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+@media (max-width: 900px) {
+  .nav-desktop-links {
+    display: none !important;
+  }
+
+  .nav-mobile-toggle {
+    display: flex !important;
+  }
+
+  .nav-desktop-auth {
+    display: none !important;
+  }
+
+  .nav-user-desktop {
+    display: none !important;
+  }
+
+  .nav-user-mobile {
+    display: flex !important;
+  }
+
+  .nav-account-capsule {
+    padding: 2px 6px !important;
+    gap: 0.3rem !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .nav-account-capsule {
+    padding: 2px 5px !important;
+    gap: 0.25rem !important;
+    font-size: 0.76rem !important;
+  }
+}
+
 /* Components */
 .glass-panel {
   background: var(--bg-glass);
@@ -1495,6 +1622,16 @@ table tbody tr:hover {
   .btn {
     min-height: 44px;
   }
+  .btn-sm {
+    min-height: 34px !important;
+    padding: 0.35rem 0.75rem !important;
+    font-size: 0.8rem !important;
+  }
+  .btn-xs {
+    min-height: 28px !important;
+    padding: 0.2rem 0.5rem !important;
+    font-size: 0.72rem !important;
+  }
 }
 
 /* 2. Responsive Hero & Grid Utilities */
@@ -1569,6 +1706,15 @@ table tbody tr:hover {
 .table-responsive::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 4px;
+}
+
+.table-responsive > table,
+.table-responsive > .table,
+.table-responsive > .data-table,
+.bookings-table-wrapper > table,
+.bookings-table-wrapper > .table,
+.bookings-table-wrapper > .data-table {
+  min-width: 720px;
 }
 
 /* 5. Mobile Horizontal Pill Scroller (No ugly scrollbars, smooth swipe) */
@@ -1773,6 +1919,15 @@ table tbody tr:hover {
   @keyframes slideUpMobileSheet {
     from { transform: translateY(100%); }
     to { transform: translateY(0); }
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-card {
+    width: 95% !important;
+    max-width: 95% !important;
+    max-height: 90vh !important;
+    margin: 0 auto !important;
   }
 }
 

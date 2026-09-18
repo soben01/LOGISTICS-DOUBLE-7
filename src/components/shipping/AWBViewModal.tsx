@@ -370,12 +370,15 @@ export default function AWBViewModal({ shipment, onClose, onStatusUpdated }: AWB
 
         {/* ================= TAB NAVIGATION ================= */}
         <div
+          className="mobile-scroll-x"
           style={{
             display: 'flex',
             gap: '0.5rem',
-            padding: '0.5rem 1.5rem',
+            padding: '0.5rem 1.25rem',
             background: 'rgba(0, 0, 0, 0.2)',
             borderBottom: '1px solid var(--border-subtle)',
+            overflowX: 'auto',
+            whiteSpace: 'nowrap',
           }}
         >
           <button

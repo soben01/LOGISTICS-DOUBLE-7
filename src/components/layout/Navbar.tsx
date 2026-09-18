@@ -210,7 +210,7 @@ export default function Navbar() {
           >
             <Search size={14} color="var(--brand-orange)" />
             <span className="hidden sm:inline">Search</span>
-            <span style={{
+            <span className="hidden sm:inline" style={{
               fontSize: '0.65rem',
               fontFamily: 'var(--font-mono)',
               background: 'rgba(255, 255, 255, 0.08)',
@@ -643,7 +643,6 @@ export default function Navbar() {
               padding: '0.5rem',
               color: '#ffffff',
               cursor: 'pointer',
-              display: 'none',
               alignItems: 'center',
               justifyContent: 'center',
             }}
