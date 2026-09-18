@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { Shipment, updateShipmentStatus } from '../../lib/store';
 import { playScanBeep, playDispatchFanfare } from '../../lib/soundFx';
+import { COMPANY_PAYMENT_DETAILS } from '../../lib/settings';
 
 interface AWBViewModalProps {
   shipment: Shipment;
@@ -169,16 +170,19 @@ export default function AWBViewModal({ shipment, onClose, onStatusUpdated }: AWB
     let payload = '';
 
     if (paymentGateway === 'fonepay') {
-      // Fonepay EMVCo format payload representation
-      payload = `fonepay://pay?merchant=D7_LOGISTICS&name=Double%207%20Logistics%20Pvt%20Ltd&amount=${activeAmountNpr}&ref=${encodeURIComponent(shipment.id)}&remarks=AWB_${encodeURIComponent(shipment.id)}_${paymentTarget.toUpperCase()}`;
+      // Fonepay / NIC ASIA Bank EMVCo payload representation
+      payload = `fonepay://pay?merchant=SOBIN_UPRETI&name=SOBIN%20UPRETI&bank=NIC_ASIA_BANK&account=3025752253490001&branch=Lagankhel&amount=${activeAmountNpr}&ref=${encodeURIComponent(shipment.id)}&remarks=AWB_${encodeURIComponent(shipment.id)}_${paymentTarget.toUpperCase()}`;
     } else if (paymentGateway === 'esewa') {
-      payload = `esewa://pay?merchant=DOUBLE7&amt=${activeAmountNpr}&pid=${encodeURIComponent(shipment.id)}&scd=EPAYTEST`;
+      // eSewa Wallet direct payment payload with 9745255231
+      payload = `esewa://pay?to=9745255231&name=SOBIN%20UPRETI&amount=${activeAmountNpr}&pid=${encodeURIComponent(shipment.id)}&remarks=AWB_${encodeURIComponent(shipment.id)}&scd=EPAYTEST`;
     } else if (paymentGateway === 'khalti') {
-      payload = `khalti://pay?product_identity=${encodeURIComponent(shipment.id)}&amount=${activeAmountNpr * 100}&merchant=Double7`;
+      // Khalti Wallet payment payload with 9745255231
+      payload = `khalti://pay?mobile=9745255231&name=SOBIN%20UPRETI&product_identity=${encodeURIComponent(shipment.id)}&amount=${activeAmountNpr * 100}&remarks=AWB_${encodeURIComponent(shipment.id)}`;
     } else if (paymentGateway === 'connectips') {
-      payload = `connectips://transfer?receiver=DOUBLE7_LOGISTICS&amount=${activeAmountNpr}&ref=${encodeURIComponent(shipment.id)}`;
+      // ConnectIPS / Direct Bank transfer to NIC ASIA BANK (Lagankhel)
+      payload = `connectips://transfer?bank=NIC_ASIA_BANK&branch=Lagankhel&account=3025752253490001&receiver=SOBIN%20UPRETI&amount=${activeAmountNpr}&ref=${encodeURIComponent(shipment.id)}`;
     } else {
-      payload = `DOUBLE7_COD_COLLECT:${shipment.id}:NPR_${activeAmountNpr}`;
+      payload = `DOUBLE7_COD_COLLECT:${shipment.id}:NPR_${activeAmountNpr}:A_C_SOBIN_UPRETI_3025752253490001`;
     }
 
     QRCode.toDataURL(payload, {
@@ -944,10 +948,10 @@ export default function AWBViewModal({ shipment, onClose, onStatusUpdated }: AWB
                 </label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.4rem' }}>
                   {[
-                    { id: 'fonepay', name: 'Fonepay Interbank QR', color: '#ef4444' },
-                    { id: 'esewa', name: 'eSewa Wallet', color: '#10b981' },
-                    { id: 'khalti', name: 'Khalti Wallet', color: '#a855f7' },
-                    { id: 'connectips', name: 'ConnectIPS', color: '#3b82f6' },
+                    { id: 'fonepay', name: 'NIC ASIA / Fonepay QR', color: '#ef4444' },
+                    { id: 'esewa', name: 'eSewa (9745255231)', color: '#10b981' },
+                    { id: 'khalti', name: 'Khalti (9745255231)', color: '#a855f7' },
+                    { id: 'connectips', name: 'ConnectIPS / Bank Transfer', color: '#3b82f6' },
                     { id: 'cod', name: 'Rider Cash / POS', color: '#f59e0b' },
                   ].map((gw) => (
                     <button
@@ -969,6 +973,101 @@ export default function AWBViewModal({ shipment, onClose, onStatusUpdated }: AWB
                       {gw.name}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Official Settlement Beneficiary Details Card */}
+              <div
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(249, 115, 22, 0.35)',
+                  borderRadius: '14px',
+                  padding: '1rem 1.25rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.75rem',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Building size={16} color="var(--brand-orange)" />
+                    <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#ffffff', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                      Official Settlement Beneficiary Details
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.55rem', borderRadius: '20px', backgroundColor: 'rgba(52, 211, 153, 0.15)', color: '#34d399', fontWeight: 700, border: '1px solid rgba(52, 211, 153, 0.3)' }}>
+                    ✓ Verified Account
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.85rem' }}>
+                  {/* NIC ASIA BANK Details */}
+                  <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)', padding: '0.85rem', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>
+                        Primary Bank Account
+                      </span>
+                      <span style={{ fontSize: '0.68rem', color: 'var(--brand-orange)', fontWeight: 800 }}>NIC ASIA BANK</span>
+                    </div>
+                    <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#ffffff', marginTop: '0.3rem' }}>
+                      SOBIN UPRETI
+                    </div>
+                    <div style={{ fontSize: '0.86rem', color: 'var(--brand-orange)', fontFamily: 'var(--font-mono)', fontWeight: 800, marginTop: '0.2rem' }}>
+                      A/C: 3025752253490001
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.15rem' }}>
+                      Branch: <strong>Lagankhel</strong>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy('3025752253490001', 'bank_ac')}
+                      className="btn btn-secondary btn-sm"
+                      style={{ marginTop: '0.6rem', padding: '0.25rem 0.6rem', fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                    >
+                      {copiedText === 'bank_ac' ? <Check size={13} color="var(--brand-emerald)" /> : <Copy size={13} />}
+                      <span>{copiedText === 'bank_ac' ? 'Copied Account No' : 'Copy A/C No'}</span>
+                    </button>
+                  </div>
+
+                  {/* eSewa & Khalti Digital Wallets */}
+                  <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)', padding: '0.85rem', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>
+                        Digital Wallets (Instant QR)
+                      </span>
+                      <span style={{ fontSize: '0.68rem', color: '#34d399', fontWeight: 800 }}>eSewa &bull; Khalti</span>
+                    </div>
+                    <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#ffffff', marginTop: '0.3rem' }}>
+                      SOBIN UPRETI
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.25rem' }}>
+                      <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Wallet ID:</span>
+                      <strong style={{ fontSize: '0.92rem', color: '#34d399', fontFamily: 'var(--font-mono)' }}>9745255231</strong>
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '0.15rem' }}>
+                      Accepted on both eSewa &amp; Khalti
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.6rem' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy('9745255231', 'esewa')}
+                        className="btn btn-secondary btn-sm"
+                        style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem', color: '#34d399', borderColor: 'rgba(52, 211, 153, 0.3)', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                      >
+                        {copiedText === 'esewa' ? <Check size={13} /> : <Copy size={13} />}
+                        <span>{copiedText === 'esewa' ? 'Copied' : 'Copy eSewa'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy('9745255231', 'khalti')}
+                        className="btn btn-secondary btn-sm"
+                        style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem', color: '#c084fc', borderColor: 'rgba(192, 132, 252, 0.3)', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                      >
+                        {copiedText === 'khalti' ? <Check size={13} /> : <Copy size={13} />}
+                        <span>{copiedText === 'khalti' ? 'Copied' : 'Copy Khalti'}</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1010,7 +1109,7 @@ export default function AWBViewModal({ shipment, onClose, onStatusUpdated }: AWB
                     />
                   )}
                   <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#080c15', letterSpacing: '0.08em', marginTop: '6px', textTransform: 'uppercase' }}>
-                    Double 7 Logistics &bull; Verified
+                    SOBIN UPRETI &bull; NIC ASIA (Lagankhel)
                   </div>
                 </div>
 
@@ -1023,8 +1122,11 @@ export default function AWBViewModal({ shipment, onClose, onStatusUpdated }: AWB
                     <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#ffffff', fontFamily: 'var(--font-mono)', marginTop: '2px' }}>
                       Rs. {activeAmountNpr.toLocaleString()} <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>NPR</span>
                     </div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                      Payee: <strong>Double 7 Logistics Pvt. Ltd.</strong>
+                    <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                      Payee: <strong style={{ color: '#ffffff' }}>SOBIN UPRETI</strong> &bull; NIC ASIA BANK (Lagankhel)
+                    </div>
+                    <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+                      A/C: <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--brand-orange)', fontWeight: 800 }}>3025752253490001</span> &bull; Wallet: <span style={{ fontFamily: 'var(--font-mono)', color: '#34d399', fontWeight: 800 }}>9745255231</span>
                     </div>
                     <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
                       Ref: <span style={{ fontFamily: 'var(--font-mono)' }}>{shipment.id}</span> &bull; Gate: <span style={{ textTransform: 'uppercase' }}>{paymentGateway}</span>

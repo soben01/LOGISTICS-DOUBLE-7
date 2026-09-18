@@ -52,7 +52,15 @@ export interface WebsiteSettings {
   digitalInvoicePrefix: string;
   bankRemittanceNotes: string;
 
-  // 6. Notifications & Communications
+  // 6. Company Official Bank & QR Settlement Accounts
+  payoutAccountName: string;
+  payoutAccountNumber: string;
+  payoutBankName: string;
+  payoutBranchName: string;
+  payoutEsewaId: string;
+  payoutKhaltiId: string;
+
+  // 7. Notifications & Communications
   smsProvider: 'sparrow' | 'twilio' | 'aakash' | 'disabled';
   smsApiKey: string;
   smsSenderId: string;
@@ -173,7 +181,15 @@ export const DEFAULT_WEBSITE_SETTINGS: WebsiteSettings = {
   digitalInvoicePrefix: 'D7-INV-',
   bankRemittanceNotes: 'Daily batch automated transfer via Nepal Clearing House / ConnectIPS',
 
-  // 6. Notifications & Communications
+  // 6. Company Official Bank & QR Settlement Accounts
+  payoutAccountName: 'SOBIN UPRETI',
+  payoutAccountNumber: '3025752253490001',
+  payoutBankName: 'NIC ASIA BANK',
+  payoutBranchName: 'Lagankhel',
+  payoutEsewaId: '9745255231',
+  payoutKhaltiId: '9745255231',
+
+  // 7. Notifications & Communications
   smsProvider: 'sparrow',
   smsApiKey: 'sparrow_live_d7log_9921_secret',
   smsSenderId: 'DOUBLE7',
@@ -323,3 +339,14 @@ export async function fetchRemoteWebsiteSettings(): Promise<WebsiteSettings | nu
     return null;
   }
 }
+
+export const COMPANY_PAYMENT_DETAILS = {
+  accountName: 'SOBIN UPRETI',
+  accountNumber: '3025752253490001',
+  bankName: 'NIC ASIA BANK',
+  branchName: 'Lagankhel',
+  esewaId: '9745255231',
+  khaltiId: '9745255231',
+};
+
+
