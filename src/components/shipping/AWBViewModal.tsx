@@ -72,6 +72,10 @@ export default function AWBViewModal({ shipment, onClose, onStatusUpdated }: AWB
     setTimeout(() => setCopiedText(null), 2000);
   };
 
+  // Destination and Origin 3-letter IATA-style hub codes
+  const originCode = (shipment.origin.city || 'KTM').substring(0, 3).toUpperCase();
+  const destCode = (shipment.destination.city || 'NP').substring(0, 3).toUpperCase();
+
   // Packing List & Dimensions computation
   const packingDetails = useMemo(() => {
     const pieces = Math.max(1, shipment.cargo.pieces || 1);
@@ -246,6 +250,7 @@ export default function AWBViewModal({ shipment, onClose, onStatusUpdated }: AWB
 
   return (
     <div
+      className="awb-modal-overlay"
       style={{
         position: 'fixed',
         inset: 0,
@@ -262,7 +267,7 @@ export default function AWBViewModal({ shipment, onClose, onStatusUpdated }: AWB
       onClick={onClose}
     >
       <div
-        className="card"
+        className="card awb-screen-modal"
         style={{
           width: '100%',
           maxWidth: '920px',
@@ -1209,6 +1214,314 @@ export default function AWBViewModal({ shipment, onClose, onStatusUpdated }: AWB
             >
               Close Dossier
             </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ================= DEDICATED PRINTABLE AIR WAYBILL & MANIFEST DOSSIER ================= */}
+      {/* Hidden on web screen; Activated and displayed razor-sharp during browser print */}
+      <div id="printable-awb-dossier" className="printable-awb-document">
+        <div style={{
+          width: '100%',
+          maxWidth: '195mm',
+          margin: '0 auto',
+          padding: '6mm 8mm',
+          backgroundColor: '#ffffff',
+          color: '#000000',
+          fontFamily: 'var(--font-sans)',
+          fontSize: '9.5pt',
+          lineHeight: 1.35,
+        }}>
+          {/* Header with Logo, Title, and Badges */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2.5px solid #000000', paddingBottom: '8px', marginBottom: '10px' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <img src="/images/logo.png" alt="Double 7" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #000000' }} />
+                <div>
+                  <div style={{ fontSize: '17pt', fontWeight: 900, letterSpacing: '-0.02em', color: '#000000', lineHeight: 1.1 }}>
+                    DOUBLE 7 LOGISTICS
+                  </div>
+                  <div style={{ fontSize: '7pt', fontWeight: 800, color: '#111111', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                    Next-Gen Global Supply Chain &bull; Air Cargo &bull; 77 Districts Network
+                  </div>
+                </div>
+              </div>
+              <div style={{ fontSize: '7.5pt', color: '#333333', marginTop: '4px' }}>
+                Official Air Waybill (AWB) &bull; Carriage Manifest &bull; Dispatch Hub: KTM-CENTRAL
+              </div>
+            </div>
+
+            <div style={{ textAlign: 'right' }}>
+              <div style={{
+                display: 'inline-block',
+                border: '2px solid #000000',
+                padding: '3px 10px',
+                fontWeight: 900,
+                fontSize: '11pt',
+                fontFamily: 'monospace',
+                backgroundColor: '#f3f4f6',
+              }}>
+                {originCode} &rarr; {destCode}
+              </div>
+              <div style={{ fontSize: '7.5pt', fontWeight: 800, marginTop: '3px', textTransform: 'uppercase' }}>
+                SERVICE: {shipment.service}
+              </div>
+              <div style={{ fontSize: '7pt', color: '#444444' }}>
+                DATE: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+              </div>
+            </div>
+          </div>
+
+          {/* High-Contrast Courier Barcode Strip */}
+          <div style={{
+            border: '1.5px solid #000000',
+            padding: '6px 10px',
+            marginBottom: '10px',
+            textAlign: 'center',
+            backgroundColor: '#f9fafb'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'stretch',
+              height: '36px',
+              gap: '2px',
+              margin: '0 auto 4px auto',
+              maxWidth: '320px'
+            }}>
+              {[3,1,2,4,1,3,2,1,4,2,3,1,1,4,2,3,1,2,4,1,3,2,1,4,2,1,3,4,1,2,3,1,4,2,1,3,2,4,1,3].map((w, i) => (
+                <div
+                  key={i}
+                  style={{
+                    background: i % 2 === 0 ? '#000000' : 'transparent',
+                    width: `${w * 1.8}px`,
+                    height: '100%'
+                  }}
+                />
+              ))}
+            </div>
+            <div style={{ fontFamily: 'monospace', fontSize: '12pt', fontWeight: 900, letterSpacing: '2px', color: '#000000' }}>
+              * {shipment.id} *
+            </div>
+            <div style={{ fontSize: '7pt', color: '#444444', fontWeight: 600 }}>
+              AWB NO: {shipment.telemetry.waybillNumber || shipment.id} &bull; TELEMETRY NODE: NP-77-VERIFIED
+            </div>
+          </div>
+
+          {/* Shipper & Consignee 2-Box Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
+            {/* Box 1: Shipper */}
+            <div style={{ border: '1.5px solid #000000', padding: '6px 8px', backgroundColor: '#ffffff' }}>
+              <div style={{ fontSize: '7pt', fontWeight: 800, textTransform: 'uppercase', color: '#444444', borderBottom: '1px solid #cccccc', paddingBottom: '2px', marginBottom: '4px' }}>
+                1. SHIPPER / CONSIGNOR (ORIGIN)
+              </div>
+              <div style={{ fontSize: '9.5pt', fontWeight: 800, color: '#000000' }}>
+                {shipment.sender.name}
+              </div>
+              <div style={{ fontSize: '8pt', color: '#222222', marginTop: '1px' }}>
+                {shipment.sender.company || shipment.origin.hub}, {shipment.origin.city}
+              </div>
+              <div style={{ fontSize: '8pt', fontWeight: 700, marginTop: '2px' }}>
+                TEL: {shipment.sender.phone}
+              </div>
+              <div style={{ fontSize: '7pt', color: '#555555', marginTop: '1px' }}>
+                ORIGIN HUB: {shipment.origin.city.toUpperCase()}-CENTRAL-NODE
+              </div>
+            </div>
+
+            {/* Box 2: Consignee */}
+            <div style={{ border: '2px solid #000000', padding: '6px 8px', backgroundColor: '#ffffff' }}>
+              <div style={{ fontSize: '7pt', fontWeight: 800, textTransform: 'uppercase', color: '#000000', borderBottom: '1px solid #000000', paddingBottom: '2px', marginBottom: '4px' }}>
+                2. CONSIGNEE / DELIVER TO (DESTINATION)
+              </div>
+              <div style={{ fontSize: '10.5pt', fontWeight: 900, color: '#000000' }}>
+                {shipment.recipient.name}
+              </div>
+              <div style={{ fontSize: '8.5pt', fontWeight: 600, color: '#111111', marginTop: '1px' }}>
+                {shipment.recipient.address || shipment.destination.city}, {shipment.destination.city}
+              </div>
+              <div style={{ fontSize: '9pt', fontWeight: 800, marginTop: '2px' }}>
+                TEL: {shipment.recipient.phone}
+              </div>
+              <div style={{ fontSize: '7pt', fontWeight: 700, color: '#000000', marginTop: '1px' }}>
+                DESTINATION HUB: {shipment.destination.city.toUpperCase()}-EXPRESS-DISPATCH
+              </div>
+            </div>
+          </div>
+
+          {/* Cargo Weights & Specifications Bar */}
+          <div style={{ border: '1.5px solid #000000', marginBottom: '10px' }}>
+            <div style={{ fontSize: '7pt', fontWeight: 800, textTransform: 'uppercase', backgroundColor: '#f3f4f6', padding: '3px 8px', borderBottom: '1px solid #000000' }}>
+              3. CARGO SPECIFICATIONS &amp; VOLUMETRIC DIMENSIONS (IATA AIR CARGO STANDARD)
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', fontSize: '7.5pt', textAlign: 'center' }}>
+              <div style={{ padding: '5px 3px', borderRight: '1px solid #dddddd' }}>
+                <div style={{ fontSize: '6.5pt', color: '#555555' }}>PIECES</div>
+                <div style={{ fontWeight: 800, fontSize: '9pt' }}>{packingDetails.pieces} Colli</div>
+              </div>
+              <div style={{ padding: '5px 3px', borderRight: '1px solid #dddddd' }}>
+                <div style={{ fontSize: '6.5pt', color: '#555555' }}>ACTUAL WT</div>
+                <div style={{ fontWeight: 800, fontSize: '9pt' }}>{packingDetails.weightKg} kg</div>
+              </div>
+              <div style={{ padding: '5px 3px', borderRight: '1px solid #dddddd' }}>
+                <div style={{ fontSize: '6.5pt', color: '#555555' }}>VOLUMETRIC</div>
+                <div style={{ fontWeight: 800, fontSize: '9pt' }}>{packingDetails.volumetricWeightKg} kg</div>
+              </div>
+              <div style={{ padding: '5px 3px', borderRight: '1px solid #dddddd' }}>
+                <div style={{ fontSize: '6.5pt', color: '#555555' }}>CHARGEABLE WT</div>
+                <div style={{ fontWeight: 900, fontSize: '9pt', color: '#000000' }}>{packingDetails.chargeableWeightKg} kg</div>
+              </div>
+              <div style={{ padding: '5px 3px', borderRight: '1px solid #dddddd' }}>
+                <div style={{ fontSize: '6.5pt', color: '#555555' }}>DIMENSIONS</div>
+                <div style={{ fontWeight: 700, fontSize: '7.5pt' }}>{packingDetails.lengthCm}×{packingDetails.widthCm}×{packingDetails.heightCm} cm</div>
+              </div>
+              <div style={{ padding: '5px 3px' }}>
+                <div style={{ fontSize: '6.5pt', color: '#555555' }}>DECLARED VALUE</div>
+                <div style={{ fontWeight: 800, fontSize: '8.5pt' }}>Rs. {packingDetails.declaredValue.toLocaleString()}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Itemized Packing List Table */}
+          <div style={{ border: '1.5px solid #000000', marginBottom: '10px' }}>
+            <div style={{ fontSize: '7pt', fontWeight: 800, textTransform: 'uppercase', backgroundColor: '#f3f4f6', padding: '3px 8px', borderBottom: '1px solid #000000' }}>
+              4. ITEMIZED CARGO PACKING LIST &amp; CUSTOMS DECLARATION
+            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '7.5pt' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid #000000', backgroundColor: '#fafafa', textAlign: 'left' }}>
+                  <th style={{ padding: '3px 6px', width: '65px' }}>COLLI #</th>
+                  <th style={{ padding: '3px 6px' }}>CONTENTS DESCRIPTION</th>
+                  <th style={{ padding: '3px 6px', width: '40px', textAlign: 'center' }}>QTY</th>
+                  <th style={{ padding: '3px 6px', width: '100px' }}>DIMENSIONS</th>
+                  <th style={{ padding: '3px 6px', width: '70px', textAlign: 'right' }}>ACTUAL WT</th>
+                  <th style={{ padding: '3px 6px', width: '90px', textAlign: 'right' }}>DECLARED VAL</th>
+                </tr>
+              </thead>
+              <tbody>
+                {packingDetails.items.map((item, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid #eeeeee' }}>
+                    <td style={{ padding: '3px 6px', fontFamily: 'monospace', fontWeight: 700 }}>{item.colliNo}</td>
+                    <td style={{ padding: '3px 6px', fontWeight: 600 }}>{item.description}</td>
+                    <td style={{ padding: '3px 6px', textAlign: 'center' }}>{item.qty}</td>
+                    <td style={{ padding: '3px 6px', fontSize: '7pt' }}>{item.dimensions}</td>
+                    <td style={{ padding: '3px 6px', textAlign: 'right' }}>{item.actualWeight}</td>
+                    <td style={{ padding: '3px 6px', textAlign: 'right', fontWeight: 700 }}>Rs. {item.declaredValueNpr.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Financial Billing & Payment QR 2-Column Section */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '8px', marginBottom: '10px' }}>
+            {/* Financial Breakdown Table */}
+            <div style={{ border: '1.5px solid #000000', padding: '5px 8px' }}>
+              <div style={{ fontSize: '7pt', fontWeight: 800, textTransform: 'uppercase', borderBottom: '1px solid #000000', paddingBottom: '2px', marginBottom: '4px' }}>
+                5. AIR CARGO BILLING ASSESSMENT
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '7.5pt' }}>
+                <tbody>
+                  <tr>
+                    <td style={{ padding: '1.5px 0', color: '#444444' }}>Base Freight Fare:</td>
+                    <td style={{ padding: '1.5px 0', textAlign: 'right', fontWeight: 600 }}>Rs. {billingBreakdown.baseRate}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '1.5px 0', color: '#444444' }}>Chargeable Weight Surcharge:</td>
+                    <td style={{ padding: '1.5px 0', textAlign: 'right', fontWeight: 600 }}>Rs. {billingBreakdown.weightCharge}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '1.5px 0', color: '#444444' }}>Fuel &amp; Security Surcharge:</td>
+                    <td style={{ padding: '1.5px 0', textAlign: 'right', fontWeight: 600 }}>Rs. {billingBreakdown.fuelTerminalSurcharge}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '1.5px 0', color: '#444444' }}>Cargo Insurance (0.5%):</td>
+                    <td style={{ padding: '1.5px 0', textAlign: 'right', fontWeight: 600 }}>Rs. {billingBreakdown.transitInsurance}</td>
+                  </tr>
+                  {billingBreakdown.codAmount > 0 && (
+                    <tr>
+                      <td style={{ padding: '1.5px 0', color: '#444444' }}>COD Remittance Fee:</td>
+                      <td style={{ padding: '1.5px 0', textAlign: 'right', fontWeight: 600 }}>Rs. {billingBreakdown.codHandlingFee}</td>
+                    </tr>
+                  )}
+                  <tr style={{ borderTop: '1.5px solid #000000' }}>
+                    <td style={{ padding: '3px 0', fontWeight: 900, fontSize: '8.5pt' }}>TOTAL AIR FREIGHT:</td>
+                    <td style={{ padding: '3px 0', textAlign: 'right', fontWeight: 900, fontSize: '9.5pt' }}>
+                      Rs. {billingBreakdown.totalFreightBill.toLocaleString()}
+                    </td>
+                  </tr>
+                  {billingBreakdown.codAmount > 0 && (
+                    <tr style={{ borderTop: '1px dashed #666666' }}>
+                      <td style={{ padding: '2px 0', fontWeight: 800, color: '#000000', fontSize: '8pt' }}>C.O.D. CASH TO COLLECT:</td>
+                      <td style={{ padding: '2px 0', textAlign: 'right', fontWeight: 900, fontSize: '9pt' }}>
+                        Rs. {billingBreakdown.codAmount.toLocaleString()}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Payment & Verification QR Box */}
+            <div style={{ border: '1.5px solid #000000', padding: '5px 6px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: '7pt', fontWeight: 800, textTransform: 'uppercase', width: '100%', borderBottom: '1px solid #000000', paddingBottom: '2px' }}>
+                6. DIGITAL PAYMENT &amp; TELEMETRY QR
+              </div>
+              
+              <div style={{ margin: '4px auto', width: '76px', height: '76px', border: '1px solid #cccccc', padding: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {qrDataUrl ? (
+                  <img src={qrDataUrl} alt="Payment QR" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                ) : (
+                  <div style={{ fontSize: '6pt', color: '#666666' }}>QR Code</div>
+                )}
+              </div>
+
+              <div style={{ fontSize: '6.2pt', color: '#222222', lineHeight: 1.2 }}>
+                <div><strong>A/C:</strong> SOBIN UPRETI &bull; NIC ASIA BANK</div>
+                <div><strong>A/C NO:</strong> 3025752253490001 (Lagankhel)</div>
+                <div><strong>ESEWA / KHALTI:</strong> 9745255231</div>
+              </div>
+
+              <div style={{
+                marginTop: '3px',
+                padding: '1px 6px',
+                border: '1px solid #000000',
+                fontSize: '6.5pt',
+                fontWeight: 800,
+                backgroundColor: paymentStatus === 'paid' ? '#e6f4ea' : '#fef3c7'
+              }}>
+                STATUS: {paymentStatus === 'paid' ? 'PAID & VERIFIED' : 'PENDING SETTLEMENT'}
+              </div>
+            </div>
+          </div>
+
+          {/* Signatures & Execution Section */}
+          <div style={{ border: '1.5px solid #000000', padding: '6px 8px', marginTop: '2px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', textAlign: 'center', fontSize: '7pt' }}>
+              <div>
+                <div style={{ height: '28px', borderBottom: '1px solid #000000', marginBottom: '3px' }}></div>
+                <div style={{ fontWeight: 800 }}>SHIPPER ACCEPTANCE</div>
+                <div style={{ color: '#666666', fontSize: '6pt' }}>Goods handed over in good order</div>
+              </div>
+              <div>
+                <div style={{ height: '28px', borderBottom: '1px solid #000000', marginBottom: '3px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '6pt', fontFamily: 'monospace', fontWeight: 800, color: '#111111' }}>[DOUBLE 7 AUTH SEAL]</span>
+                </div>
+                <div style={{ fontWeight: 800 }}>CARRIER DISPATCH AGENT</div>
+                <div style={{ color: '#666666', fontSize: '6pt' }}>Authorized Double 7 Dispatch</div>
+              </div>
+              <div>
+                <div style={{ height: '28px', borderBottom: '1px solid #000000', marginBottom: '3px' }}></div>
+                <div style={{ fontWeight: 800 }}>CONSIGNEE PROOF OF DELIVERY (POD)</div>
+                <div style={{ color: '#666666', fontSize: '6pt' }}>Received in full with seal intact</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Legal Carriage Notice Footer */}
+          <div style={{ fontSize: '5.8pt', color: '#666666', textAlign: 'center', marginTop: '6px', lineHeight: 1.25 }}>
+            This Air Waybill is an official non-negotiable contract of carriage subject to Double 7 Logistics Standard Terms &amp; Conditions.
+            Consignment is tracked via real-time telemetry nodes across Nepal's 77 districts. Customer Support: 01-5970000 / dispatch@sobinupreti.com.np.
           </div>
         </div>
       </div>

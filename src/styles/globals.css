@@ -2022,7 +2022,7 @@ html, body {
    ========================================================= */
 @media print {
   @page {
-    size: auto;
+    size: A4 portrait;
     margin: 8mm;
   }
 
@@ -2031,12 +2031,13 @@ html, body {
     color: #000000 !important;
     margin: 0 !important;
     padding: 0 !important;
-    font-size: 11pt !important;
+    font-size: 10pt !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    overflow: visible !important;
   }
 
-  /* Hide entire page structure during print */
+  /* Hide web chrome & interactive UI elements during print */
   header,
   footer,
   nav,
@@ -2044,29 +2045,53 @@ html, body {
   button,
   .btn,
   .tab-list,
-  .badge {
+  .badge,
+  .mobile-bottom-nav,
+  .mobile-bottom-nav-spacer,
+  .awb-screen-modal {
     display: none !important;
   }
 
-  /* Hide everything on body except the printable shipping label */
+  /* Ensure modal overlays reset to static flow so print layout does not clip */
+  .print-modal-overlay,
+  .awb-modal-overlay {
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  /* Hide regular body content */
   body * {
     visibility: hidden;
   }
 
-  /* Make only designated printable shipping labels visible and centered */
+  /* Make designated printable documents visible and properly aligned */
   #printable-shipping-label,
   #printable-shipping-label *,
   .printable-label-page,
-  .printable-label-page * {
+  .printable-label-page *,
+  #printable-awb-dossier,
+  #printable-awb-dossier *,
+  .printable-awb-document,
+  .printable-awb-document * {
     visibility: visible !important;
   }
 
-  #printable-shipping-label {
-    position: absolute !important;
+  #printable-shipping-label,
+  #printable-awb-dossier {
+    position: relative !important;
     left: 0 !important;
     top: 0 !important;
     width: 100% !important;
-    max-width: 180mm !important;
+    max-width: 195mm !important;
     margin: 0 auto !important;
     padding: 0 !important;
     background: #ffffff !important;
@@ -2074,12 +2099,13 @@ html, body {
     border: none !important;
     box-shadow: none !important;
     display: block !important;
+    overflow: visible !important;
   }
 
   .printable-label-page {
     width: 100% !important;
     max-width: 180mm !important;
-    margin: 0 auto 20mm auto !important;
+    margin: 0 auto 15mm auto !important;
     padding: 16px !important;
     background: #ffffff !important;
     color: #000000 !important;
@@ -2099,7 +2125,7 @@ html, body {
     margin-bottom: 0 !important;
   }
 
-  /* High contrast black borders for shipping label grid */
+  /* High contrast black borders and typography for printing */
   #printable-shipping-label table,
   #printable-shipping-label td,
   #printable-shipping-label th,
@@ -2107,7 +2133,11 @@ html, body {
   .printable-label-page table,
   .printable-label-page td,
   .printable-label-page th,
-  .printable-label-page div {
+  .printable-label-page div,
+  #printable-awb-dossier table,
+  #printable-awb-dossier td,
+  #printable-awb-dossier th,
+  #printable-awb-dossier div {
     color: #000000 !important;
   }
 }
